@@ -3,22 +3,21 @@ from typing import Callable
 from uuid import UUID, uuid4
 
 from daylight_alarm.domain.events import (
-    AlarmCancelled, 
-    AlarmCompleted, 
-    AlarmStarted, 
-    BrightnessChangeRequested, 
-    DomainEvent, 
-    WaitRequested
+    AlarmCancelled,
+    AlarmCompleted,
+    AlarmStarted,
+    BrightnessChangeRequested,
+    DomainEvent,
+    WaitRequested,
 )
 from daylight_alarm.domain.value_objects import (
     AlarmStatus,
-    Brightness, 
-    BrightnessRange, 
-    Duration, 
+    Brightness,
+    BrightnessRange,
+    Duration,
     SoundProfile,
-    TransitionSteps
+    TransitionSteps,
 )
-from uuid import uuid4
 
 
 class SunriseAlarm:
@@ -37,10 +36,14 @@ class SunriseAlarm:
         self._scene_name = scene_name
         self._duration = duration if duration is not None else Duration(minutes=7)
         self._brightness_range = (
-            brightness_range if brightness_range is not None else BrightnessRange(start=1, end=100)
+            brightness_range
+            if brightness_range is not None
+            else BrightnessRange(start=1, end=100)
         )
         self._steps = steps if steps is not None else TransitionSteps(count=70)
-        self._easing_function = easing_function if easing_function is not None else (lambda t: t)
+        self._easing_function = (
+            easing_function if easing_function is not None else (lambda t: t)
+        )
         self._sound_profile = sound_profile
 
         self._status = AlarmStatus.PENDING
@@ -50,15 +53,15 @@ class SunriseAlarm:
     @property
     def id(self) -> UUID:
         return self._id
-    
+
     @property
     def status(self) -> AlarmStatus:
         return self._status
-    
+
     @property
     def is_finished(self) -> bool:
         return self._status in {AlarmStatus.COMPLETED, AlarmStatus.CANCELLED}
-    
+
     @property
     def sound_profile(self) -> SoundProfile | None:
         return self._sound_profile
@@ -73,12 +76,14 @@ class SunriseAlarm:
             raise ValueError(f"Cannot start alarm in status {self._status}")
 
         self._status = AlarmStatus.RUNNING
-        self._raise_event(AlarmStarted(
-            aggregate_id=self._id,
-            occurred_at=datetime.now(),
-            room_name=self._room_name,
-            scene_name=self._scene_name
-        ))
+        self._raise_event(
+            AlarmStarted(
+                aggregate_id=self._id,
+                occurred_at=datetime.now(),
+                room_name=self._room_name,
+                scene_name=self._scene_name,
+            )
+        )
 
     def _raise_event(self, event: DomainEvent) -> None:
         self._domain_events.append(event)
@@ -92,22 +97,26 @@ class SunriseAlarm:
 
         brightness = self._calculate_brightness_for_step(self._current_step)
 
-        self._raise_event(BrightnessChangeRequested(
-            aggregate_id=self._id,
-            occurred_at=datetime.now(),
-            room_name=self._room_name,
-            brightness=Brightness(percentage=brightness),
-            step_number=self._current_step,
-            total_steps=self._steps.count
-        ))
+        self._raise_event(
+            BrightnessChangeRequested(
+                aggregate_id=self._id,
+                occurred_at=datetime.now(),
+                room_name=self._room_name,
+                brightness=Brightness(percentage=brightness),
+                step_number=self._current_step,
+                total_steps=self._steps.count,
+            )
+        )
 
         if self._current_step < self._steps.count:
             step_duration = self._duration.seconds / self._steps.count
-            self._raise_event(WaitRequested(
-                aggregate_id=self._id,
-                occurred_at=datetime.now(),
-                duration_seconds=step_duration
-            ))
+            self._raise_event(
+                WaitRequested(
+                    aggregate_id=self._id,
+                    occurred_at=datetime.now(),
+                    duration_seconds=step_duration,
+                )
+            )
 
         self._current_step += 1
 
@@ -122,24 +131,28 @@ class SunriseAlarm:
             raise ValueError(f"Cannot cancel alarm in status {self._status}")
 
         self._status = AlarmStatus.CANCELLED
-        self._raise_event(AlarmCancelled(
-            aggregate_id=self._id,
-            occurred_at=datetime.now(),
-            room_name=self._room_name,
-            at_step=self._current_step
-        ))
+        self._raise_event(
+            AlarmCancelled(
+                aggregate_id=self._id,
+                occurred_at=datetime.now(),
+                room_name=self._room_name,
+                at_step=self._current_step,
+            )
+        )
 
     def _can_cancel(self) -> bool:
         return self._status == AlarmStatus.RUNNING
 
     def _complete(self) -> None:
         self._status = AlarmStatus.COMPLETED
-        self._raise_event(AlarmCompleted(
-            aggregate_id=self._id,
-            occurred_at=datetime.now(),
-            room_name=self._room_name,
-            total_steps=self._steps.count
-        ))
+        self._raise_event(
+            AlarmCompleted(
+                aggregate_id=self._id,
+                occurred_at=datetime.now(),
+                room_name=self._room_name,
+                total_steps=self._steps.count,
+            )
+        )
 
     def _calculate_brightness_for_step(self, step: int) -> int:
         progress = step / self._steps.count
