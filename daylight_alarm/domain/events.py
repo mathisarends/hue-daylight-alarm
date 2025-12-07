@@ -2,6 +2,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
+from daylight_alarm.domain.value_objects import Brightness
+
 
 @dataclass(frozen=True)
 class DomainEvent:
