@@ -75,6 +75,13 @@ class SoundProfile:
         return f"{self.name}: {self.wake_up_sound.path.stem} → {self.get_up_sound.path.stem}"
 
 
+class SoundProfileName(StrEnum):
+    PEACEFUL = "peaceful"
+    ENERGETIC = "energetic"
+    NATURE = "nature"
+    COSMIC = "cosmic"
+    MYSTICAL = "mystical"
+    GENTLE = "gentle"
 
 
 @dataclass(frozen=True)

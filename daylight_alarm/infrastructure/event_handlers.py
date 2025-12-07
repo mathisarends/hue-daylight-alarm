@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
 import asyncio
 from typing import Protocol
+from uuid import UUID
 
+from daylight_alarm.domain.aggregates import SunriseAlarm
 from daylight_alarm.domain.events import AlarmCompleted, AlarmStarted, BrightnessChangeRequested, DomainEvent, WaitRequested
 from daylight_alarm.domain.value_objects import AlarmSounds, Brightness
 from daylight_alarm.infrastructure.ports import AudioService
@@ -61,10 +63,18 @@ class WaitRequestedHandler(EventHandler):
         await asyncio.sleep(event.duration_seconds)
 
 
-class AudioOnAlarmStartedHandler(EventHandler):
-    def __init__(self, audio_service: AudioService, alarm_sounds: AlarmSounds):
+class AlarmAudioHandler(Protocol):
+    def register_alarm(self, alarm: SunriseAlarm) -> None:
+        ...
+
+
+class AudioOnAlarmStartedHandler(EventHandler, AlarmAudioHandler):
+    def __init__(self, audio_service: AudioService):
         self._audio_service = audio_service
-        self._alarm_sounds = alarm_sounds
+        self._alarms: dict[UUID, SunriseAlarm] = {}
+    
+    def register_alarm(self, alarm: SunriseAlarm) -> None:
+        self._alarms[alarm.id] = alarm
     
     def can_handle(self, event: DomainEvent) -> bool:
         return isinstance(event, AlarmStarted)
@@ -73,14 +83,19 @@ class AudioOnAlarmStartedHandler(EventHandler):
         if not isinstance(event, AlarmStarted):
             return
         
-        if self._alarm_sounds.startup_sound:
-            await self._audio_service.play(self._alarm_sounds.startup_sound)
+        alarm = self._alarms.get(event.aggregate_id)
+        if alarm and alarm.sound_profile:
+            audio_file = alarm.sound_profile.wake_up_sound
+            await self._audio_service.play(audio_file)
 
 
-class AudioOnAlarmCompletedHandler(EventHandler):
-    def __init__(self, audio_service: AudioService, alarm_sounds: AlarmSounds):
+class AudioOnAlarmCompletedHandler(EventHandler, AlarmAudioHandler):
+    def __init__(self, audio_service: AudioService):
         self._audio_service = audio_service
-        self._alarm_sounds = alarm_sounds
+        self._alarms: dict[UUID, SunriseAlarm] = {}
+    
+    def register_alarm(self, alarm: SunriseAlarm) -> None:
+        self._alarms[alarm.id] = alarm
     
     def can_handle(self, event: DomainEvent) -> bool:
         return isinstance(event, AlarmCompleted)
@@ -89,4 +104,7 @@ class AudioOnAlarmCompletedHandler(EventHandler):
         if not isinstance(event, AlarmCompleted):
             return
         
-        await self._audio_service.play(self._alarm_sounds.completion_sound)
+        alarm = self._alarms.get(event.aggregate_id)
+        if alarm and alarm.sound_profile:
+            audio_file = alarm.sound_profile.get_up_sound
+            await self._audio_service.play(audio_file)

@@ -15,6 +15,7 @@ from daylight_alarm.domain.value_objects import (
     Brightness, 
     BrightnessRange, 
     Duration, 
+    SoundProfile,
     TransitionSteps
 )
 from uuid import uuid4
@@ -29,6 +30,7 @@ class SunriseAlarm:
         brightness_range: BrightnessRange = None,
         steps: TransitionSteps = None,
         easing_function: Callable[[float], float] = None,
+        sound_profile: SoundProfile = None,
     ):
         self._id = uuid4()
         self._room_name = room_name
@@ -39,6 +41,7 @@ class SunriseAlarm:
         )
         self._steps = steps if steps is not None else TransitionSteps(count=70)
         self._easing_function = easing_function if easing_function is not None else (lambda t: t)
+        self._sound_profile = sound_profile
 
         self._status = AlarmStatus.PENDING
         self._current_step = 0
@@ -51,6 +54,14 @@ class SunriseAlarm:
     @property
     def status(self) -> AlarmStatus:
         return self._status
+    
+    @property
+    def is_finished(self) -> bool:
+        return self._status in {AlarmStatus.COMPLETED, AlarmStatus.CANCELLED}
+    
+    @property
+    def sound_profile(self) -> SoundProfile | None:
+        return self._sound_profile
 
     def collect_events(self) -> list[DomainEvent]:
         events = self._domain_events.copy()
