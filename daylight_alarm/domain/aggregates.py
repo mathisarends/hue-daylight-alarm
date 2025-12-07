@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Callable
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from daylight_alarm.domain.events import (
     AlarmCancelled, 
@@ -43,6 +43,14 @@ class SunriseAlarm:
         self._status = AlarmStatus.PENDING
         self._current_step = 0
         self._domain_events: list[DomainEvent] = []
+
+    @property
+    def id(self) -> UUID:
+        return self._id
+    
+    @property
+    def status(self) -> AlarmStatus:
+        return self._status
 
     def collect_events(self) -> list[DomainEvent]:
         events = self._domain_events.copy()

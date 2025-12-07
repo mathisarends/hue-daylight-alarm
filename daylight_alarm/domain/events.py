@@ -13,7 +13,6 @@ class DomainEvent:
 
 @dataclass(frozen=True)
 class AlarmStarted(DomainEvent):
-    """Event: Alarm wurde gestartet."""
     room_name: str
     scene_name: str
 

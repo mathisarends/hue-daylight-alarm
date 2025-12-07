@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
+import random
 
 
 @dataclass(frozen=True)
@@ -59,19 +60,58 @@ class AudioFile:
     def __post_init__(self):
         if not self.path.exists():
             raise ValueError(f"Audio file does not exist: {self.path}")
-        if self.path.suffix not in ['.mp3', '.wav', '.ogg']:
+        if self.path.suffix.lower() not in ['.mp3', '.wav', '.ogg', '.flac']:
             raise ValueError(f"Unsupported audio format: {self.path.suffix}")
+        
+
+@dataclass(frozen=True)
+class SoundProfile:
+    name: str
+    wake_up_sound: AudioFile
+    get_up_sound: AudioFile
+    description: str = ""
+    
+    def __str__(self) -> str:
+        return f"{self.name}: {self.wake_up_sound.path.stem} → {self.get_up_sound.path.stem}"
+
+
 
 
 @dataclass(frozen=True)
 class AlarmSounds:
-    startup_sound: AudioFile | None = None
     completion_sound: AudioFile
+    startup_sound: AudioFile | None = None
     
     def __post_init__(self):
         if self.completion_sound is None:
             raise ValueError("Completion sound is required")
+        
 
+@dataclass(frozen=True)
+class AudioDirectory:
+    path: Path
+    supported_formats: tuple[str, ...] = ('.mp3', '.wav', '.ogg', '.flac')
+    
+    def __post_init__(self):
+        if not self.path.exists():
+            raise ValueError(f"Audio directory does not exist: {self.path}")
+        if not self.path.is_dir():
+            raise ValueError(f"Path is not a directory: {self.path}")
+        
+        if not self.get_audio_files():
+            raise ValueError(f"No audio files found in: {self.path}")
+    
+    def get_audio_files(self) -> list[Path]:
+        audio_files = []
+        for ext in self.supported_formats:
+            audio_files.extend(self.path.glob(f"*{ext}"))
+        return sorted(audio_files)
+    
+    def get_random_file(self) -> AudioFile:
+        files = self.get_audio_files()
+        if not files:
+            raise ValueError(f"No audio files found in: {self.path}")
+        return AudioFile(path=random.choice(files))
 
 class AlarmStatus(StrEnum):
     PENDING = "pending"

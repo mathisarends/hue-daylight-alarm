@@ -2,8 +2,9 @@ from abc import ABC, abstractmethod
 import asyncio
 from typing import Protocol
 
-from daylight_alarm.domain.events import AlarmStarted, BrightnessChangeRequested, DomainEvent, WaitRequested
-from daylight_alarm.domain.value_objects import Brightness
+from daylight_alarm.domain.events import AlarmCompleted, AlarmStarted, BrightnessChangeRequested, DomainEvent, WaitRequested
+from daylight_alarm.domain.value_objects import AlarmSounds, Brightness
+from daylight_alarm.infrastructure.ports import AudioService
 
 
 class RoomService(Protocol):
@@ -58,3 +59,34 @@ class WaitRequestedHandler(EventHandler):
             return
         
         await asyncio.sleep(event.duration_seconds)
+
+
+class AudioOnAlarmStartedHandler(EventHandler):
+    def __init__(self, audio_service: AudioService, alarm_sounds: AlarmSounds):
+        self._audio_service = audio_service
+        self._alarm_sounds = alarm_sounds
+    
+    def can_handle(self, event: DomainEvent) -> bool:
+        return isinstance(event, AlarmStarted)
+    
+    async def handle(self, event: DomainEvent) -> None:
+        if not isinstance(event, AlarmStarted):
+            return
+        
+        if self._alarm_sounds.startup_sound:
+            await self._audio_service.play(self._alarm_sounds.startup_sound)
+
+
+class AudioOnAlarmCompletedHandler(EventHandler):
+    def __init__(self, audio_service: AudioService, alarm_sounds: AlarmSounds):
+        self._audio_service = audio_service
+        self._alarm_sounds = alarm_sounds
+    
+    def can_handle(self, event: DomainEvent) -> bool:
+        return isinstance(event, AlarmCompleted)
+    
+    async def handle(self, event: DomainEvent) -> None:
+        if not isinstance(event, AlarmCompleted):
+            return
+        
+        await self._audio_service.play(self._alarm_sounds.completion_sound)
