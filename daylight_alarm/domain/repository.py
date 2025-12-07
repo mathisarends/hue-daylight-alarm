@@ -1,0 +1,16 @@
+from typing import Protocol
+from uuid import UUID
+
+from daylight_alarm.domain.aggregates import SunriseAlarm
+
+
+class AlarmRepository(Protocol):
+    def save(self, alarm: SunriseAlarm) -> SunriseAlarm: ...
+
+    def find_by_id(self, alarm_id: UUID) -> SunriseAlarm | None: ...
+
+    def find_all(self) -> list[SunriseAlarm]: ...
+
+    def delete(self, alarm_id: UUID) -> bool: ...
+
+    def exists(self, alarm_id: UUID) -> bool: ...

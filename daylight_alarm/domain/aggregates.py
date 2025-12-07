@@ -55,12 +55,40 @@ class SunriseAlarm:
         return self._id
 
     @property
+    def room_name(self) -> str:
+        return self._room_name
+
+    @property
+    def scene_name(self) -> str:
+        return self._scene_name
+
+    @property
+    def duration(self) -> Duration:
+        return self._duration
+
+    @property
+    def brightness_range(self) -> BrightnessRange:
+        return self._brightness_range
+
+    @property
+    def steps(self) -> TransitionSteps:
+        return self._steps
+
+    @property
+    def easing_function(self) -> Callable[[float], float]:
+        return self._easing_function
+
+    @property
     def status(self) -> AlarmStatus:
         return self._status
 
     @property
     def is_finished(self) -> bool:
         return self._status in {AlarmStatus.COMPLETED, AlarmStatus.CANCELLED}
+
+    @property
+    def current_step(self) -> int:
+        return self._current_step
 
     @property
     def sound_profile(self) -> SoundProfile | None:

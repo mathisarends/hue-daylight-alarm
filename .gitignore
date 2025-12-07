@@ -8,3 +8,9 @@ __pycache__/
 Thumbs.db
 
 .vscode/
+
+# --- SQLLite temp files ---
+*.db
+*.sqlite3
+*.db-journal
+*.db-wal

@@ -26,13 +26,11 @@ MOCK_SCENES = {
 
 @router.get("")
 def list_rooms():
-    """Liste alle Hue-Räume."""
     return {"rooms": MOCK_ROOMS}
 
 
 @router.get("/{room_name}")
 def get_room(room_name: str):
-    """Hole Raum-Details."""
     room = next((r for r in MOCK_ROOMS if r["name"] == room_name), None)
     if not room:
         raise HTTPException(status_code=404, detail=f"Room '{room_name}' not found")

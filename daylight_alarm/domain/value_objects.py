@@ -53,6 +53,12 @@ class Brightness:
             raise ValueError("Brightness must be between 0 and 100")
 
 
+class EasingType(StrEnum):
+    LINEAR = "linear"
+    EASE_IN_QUAD = "ease_in_quad"
+    EASE_IN_CUBIC = "ease_in_cubic"
+
+
 @dataclass(frozen=True)
 class AudioFile:
     path: Path

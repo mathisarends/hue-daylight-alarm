@@ -8,8 +8,9 @@ from daylight_alarm.infrastructure.adapters import HueifyRoomService
 from daylight_alarm.infrastructure.adapters.audio_apapter import PygameAudioService
 from daylight_alarm.infrastructure.event_handlers import (
     AlarmStartedHandler,
-    AudioOnAlarmStartedHandler,
+    AudioOnAlarmCancelledHandler,
     AudioOnAlarmCompletedHandler,
+    AudioOnAlarmStartedHandler,
     BrightnessChangeRequestedHandler,
     WaitRequestedHandler,
 )
@@ -63,6 +64,7 @@ async def main():
     # Audio Handler
     audio_started_handler = AudioOnAlarmStartedHandler(audio_service)
     audio_completed_handler = AudioOnAlarmCompletedHandler(audio_service)
+    audio_cancelled_handler = AudioOnAlarmCancelledHandler(audio_service)
 
     # Alle Handler registrieren
     handlers = [
@@ -71,6 +73,7 @@ async def main():
         WaitRequestedHandler(),
         audio_started_handler,
         audio_completed_handler,
+        audio_cancelled_handler,
     ]
 
     dispatcher = EventDispatcher(handlers)

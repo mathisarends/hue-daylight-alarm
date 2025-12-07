@@ -5,6 +5,7 @@ from uuid import UUID
 
 from daylight_alarm.domain.aggregates import SunriseAlarm
 from daylight_alarm.domain.events import (
+    AlarmCancelled,
     AlarmCompleted,
     AlarmStarted,
     BrightnessChangeRequested,
@@ -113,3 +114,17 @@ class AudioOnAlarmCompletedHandler(EventHandler, AlarmAudioHandler):
         if alarm and alarm.sound_profile:
             audio_file = alarm.sound_profile.get_up_sound
             await self._audio_service.play(audio_file)
+
+
+class AudioOnAlarmCancelledHandler(EventHandler):
+    def __init__(self, audio_service: AudioService):
+        self._audio_service = audio_service
+
+    def can_handle(self, event: DomainEvent) -> bool:
+        return isinstance(event, AlarmCancelled)
+
+    async def handle(self, event: DomainEvent) -> None:
+        if not isinstance(event, AlarmCancelled):
+            return
+
+        await self._audio_service.stop()

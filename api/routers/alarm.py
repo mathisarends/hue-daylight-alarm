@@ -2,14 +2,18 @@ from uuid import UUID, uuid4
 
 from fastapi import APIRouter, HTTPException
 
+from api.dependencies import InjectedAlarmRepository
+
 router = APIRouter(prefix="/alarms", tags=["Alarms"])
 
 alarms_store: dict[UUID, dict] = {}
 
 
 @router.get("")
-def list_alarms():
-    return {"alarms": list(alarms_store.values())}
+def list_alarms(repository: InjectedAlarmRepository):
+    alarms = repository.find_all()
+
+    return {"alarms": alarms}
 
 
 @router.post("", status_code=201)
