@@ -154,6 +154,17 @@ class SunriseAlarm:
     def _can_progress(self) -> bool:
         return self._status == AlarmStatus.RUNNING
 
+    def _complete(self) -> None:
+        self._status = AlarmStatus.COMPLETED
+        self._raise_event(
+            AlarmCompleted(
+                aggregate_id=self._id,
+                occurred_at=datetime.now(),
+                room_name=self._room_name,
+                total_steps=self._steps.count,
+            )
+        )
+
     def cancel(self) -> None:
         if not self._can_cancel():
             raise ValueError(f"Cannot cancel alarm in status {self._status}")
@@ -170,17 +181,6 @@ class SunriseAlarm:
 
     def _can_cancel(self) -> bool:
         return self._status == AlarmStatus.RUNNING
-
-    def _complete(self) -> None:
-        self._status = AlarmStatus.COMPLETED
-        self._raise_event(
-            AlarmCompleted(
-                aggregate_id=self._id,
-                occurred_at=datetime.now(),
-                room_name=self._room_name,
-                total_steps=self._steps.count,
-            )
-        )
 
     def _calculate_brightness_for_step(self, step: int) -> int:
         progress = step / self._steps.count

@@ -1,12 +1,10 @@
+from collections.abc import Generator
+from typing import Annotated
 from sqlmodel import Session
 from fastapi import Depends
 
 from daylight_alarm.infrastructure.persistence.database import db_config
 
-
-from typing import Annotated
-
-from collections.abc import Generator
 
 from daylight_alarm.infrastructure.persistence.repository import SQLiteAlarmRepository
 
