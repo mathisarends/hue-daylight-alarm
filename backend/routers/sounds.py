@@ -1,47 +1,26 @@
-from fastapi import APIRouter, HTTPException
+from pathlib import Path
 
-router = APIRouter(prefix="/sound-profiles", tags=["Sound Profiles"])
+from fastapi import APIRouter
 
-MOCK_PROFILES = [
-    {
-        "name": "peaceful",
-        "display_name": "Peaceful Morning",
-        "description": "Sanfte Klangschalen und blumige Melodien",
-        "wake_up_sound": "wake-up-bowls.mp3",
-        "get_up_sound": "get-up-blossom.mp3",
-    },
-    {
-        "name": "energetic",
-        "display_name": "Energetic Start",
-        "description": "Kraftvolle Klänge für dynamischen Start",
-        "wake_up_sound": "wake-up-gong.mp3",
-        "get_up_sound": "get-up-shake.mp3",
-    },
-    {
-        "name": "nature",
-        "display_name": "Nature Awakening",
-        "description": "Natürliche Klänge aus dem Dschungel",
-        "wake_up_sound": "wake-up-jungle.mp3",
-        "get_up_sound": "get-up-retreat.mp3",
-    },
-    {
-        "name": "cosmic",
-        "display_name": "Cosmic Journey",
-        "description": "Sphärische Klänge aus dem Universum",
-        "wake_up_sound": "wake-up-galaxy.mp3",
-        "get_up_sound": "get-up-aurora.mp3",
-    },
-]
+from backend.src.infrastructure.audio.registry import AudioRegistry, RegisteredSound
+
+router = APIRouter(prefix="/sounds", tags=["Sounds"])
+
+# Relativer Pfad zum assets Ordner
+SOUNDS_DIR = Path(__file__).parent.parent.parent / "assets"
+
+audio_registry = AudioRegistry(SOUNDS_DIR)
 
 
-@router.get("")
-def list_sound_profiles():
-    return {"profiles": MOCK_PROFILES}
+@router.get("", response_model=list[RegisteredSound])
+def list_sounds():
+    sounds = audio_registry.get_all()
 
-
-@router.get("/{name}")
-def get_sound_profile(name: str):
-    profile = next((p for p in MOCK_PROFILES if p["name"] == name), None)
-    if not profile:
-        raise HTTPException(status_code=404, detail=f"Sound profile '{name}' not found")
-    return profile
+    return [
+        RegisteredSound(
+            name=sound.name,
+            relative_path=sound.relative_path,
+            category=sound.category,
+        )
+        for sound in sounds
+    ]
