@@ -44,3 +44,12 @@ class AudioRegistry(LoggingMixin):
 
     def get_all(self) -> list[RegisteredSound]:
         return self._sounds
+
+    def get_by_category(self, category: str) -> list[RegisteredSound]:
+        return [sound for sound in self._sounds if sound.category == category]
+
+    def get_wake_up_sounds(self) -> list[RegisteredSound]:
+        return self.get_by_category("wake_up_sounds")
+
+    def get_get_up_sounds(self) -> list[RegisteredSound]:
+        return self.get_by_category("get_up_sounds")
