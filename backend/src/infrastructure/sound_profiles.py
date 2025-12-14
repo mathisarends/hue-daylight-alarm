@@ -1,9 +1,6 @@
 from pathlib import Path
-from daylight_alarm.domain.value_objects import (
-    AudioFile,
-    SoundProfile,
-    SoundProfileName,
-)
+
+from backend.src.domain.value_objects import AudioFile, SoundProfile, SoundProfileName
 
 
 class SoundProfileRepository:

@@ -3,10 +3,8 @@ from typing import Annotated
 from sqlmodel import Session
 from fastapi import Depends
 
-from daylight_alarm.infrastructure.persistence.database import db_config
-
-
-from daylight_alarm.infrastructure.persistence.repository import SQLiteAlarmRepository
+from backend.src.infrastructure.persistence.database import db_config
+from backend.src.infrastructure.persistence.repository import SQLiteAlarmRepository
 
 
 def get_database_session() -> Generator[Session, None, None]:

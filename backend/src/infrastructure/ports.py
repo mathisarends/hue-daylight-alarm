@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from daylight_alarm.domain.value_objects import AudioFile
+
+from backend.src.domain.value_objects import AudioFile
 
 
 class AudioService(ABC):

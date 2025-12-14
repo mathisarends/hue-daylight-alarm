@@ -1,6 +1,5 @@
 from hueify import Room
-
-from daylight_alarm.domain.value_objects import Brightness
+from backend.src.domain.value_objects import Brightness
 
 
 class HueifyRoomService:

@@ -3,7 +3,7 @@ from uuid import UUID, uuid4
 
 from sqlmodel import Field, SQLModel
 
-from daylight_alarm.domain.value_objects import AlarmStatus, EasingType
+from backend.src.domain.value_objects import AlarmStatus, EasingType
 
 
 class AlarmModel(SQLModel, table=True):

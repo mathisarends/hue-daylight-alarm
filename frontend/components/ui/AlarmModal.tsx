@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Switch,
+  FlatList,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -45,15 +45,49 @@ const SOUND_PROFILES = [
   { id: 'zen-bells', name: 'Zen Bells', icon: 'notifications-outline' },
 ];
 
+const LIGHT_SCENES = [
+  {
+    id: 'sunrise',
+    name: 'Follow a sunrise',
+    description: 'Perfect sunrise with an energy boost.',
+    colors: ['#89CFF0', '#FFB366'],
+  },
+  {
+    id: 'warm-white',
+    name: 'Warm white',
+    description: 'Gentle warm light gradually increases.',
+    colors: ['#FFF5E1', '#FFD700'],
+  },
+  {
+    id: 'energize',
+    name: 'Energize',
+    description: 'Bright cool light to feel alert.',
+    colors: ['#E0F7FF', '#4DD0E1'],
+  },
+  {
+    id: 'golden-hour',
+    name: 'Golden hour',
+    description: 'Beautiful golden morning tones.',
+    colors: ['#FFE5B4', '#FF8C00'],
+  },
+];
+
 export const AlarmModal: React.FC<AlarmModalProps> = ({ visible, onClose, onSave }) => {
-  const [time, setTime] = useState('7:00');
+  const [hours, setHours] = useState(7);
+  const [minutes, setMinutes] = useState(0);
   const [isPM, setIsPM] = useState(false);
   const [recurring, setRecurring] = useState<string[]>(['monday', 'tuesday', 'wednesday', 'thursday', 'friday']);
   const [duration, setDuration] = useState(30);
+  const [lightScene, setLightScene] = useState('sunrise');
   const [lightStartBrightness, setLightStartBrightness] = useState(1);
   const [lightEndBrightness, setLightEndBrightness] = useState(100);
   const [soundProfile, setSoundProfile] = useState('gentle-waves');
   const [enabled, setEnabled] = useState(true);
+  const [showLightScenes, setShowLightScenes] = useState(false);
+  const [showSoundProfiles, setShowSoundProfiles] = useState(false);
+
+  const hoursList = Array.from({ length: 12 }, (_, i) => i + 1);
+  const minutesList = Array.from({ length: 60 }, (_, i) => i);
 
   const toggleWeekday = (day: string) => {
     setRecurring(prev =>
@@ -62,12 +96,12 @@ export const AlarmModal: React.FC<AlarmModalProps> = ({ visible, onClose, onSave
   };
 
   const handleSave = () => {
-    const displayTime = `${time} ${isPM ? 'PM' : 'AM'}`;
+    const displayTime = `${hours}:${minutes.toString().padStart(2, '0')} ${isPM ? 'PM' : 'AM'}`;
     onSave({
       time: displayTime,
       recurring,
       duration,
-      lightScene: 'sunrise',
+      lightScene,
       lightStartBrightness,
       lightEndBrightness,
       soundProfile,
@@ -77,7 +111,6 @@ export const AlarmModal: React.FC<AlarmModalProps> = ({ visible, onClose, onSave
   };
 
   const calculateStartTime = () => {
-    const [hours, minutes] = time.split(':').map(Number);
     let totalMinutes = hours * 60 + minutes;
     if (isPM && hours !== 12) totalMinutes += 12 * 60;
     if (!isPM && hours === 12) totalMinutes -= 12 * 60;
@@ -91,6 +124,17 @@ export const AlarmModal: React.FC<AlarmModalProps> = ({ visible, onClose, onSave
     return `${displayHours}:${startMins.toString().padStart(2, '0')} ${startPeriod}`;
   };
 
+  const renderTimeItem = (item: number, isSelected: boolean, isHour: boolean) => (
+    <TouchableOpacity
+      style={[styles.timeItem, isSelected && styles.timeItemSelected]}
+      onPress={() => isHour ? setHours(item) : setMinutes(item)}
+    >
+      <Text style={[styles.timeItemText, isSelected && styles.timeItemTextSelected]}>
+        {isHour ? item : item.toString().padStart(2, '0')}
+      </Text>
+    </TouchableOpacity>
+  );
+
   return (
     <Modal
       visible={visible}
@@ -102,48 +146,215 @@ export const AlarmModal: React.FC<AlarmModalProps> = ({ visible, onClose, onSave
         <View style={styles.modalContainer}>
           {/* Header */}
           <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Rise and shine</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <Ionicons name="close" size={24} color="#000" />
+              <Ionicons name="close" size={28} color="#000" />
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>When do you want to wake up?</Text>
           </View>
 
           <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
-            {/* Description */}
-            <Text style={styles.description}>
-              We'll slowly increase the lights so you wake up gently over a {duration}-minute period.
-            </Text>
+            {/* Title */}
+            <Text style={styles.sectionMainTitle}>Wake me up at</Text>
 
-            {/* Time Picker */}
+            {/* Interactive Time Picker */}
             <View style={styles.section}>
-              <View style={styles.timePickerContainer}>
-                <View style={styles.timeDisplay}>
-                  <Ionicons name="time-outline" size={24} color="#666" />
-                  <Text style={styles.timeText}>{time} {isPM ? 'PM' : 'AM'}</Text>
-                </View>
-                <View style={styles.timePeriodToggle}>
-                  <TouchableOpacity
-                    style={[styles.periodButton, !isPM && styles.periodButtonActive]}
-                    onPress={() => setIsPM(false)}
-                  >
-                    <Text style={[styles.periodText, !isPM && styles.periodTextActive]}>AM</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.periodButton, isPM && styles.periodButtonActive]}
-                    onPress={() => setIsPM(true)}
-                  >
-                    <Text style={[styles.periodText, isPM && styles.periodTextActive]}>PM</Text>
-                  </TouchableOpacity>
+              <View style={styles.interactiveTimePicker}>
+                <View style={styles.timePickerRow}>
+                  <View style={styles.timeColumn}>
+                    <FlatList
+                      data={hoursList}
+                      renderItem={({ item }) => renderTimeItem(item, item === hours, true)}
+                      keyExtractor={(item) => `hour-${item}`}
+                      showsVerticalScrollIndicator={false}
+                      contentContainerStyle={styles.timeListContent}
+                      snapToInterval={50}
+                      decelerationRate="fast"
+                    />
+                  </View>
+                  <Text style={styles.timeSeparator}>:</Text>
+                  <View style={styles.timeColumn}>
+                    <FlatList
+                      data={minutesList}
+                      renderItem={({ item }) => renderTimeItem(item, item === minutes, false)}
+                      keyExtractor={(item) => `minute-${item}`}
+                      showsVerticalScrollIndicator={false}
+                      contentContainerStyle={styles.timeListContent}
+                      snapToInterval={50}
+                      decelerationRate="fast"
+                    />
+                  </View>
+                  <View style={styles.periodColumn}>
+                    <TouchableOpacity
+                      style={[styles.periodButton, !isPM && styles.periodButtonActive]}
+                      onPress={() => setIsPM(false)}
+                    >
+                      <Text style={[styles.periodText, !isPM && styles.periodTextActive]}>AM</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.periodButton, isPM && styles.periodButtonActive]}
+                      onPress={() => setIsPM(true)}
+                    >
+                      <Text style={[styles.periodText, isPM && styles.periodTextActive]}>PM</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
-              <Text style={styles.subtext}>Lights rise from {calculateStartTime()}</Text>
+            </View>
+
+            {/* Duration */}
+            <View style={styles.section}>
+              <View style={styles.durationCard}>
+                <View style={styles.iconWithText}>
+                  <Ionicons name="timer-outline" size={24} color="#666" />
+                  <View>
+                    <Text style={styles.sectionTitle}>Over {duration} min</Text>
+                    <Text style={styles.subtext}>Lights rise from {calculateStartTime()}</Text>
+                  </View>
+                </View>
+                <TouchableOpacity>
+                  <Ionicons name="chevron-down" size={20} color="#666" />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Light Scenes */}
+            <View style={styles.section}>
+              <TouchableOpacity
+                style={styles.menuCard}
+                onPress={() => setShowLightScenes(!showLightScenes)}
+              >
+                <View style={styles.menuCardLeft}>
+                  <View style={styles.menuIconContainer}>
+                    <View style={styles.sunriseGradientSmall}>
+                      <View style={styles.gradientTopSmall} />
+                      <View style={styles.gradientBottomSmall} />
+                    </View>
+                  </View>
+                  <View>
+                    <Text style={styles.menuCardTitle}>Set the lights</Text>
+                    <Text style={styles.menuCardSubtitle}>
+                      {LIGHT_SCENES.find(s => s.id === lightScene)?.name}
+                    </Text>
+                  </View>
+                </View>
+                <Ionicons
+                  name={showLightScenes ? "chevron-up" : "chevron-down"}
+                  size={20}
+                  color="#666"
+                />
+              </TouchableOpacity>
+
+              {showLightScenes && (
+                <View style={styles.subMenu}>
+                  {LIGHT_SCENES.map((scene) => (
+                    <TouchableOpacity
+                      key={scene.id}
+                      style={[
+                        styles.sceneCard,
+                        lightScene === scene.id && styles.sceneCardActive
+                      ]}
+                      onPress={() => {
+                        setLightScene(scene.id);
+                        setShowLightScenes(false);
+                      }}
+                    >
+                      <View style={styles.sceneGradient}>
+                        <View style={[styles.sceneGradientTop, { backgroundColor: scene.colors[0] }]} />
+                        <View style={[styles.sceneGradientBottom, { backgroundColor: scene.colors[1] }]} />
+                      </View>
+                      <View style={styles.sceneContent}>
+                        <Text style={styles.sceneTitle}>{scene.name}</Text>
+                        <Text style={styles.sceneDescription}>{scene.description}</Text>
+                      </View>
+                      {lightScene === scene.id && (
+                        <View style={styles.sceneCheckmark}>
+                          <Ionicons name="checkmark-circle" size={24} color="#000" />
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  ))}
+
+                  {/* Brightness Settings */}
+                  <View style={styles.brightnessContainer}>
+                    <View style={styles.brightnessRow}>
+                      <Text style={styles.brightnessLabel}>Start brightness</Text>
+                      <View style={styles.brightnessValueContainer}>
+                        <Text style={styles.brightnessValue}>{lightStartBrightness}%</Text>
+                        <View style={[styles.brightnessIndicator, { opacity: lightStartBrightness / 100 }]} />
+                      </View>
+                    </View>
+                    <View style={styles.brightnessRow}>
+                      <Text style={styles.brightnessLabel}>End brightness</Text>
+                      <View style={styles.brightnessValueContainer}>
+                        <Text style={styles.brightnessValue}>{lightEndBrightness}%</Text>
+                        <View style={[styles.brightnessIndicator, { opacity: lightEndBrightness / 100, backgroundColor: '#FFD700' }]} />
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              )}
+            </View>
+
+            {/* Sound Profile */}
+            <View style={styles.section}>
+              <TouchableOpacity
+                style={styles.menuCard}
+                onPress={() => setShowSoundProfiles(!showSoundProfiles)}
+              >
+                <View style={styles.menuCardLeft}>
+                  <View style={styles.menuIconContainer}>
+                    <Ionicons
+                      name={SOUND_PROFILES.find(s => s.id === soundProfile)?.icon as any}
+                      size={24}
+                      color="#666"
+                    />
+                  </View>
+                  <View>
+                    <Text style={styles.menuCardTitle}>Wake-up sound</Text>
+                    <Text style={styles.menuCardSubtitle}>
+                      {SOUND_PROFILES.find(s => s.id === soundProfile)?.name}
+                    </Text>
+                  </View>
+                </View>
+                <Ionicons
+                  name={showSoundProfiles ? "chevron-up" : "chevron-down"}
+                  size={20}
+                  color="#666"
+                />
+              </TouchableOpacity>
+
+              {showSoundProfiles && (
+                <View style={styles.subMenu}>
+                  {SOUND_PROFILES.map(profile => (
+                    <TouchableOpacity
+                      key={profile.id}
+                      style={[
+                        styles.soundProfileItem,
+                        soundProfile === profile.id && styles.soundProfileItemActive
+                      ]}
+                      onPress={() => {
+                        setSoundProfile(profile.id);
+                        setShowSoundProfiles(false);
+                      }}
+                    >
+                      <View style={styles.soundProfileContent}>
+                        <Ionicons name={profile.icon as any} size={24} color="#666" />
+                        <Text style={styles.soundProfileText}>{profile.name}</Text>
+                      </View>
+                      {soundProfile === profile.id && (
+                        <Ionicons name="checkmark-circle" size={24} color="#000" />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
             </View>
 
             {/* Recurring Days */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Recurring on</Text>
+              <Text style={styles.sectionMainTitle}>Recurring</Text>
               <View style={styles.weekdaysContainer}>
-                {WEEKDAYS.map(day => (
+                {WEEKDAYS.map((day) => (
                   <TouchableOpacity
                     key={day.value}
                     style={[
@@ -165,98 +376,7 @@ export const AlarmModal: React.FC<AlarmModalProps> = ({ visible, onClose, onSave
               </View>
             </View>
 
-            {/* Duration */}
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <View style={styles.iconWithText}>
-                  <Ionicons name="timer-outline" size={20} color="#666" />
-                  <Text style={styles.sectionTitle}>Over {duration} min</Text>
-                </View>
-                <TouchableOpacity>
-                  <Ionicons name="chevron-down" size={20} color="#666" />
-                </TouchableOpacity>
-              </View>
-              <Text style={styles.subtext}>Lights rise from {calculateStartTime()}</Text>
-            </View>
-
-            {/* Light Scene */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Set the lights</Text>
-              <View style={styles.lightSceneCard}>
-                <View style={styles.sunriseGradient}>
-                  <View style={styles.gradientTop} />
-                  <View style={styles.gradientBottom} />
-                </View>
-                <View style={styles.lightSceneContent}>
-                  <Text style={styles.lightSceneTitle}>Follow a sunrise</Text>
-                  <Text style={styles.lightSceneSubtitle}>
-                    Set the perfect sunrise for you and start the day with an energy boost.
-                  </Text>
-                </View>
-              </View>
-
-              {/* Brightness Settings */}
-              <View style={styles.brightnessContainer}>
-                <View style={styles.brightnessRow}>
-                  <Text style={styles.brightnessLabel}>Lights start at</Text>
-                  <View style={styles.brightnessValueContainer}>
-                    <Text style={styles.brightnessValue}>{lightStartBrightness}%</Text>
-                    <View style={[styles.brightnessIndicator, { backgroundColor: '#FFB366' }]} />
-                  </View>
-                </View>
-                <View style={styles.brightnessRow}>
-                  <Text style={styles.brightnessLabel}>Lights end at</Text>
-                  <View style={styles.brightnessValueContainer}>
-                    <Text style={styles.brightnessValue}>{lightEndBrightness}%</Text>
-                    <View style={[styles.brightnessIndicator, { backgroundColor: '#FF8533' }]} />
-                  </View>
-                </View>
-              </View>
-            </View>
-
-            {/* Sound Profile */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Wake-up sound</Text>
-              {SOUND_PROFILES.map(profile => (
-                <TouchableOpacity
-                  key={profile.id}
-                  style={[
-                    styles.soundProfileItem,
-                    soundProfile === profile.id && styles.soundProfileItemActive
-                  ]}
-                  onPress={() => setSoundProfile(profile.id)}
-                >
-                  <View style={styles.soundProfileContent}>
-                    <Ionicons name={profile.icon as any} size={24} color="#666" />
-                    <Text style={styles.soundProfileText}>{profile.name}</Text>
-                  </View>
-                  {soundProfile === profile.id && (
-                    <Ionicons name="checkmark-circle" size={24} color="#000" />
-                  )}
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            {/* Enable Switch */}
-            <View style={styles.section}>
-              <View style={styles.enableRow}>
-                <View style={styles.enableContent}>
-                  <Ionicons name="alarm-outline" size={24} color="#000" />
-                  <View>
-                    <Text style={styles.enableTitle}>{time} {isPM ? 'PM' : 'AM'}</Text>
-                    <Text style={styles.enableSubtitle}>
-                      {recurring.length === 7 ? 'Daily' : recurring.length > 0 ? 'Weekdays' : 'No repeat'}
-                    </Text>
-                  </View>
-                </View>
-                <Switch
-                  value={enabled}
-                  onValueChange={setEnabled}
-                  trackColor={{ false: '#ddd', true: '#000' }}
-                  thumbColor="#fff"
-                />
-              </View>
-            </View>
+            <View style={{ height: 20 }} />
           </ScrollView>
 
           {/* Save Button */}
@@ -281,78 +401,105 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: '90%',
+    height: '95%',
   },
   modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
+    position: 'relative',
   },
   closeButton: {
-    alignSelf: 'flex-start',
-    marginBottom: 12,
+    position: 'absolute',
+    right: 20,
+    top: 20,
   },
   modalTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 20,
+    fontWeight: '600',
   },
   scrollContent: {
     padding: 20,
   },
-  description: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
-    marginBottom: 24,
-  },
   section: {
-    marginBottom: 32,
+    marginBottom: 28,
+  },
+  sectionMainTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 12,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  iconWithText: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
   },
   subtext: {
     fontSize: 12,
     color: '#666',
+    marginTop: 2,
   },
-  timePickerContainer: {
-    backgroundColor: '#f5f5f5',
-    padding: 20,
-    borderRadius: 12,
-    marginBottom: 8,
-  },
-  timeDisplay: {
+  iconWithText: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    marginBottom: 16,
+    flex: 1,
   },
-  timeText: {
+  // Interactive Time Picker
+  interactiveTimePicker: {
+    backgroundColor: '#f8f8f8',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 12,
+  },
+  timePickerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  timeColumn: {
+    height: 150,
+    width: 60,
+  },
+  timeListContent: {
+    paddingVertical: 50,
+  },
+  timeItem: {
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  timeItemSelected: {
+    backgroundColor: 'transparent',
+  },
+  timeItemText: {
+    fontSize: 24,
+    color: '#ccc',
+  },
+  timeItemTextSelected: {
     fontSize: 32,
     fontWeight: 'bold',
+    color: '#000',
   },
-  timePeriodToggle: {
-    flexDirection: 'row',
+  timeSeparator: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    marginHorizontal: 4,
+  },
+  periodColumn: {
     gap: 8,
+    marginLeft: 8,
   },
   periodButton: {
     paddingVertical: 8,
-    paddingHorizontal: 20,
-    borderRadius: 20,
+    paddingHorizontal: 16,
+    borderRadius: 16,
     backgroundColor: '#fff',
+    minWidth: 50,
+    alignItems: 'center',
   },
   periodButtonActive: {
     backgroundColor: '#000',
@@ -365,65 +512,111 @@ const styles = StyleSheet.create({
   periodTextActive: {
     color: '#fff',
   },
-  weekdaysContainer: {
+  // Duration Card
+  durationCard: {
     flexDirection: 'row',
-    gap: 8,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#f8f8f8',
+    padding: 16,
+    borderRadius: 12,
   },
-  weekdayButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#f5f5f5',
+  // Menu Cards
+  menuCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#f8f8f8',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 8,
+  },
+  menuCardLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  menuIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'hidden',
   },
-  weekdayButtonActive: {
-    backgroundColor: '#000',
-  },
-  weekdayText: {
+  menuCardTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#999',
+    marginBottom: 2,
   },
-  weekdayTextActive: {
-    color: '#fff',
+  menuCardSubtitle: {
+    fontSize: 12,
+    color: '#666',
   },
-  lightSceneCard: {
-    borderRadius: 16,
-    overflow: 'hidden',
-    marginBottom: 16,
+  sunriseGradientSmall: {
+    width: '100%',
+    height: '100%',
+    flexDirection: 'column',
   },
-  sunriseGradient: {
-    height: 80,
-    position: 'relative',
-  },
-  gradientTop: {
+  gradientTopSmall: {
     flex: 1,
     backgroundColor: '#89CFF0',
   },
-  gradientBottom: {
+  gradientBottomSmall: {
     flex: 1,
     backgroundColor: '#FFB366',
   },
-  lightSceneContent: {
-    padding: 16,
-    backgroundColor: '#f5f5f5',
+  subMenu: {
+    marginTop: 8,
+    gap: 12,
   },
-  lightSceneTitle: {
+  // Light Scenes
+  sceneCard: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  sceneCardActive: {
+    borderColor: '#000',
+  },
+  sceneGradient: {
+    height: 100,
+    flexDirection: 'column',
+  },
+  sceneGradientTop: {
+    flex: 1,
+  },
+  sceneGradientBottom: {
+    flex: 1,
+  },
+  sceneContent: {
+    padding: 16,
+    backgroundColor: '#f8f8f8',
+  },
+  sceneTitle: {
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 4,
   },
-  lightSceneSubtitle: {
+  sceneDescription: {
     fontSize: 12,
     color: '#666',
     lineHeight: 18,
   },
+  sceneCheckmark: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+  },
   brightnessContainer: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#f8f8f8',
     padding: 16,
     borderRadius: 12,
-    gap: 16,
+    gap: 12,
   },
   brightnessRow: {
     flexDirection: 'row',
@@ -447,13 +640,39 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
+    backgroundColor: '#FFD700',
   },
+  // Weekdays
+  weekdaysContainer: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  weekdayButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#f5f5f5',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  weekdayButtonActive: {
+    backgroundColor: '#000',
+  },
+  weekdayText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#999',
+  },
+  weekdayTextActive: {
+    color: '#fff',
+  },
+  // Sound Profile
   soundProfileItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#f8f8f8',
     borderRadius: 12,
     marginBottom: 8,
   },
@@ -469,27 +688,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
   },
-  enableRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 12,
-  },
-  enableContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  enableTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  enableSubtitle: {
-    fontSize: 12,
-    color: '#666',
-  },
+  // Footer
   footer: {
     padding: 20,
     borderTopWidth: 1,
@@ -507,3 +706,5 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+
+export default AlarmModal;

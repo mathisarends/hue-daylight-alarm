@@ -1,5 +1,5 @@
-from daylight_alarm.domain.events import DomainEvent
-from daylight_alarm.infrastructure.event_handlers import EventHandler
+from backend.src.domain.events import DomainEvent
+from backend.src.infrastructure.event_handlers import EventHandler
 
 
 class EventDispatcher:

@@ -1,8 +1,9 @@
 from uuid import UUID
 from sqlmodel import Session, select
-from daylight_alarm.domain.aggregates import SunriseAlarm
-from daylight_alarm.infrastructure.persistence.models import AlarmModel
-from daylight_alarm.infrastructure.persistence.mappers import to_model, to_domain
+
+from backend.src.domain.aggregates import SunriseAlarm
+from backend.src.infrastructure.persistence.mappers import to_domain, to_model
+from backend.src.infrastructure.persistence.models import AlarmModel
 
 
 class SQLiteAlarmRepository:

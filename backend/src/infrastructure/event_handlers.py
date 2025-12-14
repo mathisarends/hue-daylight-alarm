@@ -3,8 +3,8 @@ import asyncio
 from typing import Protocol
 from uuid import UUID
 
-from daylight_alarm.domain.aggregates import SunriseAlarm
-from daylight_alarm.domain.events import (
+from backend.src.domain.aggregates import SunriseAlarm
+from backend.src.domain.events import (
     AlarmCancelled,
     AlarmCompleted,
     AlarmStarted,
@@ -12,8 +12,8 @@ from daylight_alarm.domain.events import (
     DomainEvent,
     WaitRequested,
 )
-from daylight_alarm.domain.value_objects import Brightness
-from daylight_alarm.infrastructure.ports import AudioService
+from backend.src.domain.value_objects import Brightness
+from backend.src.infrastructure.ports import AudioService
 
 
 class RoomService(Protocol):

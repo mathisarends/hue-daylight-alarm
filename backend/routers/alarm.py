@@ -2,7 +2,7 @@ from uuid import UUID, uuid4
 
 from fastapi import APIRouter, HTTPException
 
-from api.dependencies import InjectedAlarmRepository
+from backend.dependencies import InjectedAlarmRepository
 
 router = APIRouter(prefix="/alarms", tags=["Alarms"])
 

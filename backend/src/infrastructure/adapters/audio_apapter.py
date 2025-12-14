@@ -1,8 +1,7 @@
 import asyncio
+from backend.src.domain.value_objects import AudioFile
+from backend.src.infrastructure.ports import AudioService
 import pygame
-
-from daylight_alarm.domain.value_objects import AudioFile
-from daylight_alarm.infrastructure.ports import AudioService
 
 
 class PygameAudioService(AudioService):

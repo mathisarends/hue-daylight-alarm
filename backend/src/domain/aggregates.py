@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Callable
 from uuid import UUID, uuid4
 
-from daylight_alarm.domain.events import (
+from backend.src.domain.events import (
     AlarmCancelled,
     AlarmCompleted,
     AlarmStarted,
@@ -10,7 +10,7 @@ from daylight_alarm.domain.events import (
     DomainEvent,
     WaitRequested,
 )
-from daylight_alarm.domain.value_objects import (
+from backend.src.domain.value_objects import (
     AlarmStatus,
     Brightness,
     BrightnessRange,

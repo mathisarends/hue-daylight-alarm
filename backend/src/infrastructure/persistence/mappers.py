@@ -1,12 +1,12 @@
-from daylight_alarm.domain.aggregates import SunriseAlarm
-from daylight_alarm.domain.easing import ease_in_cubic, ease_in_quad, ease_linear
-from daylight_alarm.domain.value_objects import (
+from backend.src.domain.aggregates import SunriseAlarm
+from backend.src.domain.easing import ease_in_cubic, ease_in_quad, ease_linear
+from backend.src.domain.value_objects import (
     BrightnessRange,
     Duration,
     EasingType,
     TransitionSteps,
 )
-from daylight_alarm.infrastructure.persistence.models import AlarmModel
+from backend.src.infrastructure.persistence.models import AlarmModel
 
 
 _EASING_TO_ENUM = {

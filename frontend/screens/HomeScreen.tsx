@@ -60,7 +60,6 @@ export const HomeScreen: React.FC = () => {
 
   const handleSaveAlarm = (alarm: AlarmConfig) => {
     console.log('Alarm saved:', alarm);
-    // TODO: Add alarm to state/backend
   };
 
   const handleRoomPress = (roomId: string) => {

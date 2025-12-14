@@ -1,7 +1,7 @@
 from typing import Protocol
 from uuid import UUID
 
-from daylight_alarm.domain.aggregates import SunriseAlarm
+from backend.src.domain.aggregates import SunriseAlarm
 
 
 class AlarmRepository(Protocol):

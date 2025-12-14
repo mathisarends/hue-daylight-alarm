@@ -1,15 +1,15 @@
 from typing import Callable
 
-from daylight_alarm.application.event_dispatcher import EventDispatcher
-from daylight_alarm.domain.aggregates import SunriseAlarm
-from daylight_alarm.domain.easing import ease_in_cubic
-from daylight_alarm.domain.value_objects import (
+from backend.src.application.event_dispatcher import EventDispatcher
+from backend.src.domain.aggregates import SunriseAlarm
+from backend.src.domain.easing import ease_in_cubic
+from backend.src.domain.value_objects import (
     BrightnessRange,
     Duration,
     SoundProfile,
     TransitionSteps,
 )
-from daylight_alarm.infrastructure.event_handlers import AlarmAudioHandler
+from backend.src.infrastructure.event_handlers import AlarmAudioHandler
 
 
 class StartSunriseAlarmUseCase:

@@ -1,9 +1,9 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
-from daylight_alarm.infrastructure.persistence.database import db_config
+from backend.src.infrastructure.persistence.database import db_config
 
-from api.routers import api_v1
+from backend.routers import api_v1
 
 
 @asynccontextmanager
@@ -21,3 +21,8 @@ app = FastAPI(
 )
 
 app.include_router(api_v1)
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run("backend.main:app", host="127.0.0.1", port=8000, reload=True)
