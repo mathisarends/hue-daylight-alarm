@@ -40,3 +40,17 @@ class AlarmCompleted(DomainEvent):
 class AlarmCancelled(DomainEvent):
     room_name: str
     at_step: int
+
+
+@dataclass(frozen=True)
+class AlarmScheduled(DomainEvent):
+    room_name: str
+    scene_name: str
+    scheduled_hour: int
+    scheduled_minute: int
+
+
+@dataclass(frozen=True)
+class AlarmTriggered(DomainEvent):
+    room_name: str
+    scene_name: str

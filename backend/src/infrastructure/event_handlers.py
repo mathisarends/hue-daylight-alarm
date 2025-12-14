@@ -13,7 +13,7 @@ from backend.src.domain.events import (
     WaitRequested,
 )
 from backend.src.domain.value_objects import Brightness
-from backend.src.infrastructure.ports import AudioService
+from backend.src.infrastructure.audio import AudioPlayer
 
 
 class RoomService(Protocol):
@@ -75,7 +75,7 @@ class AlarmAudioHandler(Protocol):
 
 
 class AudioOnAlarmStartedHandler(EventHandler, AlarmAudioHandler):
-    def __init__(self, audio_service: AudioService):
+    def __init__(self, audio_service: AudioPlayer):
         self._audio_service = audio_service
         self._alarms: dict[UUID, SunriseAlarm] = {}
 
@@ -96,7 +96,7 @@ class AudioOnAlarmStartedHandler(EventHandler, AlarmAudioHandler):
 
 
 class AudioOnAlarmCompletedHandler(EventHandler, AlarmAudioHandler):
-    def __init__(self, audio_service: AudioService):
+    def __init__(self, audio_service: AudioPlayer):
         self._audio_service = audio_service
         self._alarms: dict[UUID, SunriseAlarm] = {}
 
@@ -117,7 +117,7 @@ class AudioOnAlarmCompletedHandler(EventHandler, AlarmAudioHandler):
 
 
 class AudioOnAlarmCancelledHandler(EventHandler):
-    def __init__(self, audio_service: AudioService):
+    def __init__(self, audio_service: AudioPlayer):
         self._audio_service = audio_service
 
     def can_handle(self, event: DomainEvent) -> bool:

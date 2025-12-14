@@ -7,8 +7,10 @@ requires-python = ">=3.14"
 dependencies = [
     "fastapi>=0.124.0",
     "hueify>=0.2.0",
+    "hypercorn>=0.18.0",
     "pygame-ce>=2.5.6",
     "python-dotenv>=1.2.1",
+    "soco>=0.30.12",
     "sqlmodel>=0.0.27",
 ]
 

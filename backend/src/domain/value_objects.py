@@ -128,7 +128,26 @@ class AudioDirectory:
 
 
 class AlarmStatus(StrEnum):
+    SCHEDULED = "scheduled"
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
     CANCELLED = "cancelled"
+
+
+@dataclass(frozen=True)
+class ScheduledTime:
+    hour: int
+    minute: int
+
+    def __post_init__(self):
+        if not (0 <= self.hour <= 23):
+            raise ValueError("Hour must be between 0 and 23")
+        if not (0 <= self.minute <= 59):
+            raise ValueError("Minute must be between 0 and 59")
+
+    def to_seconds_from_midnight(self) -> int:
+        return self.hour * 3600 + self.minute * 60
+
+    def __str__(self) -> str:
+        return f"{self.hour:02d}:{self.minute:02d}"

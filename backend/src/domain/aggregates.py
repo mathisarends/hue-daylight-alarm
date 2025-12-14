@@ -5,7 +5,9 @@ from uuid import UUID, uuid4
 from backend.src.domain.events import (
     AlarmCancelled,
     AlarmCompleted,
+    AlarmScheduled,
     AlarmStarted,
+    AlarmTriggered,
     BrightnessChangeRequested,
     DomainEvent,
     WaitRequested,
@@ -15,6 +17,7 @@ from backend.src.domain.value_objects import (
     Brightness,
     BrightnessRange,
     Duration,
+    ScheduledTime,
     SoundProfile,
     TransitionSteps,
 )
@@ -30,6 +33,7 @@ class SunriseAlarm:
         steps: TransitionSteps = None,
         easing_function: Callable[[float], float] = None,
         sound_profile: SoundProfile = None,
+        scheduled_time: ScheduledTime | None = None,
     ):
         self._id = uuid4()
         self._room_name = room_name
@@ -45,8 +49,10 @@ class SunriseAlarm:
             easing_function if easing_function is not None else (lambda t: t)
         )
         self._sound_profile = sound_profile
+        self._scheduled_time = scheduled_time
 
-        self._status = AlarmStatus.PENDING
+        # Status depends on whether alarm is scheduled or immediate
+        self._status = AlarmStatus.SCHEDULED if scheduled_time else AlarmStatus.PENDING
         self._current_step = 0
         self._domain_events: list[DomainEvent] = []
 
@@ -94,16 +100,46 @@ class SunriseAlarm:
     def sound_profile(self) -> SoundProfile | None:
         return self._sound_profile
 
+    @property
+    def scheduled_time(self) -> ScheduledTime | None:
+        return self._scheduled_time
+
     def collect_events(self) -> list[DomainEvent]:
         events = self._domain_events.copy()
         self._domain_events.clear()
         return events
 
-    def start(self) -> None:
-        if not self._can_start():
-            raise ValueError(f"Cannot start alarm in status {self._status}")
+    def schedule(self) -> None:
+        if self._status != AlarmStatus.PENDING:
+            raise ValueError(f"Cannot schedule alarm in status {self._status}")
+        if self._scheduled_time is None:
+            raise ValueError("Cannot schedule alarm without scheduled_time")
+
+        self._status = AlarmStatus.SCHEDULED
+        self._raise_event(
+            AlarmScheduled(
+                aggregate_id=self._id,
+                occurred_at=datetime.now(),
+                room_name=self._room_name,
+                scene_name=self._scene_name,
+                scheduled_hour=self._scheduled_time.hour,
+                scheduled_minute=self._scheduled_time.minute,
+            )
+        )
+
+    def trigger(self) -> None:
+        if self._status != AlarmStatus.SCHEDULED:
+            raise ValueError(f"Cannot trigger alarm in status {self._status}")
 
         self._status = AlarmStatus.RUNNING
+        self._raise_event(
+            AlarmTriggered(
+                aggregate_id=self._id,
+                occurred_at=datetime.now(),
+                room_name=self._room_name,
+                scene_name=self._scene_name,
+            )
+        )
         self._raise_event(
             AlarmStarted(
                 aggregate_id=self._id,
@@ -115,9 +151,6 @@ class SunriseAlarm:
 
     def _raise_event(self, event: DomainEvent) -> None:
         self._domain_events.append(event)
-
-    def _can_start(self) -> bool:
-        return self._status == AlarmStatus.PENDING
 
     def progress_step(self) -> None:
         if not self._can_progress():
@@ -180,7 +213,7 @@ class SunriseAlarm:
         )
 
     def _can_cancel(self) -> bool:
-        return self._status == AlarmStatus.RUNNING
+        return self._status in {AlarmStatus.SCHEDULED, AlarmStatus.RUNNING}
 
     def _calculate_brightness_for_step(self, step: int) -> int:
         progress = step / self._steps.count
