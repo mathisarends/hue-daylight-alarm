@@ -493,7 +493,7 @@ wheels = [
 
 [[package]]
 name = "hueify"
-version = "0.5.0"
+version = "0.6.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "httpx", extra = ["http2"] },
@@ -501,9 +501,9 @@ dependencies = [
     { name = "pydantic" },
     { name = "pydantic-settings" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c8/29/a72ae38819eaf2deb10bc924b7f41ccc4ad2d8a504f487678455489fa214/hueify-0.5.0.tar.gz", hash = "sha256:4d7ff9271372d3961e7807d7a8442017388fe0e5254c35dd77e1b34f639367ff", size = 105375, upload-time = "2026-03-31T12:19:46.763Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ba/83/a9780298eb3c8b17d6f938ac7c6d679636050cedd805c49739fe44748733/hueify-0.6.1.tar.gz", hash = "sha256:85ca613993d119a372ecbd8ea0b28be2d17132f802c9a8535400d12445798e42", size = 107805, upload-time = "2026-07-26T05:20:30.977Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f0/67/77bf037dd6c276bdf148f077d85328f08c77d30424fd87be81f40e1220f5/hueify-0.5.0-py3-none-any.whl", hash = "sha256:ac993736b61eabd7172f168d97d9c5dd08d3fd3f858b26389d0413288b5d0c53", size = 52392, upload-time = "2026-03-31T12:19:45.647Z" },
+    { url = "https://files.pythonhosted.org/packages/64/84/1d92f616f41983e499421c8ff6f5534ab99ed2777d70977dcda28425d290/hueify-0.6.1-py3-none-any.whl", hash = "sha256:a554715918828c3d400da16126dc673c218ca8a476e60b025c81d9fa07383962", size = 54050, upload-time = "2026-07-26T05:20:29.869Z" },
 ]
 
 [[package]]
@@ -541,7 +541,7 @@ requires-dist = [
     { name = "alembic", specifier = ">=1.18.4" },
     { name = "dishka", specifier = ">=1.9.1" },
     { name = "fastapi", specifier = ">=0.124.0" },
-    { name = "hueify", specifier = ">=0.5.0" },
+    { name = "hueify", specifier = ">=0.6.1" },
     { name = "numpy", specifier = ">=2.4.4" },
     { name = "pydantic", specifier = ">=2.12.5" },
     { name = "pydantic-settings", specifier = ">=2.13.1" },
