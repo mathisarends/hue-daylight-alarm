@@ -1,4 +1,5 @@
 from unittest.mock import AsyncMock, MagicMock
+from uuid import UUID
 
 from huerise.features.devices.application import SoundCatalog
 from huerise.features.devices.domain import Sound, SoundCategory
@@ -10,7 +11,7 @@ async def test_downloads_the_sound_the_id_points_at() -> None:
     catalog = MagicMock(spec=SoundCatalog)
     catalog.get = AsyncMock(
         return_value=Sound(
-            id="wake_up/bowls",
+            id=UUID("1693baba-146e-5b14-acf2-6f76554f36e9"),
             name="bowls",
             category=SoundCategory.WAKE_UP,
             storage_path="wake_up_sounds/wake-up-bowls.mp3",
@@ -22,7 +23,7 @@ async def test_downloads_the_sound_the_id_points_at() -> None:
     player = SoundDeviceAudioPlayer(catalog, storage)
     player._play_blocking = MagicMock()
 
-    await player.play("wake_up/bowls", volume=40)
+    await player.play(UUID("1693baba-146e-5b14-acf2-6f76554f36e9"), volume=40)
 
     storage.download_bytes.assert_awaited_once_with("wake_up_sounds/wake-up-bowls.mp3")
     player._play_blocking.assert_called_once_with(b"audio data")

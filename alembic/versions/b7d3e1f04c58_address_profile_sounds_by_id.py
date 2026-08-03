@@ -12,16 +12,16 @@ Create Date: 2026-08-03
 """
 
 from collections.abc import Sequence
-from typing import Union
+from uuid import NAMESPACE_URL, uuid5
 
 import sqlalchemy as sa
 
 from alembic import op
 
 revision: str = "b7d3e1f04c58"
-down_revision: Union[str, Sequence[str], None] = "a1c7f4d9b2e3"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | Sequence[str] | None = "a1c7f4d9b2e3"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 # Spelled out rather than imported from the devices feature: migrations must
 # keep running even after the categories change.
@@ -38,15 +38,13 @@ def _to_sound_id(file_name: str) -> str:
     for category in _CATEGORIES:
         prefix = f"{category.replace('_', '-')}-"
         if name.startswith(prefix):
-            return f"{category}/{name.removeprefix(prefix)}"
-    return name
-
-
-def _to_file_name(sound_id: str) -> str:
-    category, separator, name = sound_id.partition("/")
-    if not separator or category not in _CATEGORIES:
-        return sound_id
-    return f"{category.replace('_', '-')}-{name}.mp3"
+            return str(
+                uuid5(
+                    NAMESPACE_URL,
+                    f"huerise:sound:{category}/{name.removeprefix(prefix)}",
+                )
+            )
+    return str(uuid5(NAMESPACE_URL, f"huerise:sound:legacy:{name}"))
 
 
 def _convert(columns: Sequence[str], convert) -> None:
@@ -70,10 +68,12 @@ def upgrade() -> None:
 
     _convert([new_name for _, new_name in _RENAMES], _to_sound_id)
 
+    with op.batch_alter_table("alarm_profiles") as batch:
+        for _, column in _RENAMES:
+            batch.alter_column(column, type_=sa.Uuid())
+
 
 def downgrade() -> None:
-    _convert([new_name for _, new_name in _RENAMES], _to_file_name)
-
     with op.batch_alter_table("alarm_profiles") as batch:
         for old_name, new_name in _RENAMES:
-            batch.alter_column(new_name, new_column_name=old_name)
+            batch.alter_column(new_name, new_column_name=old_name, type_=sa.String())

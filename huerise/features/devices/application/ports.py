@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
+from uuid import UUID
 
 from huerise.features.devices.domain import Room
 
 
 class AudioPlayer(ABC):
     @abstractmethod
-    async def play(self, sound_id: str, volume: int) -> None: ...
+    async def play(self, sound_id: UUID, volume: int) -> None: ...
 
     @abstractmethod
     async def stop(self) -> None: ...

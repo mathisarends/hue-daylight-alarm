@@ -42,7 +42,7 @@ class SunriseSchema(BaseModel):
 
 
 class RingtoneSchema(BaseModel):
-    sound_id: str = Field(description=_SOUND_ID_DESCRIPTION)
+    sound_id: UUID = Field(description=_SOUND_ID_DESCRIPTION)
     volume: int = Field(default=80, ge=0, le=100)
 
     def to_domain(self) -> RingtoneConfig:
@@ -54,7 +54,7 @@ class RingtoneSchema(BaseModel):
 
 
 class IntroSchema(BaseModel):
-    sound_id: str = Field(description=_SOUND_ID_DESCRIPTION)
+    sound_id: UUID = Field(description=_SOUND_ID_DESCRIPTION)
 
     def to_domain(self) -> IntroConfig:
         return IntroConfig(sound_id=self.sound_id)

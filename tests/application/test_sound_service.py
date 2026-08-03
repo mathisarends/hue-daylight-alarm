@@ -1,4 +1,5 @@
 import asyncio
+from uuid import UUID
 
 import pytest
 
@@ -16,18 +17,19 @@ class TestSoundService:
         audio = make_audio()
         service = make_sound_service(audio)
 
-        sound = await service.preview("wake_up/bowls", volume=30)
+        sound_id = UUID("1693baba-146e-5b14-acf2-6f76554f36e9")
+        sound = await service.preview(sound_id, volume=30)
         await asyncio.sleep(0)
 
-        assert sound.id == "wake_up/bowls"
+        assert sound.id == sound_id
         audio.stop.assert_awaited_once()
-        audio.play.assert_awaited_once_with("wake_up/bowls", 30)
+        audio.play.assert_awaited_once_with(sound_id, 30)
 
     async def test_preview_rejects_an_unknown_sound(self) -> None:
         audio = make_audio()
         service = make_sound_service(audio)
 
         with pytest.raises(SoundNotFoundError):
-            await service.preview("wake_up/nope")
+            await service.preview(UUID("680dc52c-db89-5a81-aaa2-860a89ccef39"))
 
         audio.play.assert_not_awaited()

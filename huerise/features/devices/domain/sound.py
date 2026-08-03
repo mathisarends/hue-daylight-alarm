@@ -1,7 +1,9 @@
 from dataclasses import dataclass
 from enum import StrEnum
+from uuid import NAMESPACE_URL, UUID, uuid5
 
 _ID_SEPARATOR = "/"
+_ID_NAMESPACE = "huerise:sound:"
 
 
 class SoundCategory(StrEnum):
@@ -21,13 +23,13 @@ class SoundCategory(StrEnum):
 
 @dataclass(frozen=True, slots=True)
 class Sound:
-    """A playable audio file, addressed by a stable ``<category>/<name>`` id.
+    """A playable audio file, addressed by a stable deterministic UUID.
 
     The id is what an alarm profile stores, so it must survive a re-upload:
     it is derived from category and file name, never from the object key.
     """
 
-    id: str
+    id: UUID
     name: str
     category: SoundCategory
     storage_path: str
@@ -51,7 +53,10 @@ class Sound:
             return None
 
         return cls(
-            id=f"{category.value}{_ID_SEPARATOR}{name}",
+            id=uuid5(
+                NAMESPACE_URL,
+                f"{_ID_NAMESPACE}{category.value}{_ID_SEPARATOR}{name}",
+            ),
             name=name,
             category=category,
             storage_path=storage_path,

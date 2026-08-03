@@ -1,3 +1,5 @@
+from uuid import UUID
+
 import pytest
 
 from huerise.features.devices.domain import Sound, SoundCategory
@@ -6,14 +8,26 @@ from huerise.features.devices.domain import Sound, SoundCategory
 @pytest.mark.parametrize(
     ("storage_path", "expected_id", "expected_category"),
     [
-        ("wake_up_sounds/wake-up-bowls.mp3", "wake_up/bowls", SoundCategory.WAKE_UP),
-        ("get_up_sounds/get-up-aurora.mp3", "get_up/aurora", SoundCategory.GET_UP),
+        (
+            "wake_up_sounds/wake-up-bowls.mp3",
+            UUID("1693baba-146e-5b14-acf2-6f76554f36e9"),
+            SoundCategory.WAKE_UP,
+        ),
+        (
+            "get_up_sounds/get-up-aurora.mp3",
+            UUID("5c0806e7-7162-5be7-948e-33d349bde4a8"),
+            SoundCategory.GET_UP,
+        ),
         # A file that never got the category prefix still belongs to its folder.
-        ("get_up_sounds/aurora.wav", "get_up/aurora", SoundCategory.GET_UP),
+        (
+            "get_up_sounds/aurora.wav",
+            UUID("5c0806e7-7162-5be7-948e-33d349bde4a8"),
+            SoundCategory.GET_UP,
+        ),
     ],
 )
 def test_derives_its_id_from_category_and_file_name(
-    storage_path: str, expected_id: str, expected_category: SoundCategory
+    storage_path: str, expected_id: UUID, expected_category: SoundCategory
 ) -> None:
     sound = Sound.from_storage_path(storage_path)
 

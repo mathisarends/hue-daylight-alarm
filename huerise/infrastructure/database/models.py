@@ -44,14 +44,14 @@ class AlarmProfileModel(DatabaseEntity, table=True):
     name: str = Field(unique=True)
     is_default: bool = Field(default=False)
 
-    intro_sound_id: str
+    intro_sound_id: UUID
 
     sunrise_scene_name: str
     sunrise_duration_minutes: int
     sunrise_brightness_start: int
     sunrise_brightness_end: int
 
-    ringtone_sound_id: str
+    ringtone_sound_id: UUID
     ringtone_volume: int
 
 

@@ -1,9 +1,12 @@
+from uuid import UUID
+
+
 class DeviceError(Exception):
     """Base for everything the devices feature raises."""
 
 
 class SoundNotFoundError(DeviceError):
-    def __init__(self, sound_id: str) -> None:
+    def __init__(self, sound_id: UUID) -> None:
         super().__init__(f"Sound {sound_id} not found")
 
 

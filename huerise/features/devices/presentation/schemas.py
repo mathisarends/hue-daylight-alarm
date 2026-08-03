@@ -1,4 +1,5 @@
 from typing import Self
+from uuid import UUID
 
 from pydantic import BaseModel, Field
 
@@ -9,7 +10,7 @@ from huerise.features.devices.domain import Room, Sound, SoundCategory
 class SoundRead(BaseModel):
     """A sound as an alarm profile refers to it."""
 
-    id: str = Field(description="Store this in a profile, e.g. 'wake_up/bowls'.")
+    id: UUID = Field(description="Store this UUID in a profile.")
     name: str
     category: SoundCategory
 
@@ -19,7 +20,7 @@ class SoundRead(BaseModel):
 
 
 class SoundPreviewRequest(BaseModel):
-    sound_id: str
+    sound_id: UUID
     volume: int = Field(default=PREVIEW_VOLUME, ge=0, le=100)
 
 

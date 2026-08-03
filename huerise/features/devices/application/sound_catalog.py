@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from huerise.features.devices.domain import Sound, SoundCategory, SoundNotFoundError
 from huerise.infrastructure.storage import StorageBackend
 
@@ -12,7 +14,7 @@ class SoundCatalog:
 
     def __init__(self, storage: StorageBackend) -> None:
         self._storage = storage
-        self._sounds: dict[str, Sound] | None = None
+        self._sounds: dict[UUID, Sound] | None = None
 
     async def list_sounds(self, category: SoundCategory | None = None) -> list[Sound]:
         sounds = (await self._load()).values()
@@ -20,7 +22,7 @@ class SoundCatalog:
             sounds = [sound for sound in sounds if sound.category is category]
         return sorted(sounds, key=lambda sound: (sound.category, sound.name))
 
-    async def get(self, sound_id: str) -> Sound:
+    async def get(self, sound_id: UUID) -> Sound:
         sounds = await self._load()
         if sound_id not in sounds:
             sounds = await self._refresh()
@@ -28,13 +30,13 @@ class SoundCatalog:
             raise SoundNotFoundError(sound_id)
         return sounds[sound_id]
 
-    async def _load(self) -> dict[str, Sound]:
+    async def _load(self) -> dict[UUID, Sound]:
         if self._sounds is None:
             return await self._refresh()
         return self._sounds
 
-    async def _refresh(self) -> dict[str, Sound]:
-        sounds: dict[str, Sound] = {}
+    async def _refresh(self) -> dict[UUID, Sound]:
+        sounds: dict[UUID, Sound] = {}
         for category in SoundCategory:
             for file in await self._storage.list_files(f"{category.folder}/"):
                 sound = Sound.from_storage_path(file.storage_path)

@@ -1,6 +1,7 @@
 import asyncio
 import threading
 from io import BytesIO
+from uuid import UUID
 
 import numpy as np
 import sounddevice as sd
@@ -19,7 +20,7 @@ class SoundDeviceAudioPlayer(AudioPlayer):
         self._volume = 100
         self._stop_event = threading.Event()
 
-    async def play(self, sound_id: str, volume: int) -> None:
+    async def play(self, sound_id: UUID, volume: int) -> None:
         await self.stop()
         self._volume = volume
         self._stop_event.clear()

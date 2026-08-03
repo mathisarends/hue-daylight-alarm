@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime, time, timedelta, timezone
 from enum import IntEnum, StrEnum
+from uuid import UUID
 from zoneinfo import ZoneInfo
 
 DEFAULT_TIMEZONE = ZoneInfo("Europe/Berlin")
@@ -110,7 +111,7 @@ class Schedule:
 
 @dataclass(frozen=True)
 class IntroConfig:
-    sound_id: str
+    sound_id: UUID
 
 
 @dataclass(frozen=True)
@@ -133,7 +134,7 @@ class SunriseConfig:
 
 @dataclass(frozen=True)
 class RingtoneConfig:
-    sound_id: str
+    sound_id: UUID
     volume: int = 80
 
     def __post_init__(self) -> None:
