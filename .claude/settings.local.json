@@ -2,7 +2,30 @@
   "permissions": {
     "allow": [
       "Bash(uv run:*)",
-      "Bash(python -m pytest tests/ -v)"
+      "Bash(python -m pytest tests/ -v)",
+      "PowerShell(git *)",
+      "Bash(python *)",
+      "Bash(uv add *)",
+      "Bash(rm -f /tmp/mig.db)",
+      "Bash(DATABASE_URL=\"sqlite:///./data/_migtest.db\" uv run alembic upgrade head)",
+      "Bash(DATABASE_URL=\"sqlite:///./data/_migtest.db\" uv run alembic check)",
+      "Bash(DATABASE_URL=\"sqlite:///./data/_migtest.db\" uv run alembic downgrade base)",
+      "Bash(git add *)",
+      "Bash(git commit -q -m '@ *)",
+      "Bash(sed '1d;$d')",
+      "Bash(git commit *)",
+      "Read(//c/code/huerise/tests/presentation//**)",
+      "Read(//c/code/huerise/tests/application/**)",
+      "Bash(git restore *)",
+      "Bash(git revert *)",
+      "Read(//c/code/huerise/**)",
+      "Bash(git rm *)",
+      "Bash(git mv *)",
+      "Bash(git checkout *)",
+      "Bash(git merge *)",
+      "Bash(git branch *)",
+      "Read(//c/code/huerise/tests/presentation/**)",
+      "Bash(API_ACCESS_TOKEN=abc123 uv run python -c ' *)"
     ]
   }
 }

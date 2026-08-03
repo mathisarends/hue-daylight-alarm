@@ -91,18 +91,43 @@ Requests with a missing, malformed, or wrong token get `401 Unauthorized` with a
 Interactive docs are available at `http://localhost:8000/docs` (Swagger UI) —
 click **Authorize** and paste the token to call endpoints from there.
 
-Key endpoints:
+### Alarms
 
-| Method | Path                      | Description                     |
-| ------ | ------------------------- | ------------------------------- |
-| GET    | `/alarms`                 | List all alarms                 |
-| POST   | `/alarms/one-time`        | Create a one-time alarm         |
-| POST   | `/alarms/recurring`       | Create a recurring alarm series |
-| POST   | `/alarms/{id}/activate`   | Activate an alarm               |
-| POST   | `/alarms/{id}/deactivate` | Deactivate an alarm             |
-| POST   | `/alarms/{id}/cancel`     | Cancel a running alarm          |
-| DELETE | `/alarms/{id}`            | Delete an alarm                 |
-| DELETE | `/alarms/series/{id}`     | Delete a recurring series       |
+| Method | Path                               | Description                         |
+| ------ | ---------------------------------- | ----------------------------------- |
+| GET    | `/alarms`                          | List all alarms                     |
+| POST   | `/alarms`                          | Create an alarm                     |
+| GET    | `/alarms/{alarm_id}`               | Get an alarm                        |
+| POST   | `/alarms/{alarm_id}/enable`        | Enable an alarm                     |
+| POST   | `/alarms/{alarm_id}/disable`       | Disable an alarm                    |
+| POST   | `/alarms/{alarm_id}/snooze`        | Snooze an alarm occurrence          |
+| POST   | `/alarms/{alarm_id}/dismiss`       | Dismiss an alarm occurrence         |
+| GET    | `/alarms/{alarm_id}/occurrences`   | List recent alarm occurrences       |
+| DELETE | `/alarms/{alarm_id}`               | Delete an alarm                     |
+
+### Alarm profiles
+
+| Method | Path              | Description              |
+| ------ | ----------------- | ------------------------ |
+| GET    | `/alarm-profiles` | List all alarm profiles  |
+| POST   | `/alarm-profiles` | Create an alarm profile  |
+
+### Rooms and scenes
+
+| Method | Path                                                   | Description                         |
+| ------ | ------------------------------------------------------ | ----------------------------------- |
+| GET    | `/rooms`                                               | List all Hue rooms                  |
+| GET    | `/rooms/{room_name}`                                   | Get a Hue room and its scenes       |
+| POST   | `/rooms/{room_name}/scenes/{scene_name}/activate`     | Activate a scene                    |
+
+### Sounds
+
+| Method | Path              | Description                              |
+| ------ | ----------------- | ---------------------------------------- |
+| GET    | `/sounds`         | List available sounds, optionally filtered by category |
+| POST   | `/sounds/preview` | Preview a sound                           |
+| POST   | `/sounds/stop`    | Stop the current sound                    |
+| POST   | `/sounds/volume`  | Set playback volume                       |
 
 ## Local Development
 
