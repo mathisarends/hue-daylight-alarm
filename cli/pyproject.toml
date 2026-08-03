@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 [project.scripts]
-huerise = "huerise_cli.main:app"
+huerise = "huerise_cli.main:main"
 
 [build-system]
 requires = ["hatchling"]
