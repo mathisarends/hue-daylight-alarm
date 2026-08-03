@@ -1,13 +1,14 @@
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from huerise.features.alarm.domain.views import (
     IntroConfig,
     RingtoneConfig,
     SunriseConfig,
 )
+from huerise.shared.ddd import Aggregate
 
 
-class AlarmProfile:
+class AlarmProfile(Aggregate):
     """Reusable behaviour of an alarm: intro, sunrise curve, ringtone."""
 
     def __init__(
@@ -19,7 +20,7 @@ class AlarmProfile:
         is_default: bool = False,
         id: UUID | None = None,
     ) -> None:
-        self.id = id if id is not None else uuid4()
+        super().__init__(id)
         self.name = name
         self.intro_config = intro_config
         self.sunrise_config = sunrise_config

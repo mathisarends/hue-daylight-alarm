@@ -1,9 +1,6 @@
-"""Central ORM schema.
-
-All tables live here instead of next to the feature that owns them: the schema
-is small enough that one place beats colocation, and Alembic sees the complete
-metadata through a single import.
-"""
+# All tables live here instead of next to the feature that owns them: the schema
+# is small enough that one place beats colocation, and Alembic sees the complete
+# metadata through a single import.
 
 from datetime import datetime
 from uuid import UUID, uuid4

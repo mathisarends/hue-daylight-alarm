@@ -1,11 +1,12 @@
 from datetime import datetime, timedelta, timezone
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from huerise.features.alarm.domain.exceptions import (
     InvalidOccurrenceTransitionError,
     OccurrenceNotRunningError,
 )
 from huerise.features.alarm.domain.views import OccurrenceState
+from huerise.shared.ddd import Entity
 
 _WAITING_STATES = {OccurrenceState.PENDING, OccurrenceState.SNOOZED}
 _RUNNING_STATES = {OccurrenceState.SUNRISE, OccurrenceState.RINGING}
@@ -16,7 +17,7 @@ _FINAL_STATES = {
 }
 
 
-class AlarmOccurrence:
+class AlarmOccurrence(Entity):
     """One concrete wake-up run of an alarm."""
 
     def __init__(
@@ -33,7 +34,7 @@ class AlarmOccurrence:
         if scheduled_for.tzinfo is None:
             raise ValueError("scheduled_for must be timezone-aware")
 
-        self.id = id if id is not None else uuid4()
+        super().__init__(id)
         self.alarm_id = alarm_id
         self.scheduled_for = scheduled_for
         self.state = state

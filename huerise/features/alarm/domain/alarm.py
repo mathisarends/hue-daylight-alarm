@@ -1,11 +1,12 @@
 from datetime import datetime, timezone
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from huerise.features.alarm.domain.exceptions import AlarmAlreadyInStateError
 from huerise.features.alarm.domain.views import Schedule
+from huerise.shared.ddd import Aggregate
 
 
-class Alarm:
+class Alarm(Aggregate):
     """The wake-up rule. Carries no runtime state -- that lives on occurrences."""
 
     def __init__(
@@ -18,15 +19,12 @@ class Alarm:
         id: UUID | None = None,
         created_at: datetime | None = None,
     ) -> None:
-        self.id = id if id is not None else uuid4()
+        super().__init__(id, created_at)
         self.label = label
         self.schedule = schedule
         self.profile_id = profile_id
         self.room_name = room_name
         self.is_enabled = is_enabled
-        self.created_at = (
-            created_at if created_at is not None else datetime.now(timezone.utc)
-        )
 
     def enable(self) -> None:
         if self.is_enabled:
