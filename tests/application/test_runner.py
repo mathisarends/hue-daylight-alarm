@@ -76,7 +76,7 @@ class TestRun:
             alarm.room_name, profile.sunrise_config.scene_name
         )
         audio.play.assert_any_await(
-            profile.ringtone_config.audio_file, profile.ringtone_config.volume
+            profile.ringtone_config.sound_id, profile.ringtone_config.volume
         )
         assert occurrences.items[occurrence.id].state is OccurrenceState.DISMISSED
 

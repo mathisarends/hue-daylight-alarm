@@ -84,26 +84,26 @@ class SunriseSchema(BaseModel):
 
 
 class RingtoneSchema(BaseModel):
-    audio_file: str
+    sound_id: str
     volume: int = Field(default=80, ge=0, le=100)
 
     def to_domain(self) -> RingtoneConfig:
-        return RingtoneConfig(audio_file=self.audio_file, volume=self.volume)
+        return RingtoneConfig(sound_id=self.sound_id, volume=self.volume)
 
     @classmethod
     def from_domain(cls, config: RingtoneConfig) -> Self:
-        return cls(audio_file=config.audio_file, volume=config.volume)
+        return cls(sound_id=config.sound_id, volume=config.volume)
 
 
 class IntroSchema(BaseModel):
-    audio_file: str
+    sound_id: str
 
     def to_domain(self) -> IntroConfig:
-        return IntroConfig(audio_file=self.audio_file)
+        return IntroConfig(sound_id=self.sound_id)
 
     @classmethod
     def from_domain(cls, config: IntroConfig) -> Self:
-        return cls(audio_file=config.audio_file)
+        return cls(sound_id=config.sound_id)
 
 
 class AlarmCreate(BaseModel):

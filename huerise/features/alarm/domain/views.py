@@ -110,7 +110,7 @@ class Schedule:
 
 @dataclass(frozen=True)
 class IntroConfig:
-    audio_file: str
+    sound_id: str
 
 
 @dataclass(frozen=True)
@@ -133,7 +133,7 @@ class SunriseConfig:
 
 @dataclass(frozen=True)
 class RingtoneConfig:
-    audio_file: str
+    sound_id: str
     volume: int = 80
 
     def __post_init__(self) -> None:

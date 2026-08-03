@@ -22,8 +22,43 @@ from huerise.features.alarm.domain import (
     Weekday,
 )
 from huerise.features.devices.application import AudioPlayer, Lights
+from huerise.infrastructure.storage import StorageBackend, StorageFile, UploadResponse
 
 BERLIN = ZoneInfo("Europe/Berlin")
+
+
+class FakeStorage(StorageBackend):
+    """Object storage holding nothing but the keys it was handed."""
+
+    def __init__(self, paths: list[str]) -> None:
+        self.paths = paths
+        self.list_calls = 0
+
+    async def list_files(self, path: str = "") -> list[StorageFile]:
+        self.list_calls += 1
+        return [
+            StorageFile(name=p.rsplit("/", maxsplit=1)[-1], storage_path=p)
+            for p in self.paths
+            if p.startswith(path)
+        ]
+
+    async def download_bytes(self, path: str) -> bytes:
+        raise NotImplementedError
+
+    async def upload_bytes(
+        self, path: str, data: bytes, content_type: str | None = None
+    ) -> UploadResponse:
+        raise NotImplementedError
+
+
+def make_sound_storage() -> FakeStorage:
+    return FakeStorage(
+        [
+            "wake_up_sounds/wake-up-bowls.mp3",
+            "wake_up_sounds/wake-up-mist.mp3",
+            "get_up_sounds/get-up-aurora.mp3",
+        ]
+    )
 
 
 class InMemoryAlarmRepository(AlarmRepository):
@@ -149,9 +184,9 @@ def make_profile(
     return AlarmProfile(
         name=name,
         is_default=is_default,
-        intro_config=IntroConfig(audio_file="intro.mp3"),
+        intro_config=IntroConfig(sound_id="wake_up/bowls"),
         sunrise_config=SunriseConfig(duration=sunrise_duration),
-        ringtone_config=RingtoneConfig(audio_file="alarm.mp3"),
+        ringtone_config=RingtoneConfig(sound_id="get_up/aurora"),
     )
 
 

@@ -76,6 +76,6 @@ class TestProfileRead:
 
         read = ProfileRead.from_domain(profile)
 
-        assert read.intro.audio_file == profile.intro_config.audio_file
+        assert read.intro.sound_id == profile.intro_config.sound_id
         assert read.ringtone.volume == profile.ringtone_config.volume
         assert read.sunrise.duration_minutes == 7

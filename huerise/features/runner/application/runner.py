@@ -63,7 +63,7 @@ class AlarmRunner(AlarmRunnerPort):
         sunrise = profile.sunrise_config
 
         asyncio.create_task(
-            self._audio.play(profile.intro_config.audio_file, volume=INTRO_VOLUME)
+            self._audio.play(profile.intro_config.sound_id, volume=INTRO_VOLUME)
         )
         await self._lights.activate_scene(alarm.room_name, sunrise.scene_name)
 
@@ -77,7 +77,7 @@ class AlarmRunner(AlarmRunnerPort):
     async def _run_ringtone(self, profile: AlarmProfile) -> None:
         ringtone = profile.ringtone_config
         await self._audio.stop()
-        await self._audio.play(ringtone.audio_file, ringtone.volume)
+        await self._audio.play(ringtone.sound_id, ringtone.volume)
 
     async def _load(self, alarm_id: UUID) -> tuple[Alarm, AlarmProfile] | None:
         async with self._unit_of_work_factory.create() as uow:

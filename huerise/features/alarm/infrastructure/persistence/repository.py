@@ -49,7 +49,7 @@ class SQLAlarmProfileRepository(
             id=orm.id,
             name=orm.name,
             is_default=orm.is_default,
-            intro_config=IntroConfig(audio_file=orm.intro_audio_file),
+            intro_config=IntroConfig(sound_id=orm.intro_sound_id),
             sunrise_config=SunriseConfig(
                 scene_name=orm.sunrise_scene_name,
                 duration=timedelta(minutes=orm.sunrise_duration_minutes),
@@ -57,7 +57,7 @@ class SQLAlarmProfileRepository(
                 brightness_end=orm.sunrise_brightness_end,
             ),
             ringtone_config=RingtoneConfig(
-                audio_file=orm.ringtone_audio_file,
+                sound_id=orm.ringtone_sound_id,
                 volume=orm.ringtone_volume,
             ),
         )
@@ -67,12 +67,12 @@ class SQLAlarmProfileRepository(
             id=domain.id,
             name=domain.name,
             is_default=domain.is_default,
-            intro_audio_file=domain.intro_config.audio_file,
+            intro_sound_id=domain.intro_config.sound_id,
             sunrise_scene_name=domain.sunrise_config.scene_name,
             sunrise_duration_minutes=domain.sunrise_config.duration_minutes,
             sunrise_brightness_start=domain.sunrise_config.brightness_start,
             sunrise_brightness_end=domain.sunrise_config.brightness_end,
-            ringtone_audio_file=domain.ringtone_config.audio_file,
+            ringtone_sound_id=domain.ringtone_config.sound_id,
             ringtone_volume=domain.ringtone_config.volume,
         )
 
