@@ -8,20 +8,13 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from huerise.application.ports import AudioPlayer, Lights
-from huerise.application.scheduler import AlarmRunner, AlarmScheduler
-from huerise.application.commands import (
-    ActivateAlarmCommandHandler,
-    CancelAlarmCommandHandler,
-    CreateOneTimeAlarmCommandHandler,
-    CreateRecurringAlarmCommandHandler,
-    DeactivateAlarmCommandHandler,
-    DeleteAlarmCommandHandler,
-    DeleteSeriesCommandHandler,
-    SetVolumeCommandHandler,
-    SnoozeAlarmCommandHandler,
+from huerise.application.alarm_service import (
+    AlarmRunner,
+    AlarmScheduler,
+    AlarmService,
+    AudioPlayer,
+    Lights,
 )
-from huerise.application.queries import ListAlarmsQueryHandler
 
 from huerise.domain import AlarmRepository
 from huerise.infrastructure.adapters.mock_hue import MockHueLights
@@ -71,58 +64,10 @@ class AlarmProvider(Provider):
         return SQLModelAlarmRepository(session)
 
     @provide
-    def get_list_alarms_handler(self, repo: AlarmRepository) -> ListAlarmsQueryHandler:
-        return ListAlarmsQueryHandler(repo)
-
-    @provide
-    def get_create_one_time_handler(
-        self, repo: AlarmRepository
-    ) -> CreateOneTimeAlarmCommandHandler:
-        return CreateOneTimeAlarmCommandHandler(repo)
-
-    @provide
-    def get_create_recurring_handler(
-        self, repo: AlarmRepository
-    ) -> CreateRecurringAlarmCommandHandler:
-        return CreateRecurringAlarmCommandHandler(repo)
-
-    @provide
-    def get_activate_handler(
-        self, repo: AlarmRepository
-    ) -> ActivateAlarmCommandHandler:
-        return ActivateAlarmCommandHandler(repo)
-
-    @provide
-    def get_deactivate_handler(
-        self, repo: AlarmRepository
-    ) -> DeactivateAlarmCommandHandler:
-        return DeactivateAlarmCommandHandler(repo)
-
-    @provide
-    def get_cancel_handler(self, repo: AlarmRepository) -> CancelAlarmCommandHandler:
-        return CancelAlarmCommandHandler(repo)
-
-    @provide
-    def get_delete_alarm_handler(
-        self, repo: AlarmRepository
-    ) -> DeleteAlarmCommandHandler:
-        return DeleteAlarmCommandHandler(repo)
-
-    @provide
-    def get_delete_series_handler(
-        self, repo: AlarmRepository
-    ) -> DeleteSeriesCommandHandler:
-        return DeleteSeriesCommandHandler(repo)
-
-    @provide
-    def get_snooze_handler(
+    def get_alarm_service(
         self, repo: AlarmRepository, audio: AudioPlayer
-    ) -> SnoozeAlarmCommandHandler:
-        return SnoozeAlarmCommandHandler(alarm_repository=repo, audio=audio)
-
-    @provide
-    def get_set_volume_handler(self, audio: AudioPlayer) -> SetVolumeCommandHandler:
-        return SetVolumeCommandHandler(audio=audio)
+    ) -> AlarmService:
+        return AlarmService(alarm_repository=repo, audio=audio)
 
 
 class SchedulerProvider(Provider):
