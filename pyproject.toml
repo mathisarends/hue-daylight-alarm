@@ -15,10 +15,6 @@ dependencies = [
     "sounddevice>=0.5.5",
     "soundfile>=0.13.1",
     "numpy>=2.4.4",
-]
-
-[project.optional-dependencies]
-api = [
     "fastapi>=0.124.0",
     "uvicorn[standard]>=0.34.0",
 ]

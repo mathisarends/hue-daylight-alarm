@@ -1,13 +1,7 @@
 from uuid import UUID
 
-try:
-    from dishka.integrations.fastapi import DishkaRoute, FromDishka
-    from fastapi import APIRouter
-except ImportError as e:
-    raise ImportError(
-        "API support requires 'fastapi' and 'uvicorn'. "
-        "Install with: pip install huerise[api]"
-    ) from e
+from dishka.integrations.fastapi import DishkaRoute, FromDishka
+from fastapi import APIRouter
 
 from huerise.application.commands import (
     ActivateAlarmCommand,

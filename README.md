@@ -13,18 +13,6 @@ Sunrise alarm clock powered by Philips Hue. Gradually increases light brightness
 
 Python 3.13+ · FastAPI · SQLite (aiosqlite) · SQLModel · Alembic · Dishka (DI) · [hueify](https://pypi.org/project/hueify/) · uv
 
-## Optional Extras
-
-| Extra          | Installs          | When you need it                 |
-| -------------- | ----------------- | -------------------------------- |
-| `huerise[api]` | FastAPI + Uvicorn | Run the REST API server          |
-
-Install it:
-
-```bash
-uv sync --extra api          # REST API only
-```
-
 ## Prerequisites
 
 - Docker & Docker Compose
@@ -85,8 +73,7 @@ Key endpoints:
 Requires [uv](https://docs.astral.sh/uv/) and Python 3.14+.
 
 ```bash
-# With REST API
-uv sync --extra api
+uv sync
 uv run python -m huerise.main
 ```
 
