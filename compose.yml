@@ -1,4 +1,35 @@
 services:
+  minio:
+    image: minio/minio:latest
+    container_name: daylight-alarm-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-huerise}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-huerise-dev-secret}
+    volumes:
+      - minio_data:/data
+
+  minio-init:
+    image: minio/mc:latest
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-huerise}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-huerise-dev-secret}
+      STORAGE_BUCKET_NAME: ${MINIO_BUCKET_NAME:-huerise-assets}
+    volumes:
+      - ./assets:/assets:ro
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c '
+      until mc alias set local http://minio:9000 "$${MINIO_ROOT_USER}" "$${MINIO_ROOT_PASSWORD}"; do sleep 1; done;
+      mc mb --ignore-existing "local/$${STORAGE_BUCKET_NAME}";
+      mc mirror --overwrite /assets "local/$${STORAGE_BUCKET_NAME}";
+      '
+
   migrate:
     build:
       context: .
@@ -14,6 +45,7 @@ services:
       - ./alembic.ini:/app/alembic.ini
     environment:
       - DATABASE_URL=sqlite+aiosqlite:////app/data/daylight.db
+      - MINIO_ENDPOINT_URL=http://minio:9000
     command: ["python", "-m", "alembic", "upgrade", "head"]
 
   daylight-alarm:
@@ -34,8 +66,11 @@ services:
       - ./alembic.ini:/app/alembic.ini
     environment:
       - DATABASE_URL=sqlite+aiosqlite:////app/data/daylight.db
+      - MINIO_ENDPOINT_URL=http://minio:9000
     depends_on:
       migrate:
+        condition: service_completed_successfully
+      minio-init:
         condition: service_completed_successfully
 
   adminer:
@@ -52,3 +87,4 @@ services:
 
 volumes:
   sqlite_data:
+  minio_data:

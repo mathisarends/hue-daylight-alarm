@@ -4,6 +4,7 @@ from .infrastructure.di import (
     AlarmProvider,
     DatabaseProvider,
     SchedulerProvider,
+    StorageProvider,
 )
 from .presentation import alarm_router, register_alarm_exception_handlers
 
@@ -12,6 +13,7 @@ feature = Feature(
     routers=[alarm_router],
     providers=[
         DatabaseProvider,
+        StorageProvider,
         AlarmProvider,
         SchedulerProvider,
     ],

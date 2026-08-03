@@ -1,15 +1,23 @@
 import asyncio
 import threading
+from io import BytesIO
 
 import numpy as np
 import sounddevice as sd
 import soundfile as sf
 
 from huerise.alarm.application import AudioPlayer
+from huerise.alarm.application.storage import StorageBackend
+
+_SOUND_FOLDERS = {
+    "wake-up-": "wake_up_sounds",
+    "get-up-": "get_up_sounds",
+}
 
 
 class SoundDeviceAudioPlayer(AudioPlayer):
-    def __init__(self) -> None:
+    def __init__(self, storage: StorageBackend) -> None:
+        self._storage = storage
         self._volume = 100
         self._stop_event = threading.Event()
         self._playback_thread: threading.Thread | None = None
@@ -18,11 +26,21 @@ class SoundDeviceAudioPlayer(AudioPlayer):
         await self.stop()
         self._volume = volume
         self._stop_event.clear()
+        audio_data = await self._storage.download_bytes(self._storage_path(audio_file))
         loop = asyncio.get_running_loop()
-        await loop.run_in_executor(None, self._play_blocking, audio_file)
+        await loop.run_in_executor(None, self._play_blocking, audio_data)
 
-    def _play_blocking(self, audio_file: str) -> None:
-        data, samplerate = sf.read(audio_file, dtype="float32")
+    @staticmethod
+    def _storage_path(audio_file: str) -> str:
+        if "/" in audio_file:
+            return audio_file
+        for prefix, folder in _SOUND_FOLDERS.items():
+            if audio_file.startswith(prefix):
+                return f"{folder}/{audio_file}"
+        return audio_file
+
+    def _play_blocking(self, audio_data: bytes) -> None:
+        data, samplerate = sf.read(BytesIO(audio_data), dtype="float32")
         chunk_size = 1024
         pos = 0
 
@@ -42,8 +60,8 @@ class SoundDeviceAudioPlayer(AudioPlayer):
             samplerate=samplerate,
             channels=data.shape[1] if data.ndim > 1 else 1,
             callback=callback,
-        ):
-            while not self._stop_event.is_set():
+        ) as stream:
+            while stream.active and not self._stop_event.is_set():
                 sd.sleep(chunk_size)
 
     async def stop(self) -> None:

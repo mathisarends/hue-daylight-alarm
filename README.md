@@ -44,6 +44,20 @@ Python 3.13+ · FastAPI · SQLite (aiosqlite) · SQLModel · Alembic · Dishka (
    - Run database migrations (Alembic)
    - Start the API server on **port 8000**
    - Start Adminer (DB browser) on **port 8080**
+   - Start MinIO on **port 9000** and its Console on **port 9001**
+   - Create the asset bucket and upload the bundled alarm sounds
+
+   Sign in to the MinIO Console at `http://localhost:9001` with the
+   `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` values from `.env`.
+
+   To upload the local assets again after changing them:
+
+   ```bash
+   ./scripts/upload_assets.sh
+   ```
+
+   The files in `assets/` are only seeds for MinIO. Runtime audio playback
+   always reads the selected object through the configured storage backend.
 
 3. **Verify**
 

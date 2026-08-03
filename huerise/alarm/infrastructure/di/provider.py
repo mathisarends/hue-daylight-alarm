@@ -16,12 +16,15 @@ from huerise.alarm.application import (
     AudioPlayer,
     Lights,
 )
+from huerise.alarm.application.storage import StorageBackend
 from huerise.alarm.domain import AlarmRepository
 from huerise.alarm.infrastructure.adapters.hue import HueLights
 from huerise.alarm.infrastructure.adapters.pyaudio import SoundDeviceAudioPlayer
+from huerise.alarm.infrastructure.adapters.s3_storage import S3StorageBackend
 from huerise.alarm.infrastructure.credentials import (
     DatabaseSettings,
     HueCredentials,
+    StorageSettings,
 )
 from huerise.alarm.infrastructure.persistence import (
     BackgroundAlarmRepository,
@@ -73,6 +76,18 @@ class AlarmProvider(Provider):
         return AlarmService(alarm_repository=repo, audio=audio)
 
 
+class StorageProvider(Provider):
+    scope = Scope.APP
+
+    @provide
+    def get_storage_settings(self) -> StorageSettings:
+        return StorageSettings()
+
+    @provide
+    def get_storage(self, settings: StorageSettings) -> StorageBackend:
+        return S3StorageBackend(settings)
+
+
 class SchedulerProvider(Provider):
     scope = Scope.APP
 
@@ -85,8 +100,8 @@ class SchedulerProvider(Provider):
         return HueLights(Hueify(credentials.bridge_ip, credentials.app_key))
 
     @provide
-    def get_audio(self) -> AudioPlayer:
-        return SoundDeviceAudioPlayer()
+    def get_audio(self, storage: StorageBackend) -> AudioPlayer:
+        return SoundDeviceAudioPlayer(storage)
 
     @provide
     def get_background_repo(
