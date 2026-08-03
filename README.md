@@ -8,6 +8,7 @@ Sunrise alarm clock powered by Philips Hue. Gradually increases light brightness
 - **Audio playback** — intro ambient sound during sunrise, followed by a ringtone alarm
 - **One-time & recurring alarms** — schedule single alarms or recurring series on specific weekdays
 - **Alarm lifecycle** — activate, deactivate, cancel, and delete alarms through the API
+- **Sound & scene browsing** — list the available sounds and Hue scenes and preview them before putting them into a profile
 
 ## Tech Stack
 
