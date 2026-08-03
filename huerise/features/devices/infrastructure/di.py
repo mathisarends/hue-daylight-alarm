@@ -1,3 +1,5 @@
+from collections.abc import AsyncIterator
+
 from dishka import Provider, Scope, provide
 from hueify import Hueify
 
@@ -21,10 +23,16 @@ class DevicesProvider(Provider):
         return HueCredentials()
 
     @provide
-    def lights(self, credentials: HueCredentials) -> Lights:
-        return HueLights(
-            Hueify(credentials.bridge_ip, credentials.app_key.get_secret_value())
-        )
+    async def hue(self, credentials: HueCredentials) -> AsyncIterator[Hueify]:
+        """Connected client: its caches are only populated by ``connect()``."""
+        async with Hueify(
+            credentials.bridge_ip, credentials.app_key.get_secret_value()
+        ) as hue:
+            yield hue
+
+    @provide
+    def lights(self, hue: Hueify) -> Lights:
+        return HueLights(hue)
 
     @provide
     def sound_catalog(self, storage: StorageBackend) -> SoundCatalog:
