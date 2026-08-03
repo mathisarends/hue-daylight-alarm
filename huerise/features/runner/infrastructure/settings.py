@@ -1,3 +1,4 @@
+from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -8,5 +9,5 @@ class HueCredentials(BaseSettings):
         env_prefix="HUE_",
     )
 
-    app_key: str
+    app_key: SecretStr
     bridge_ip: str

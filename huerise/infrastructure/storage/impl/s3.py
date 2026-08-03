@@ -31,8 +31,8 @@ class S3StorageBackend(StorageBackend):
             service_name="s3",
             endpoint_url=self._settings.endpoint_url,
             region_name="us-east-1",
-            aws_access_key_id=self._settings.access_key,
-            aws_secret_access_key=self._settings.secret_key,
+            aws_access_key_id=self._settings.access_key.get_secret_value(),
+            aws_secret_access_key=self._settings.secret_key.get_secret_value(),
             config=_S3_CLIENT_CONFIG,
         ) as client:
             yield client

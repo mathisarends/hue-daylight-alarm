@@ -1,3 +1,4 @@
+from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -10,6 +11,6 @@ class StorageSettings(BaseSettings):
     )
 
     endpoint_url: str = "http://localhost:9000"
-    access_key: str = "huerise"
-    secret_key: str = "huerise-dev-secret"
+    access_key: SecretStr = SecretStr("huerise")
+    secret_key: SecretStr = SecretStr("huerise-dev-secret")
     bucket_name: str = "huerise-assets"

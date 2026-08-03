@@ -24,7 +24,9 @@ class RunnerProvider(Provider):
 
     @provide
     def lights(self, credentials: HueCredentials) -> Lights:
-        return HueLights(Hueify(credentials.bridge_ip, credentials.app_key))
+        return HueLights(
+            Hueify(credentials.bridge_ip, credentials.app_key.get_secret_value())
+        )
 
     @provide
     def audio(self, storage: StorageBackend) -> AudioPlayer:
