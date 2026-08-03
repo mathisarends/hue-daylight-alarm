@@ -5,13 +5,12 @@ import pytest
 from pydantic import ValidationError
 
 from huerise.features.alarm.domain import Alarm, Schedule, SunriseConfig, Weekday
-from huerise.features.alarm.presentation.mappers import (
-    alarm_to_read,
-    profile_to_read,
-    schedule_to_schema,
-    sunrise_to_schema,
+from huerise.features.alarm.presentation.schemas import (
+    AlarmRead,
+    ProfileRead,
+    ScheduleSchema,
+    SunriseSchema,
 )
-from huerise.features.alarm.presentation.schemas import ScheduleSchema
 from tests.application.conftest import make_profile
 
 
@@ -21,7 +20,7 @@ class TestScheduleSchema:
             hour=6, minute=45, timezone="Europe/Berlin", days=[Weekday.MON]
         )
 
-        assert schedule_to_schema(schema.to_domain()) == schema
+        assert ScheduleSchema.from_domain(schema.to_domain()) == schema
 
     def test_defaults_to_a_one_time_schedule(self) -> None:
         schedule = ScheduleSchema(hour=7, minute=0).to_domain()
@@ -42,7 +41,7 @@ class TestSunriseSchema:
     def test_roundtrips_through_the_domain(self) -> None:
         config = SunriseConfig(duration=timedelta(minutes=15), brightness_start=5)
 
-        assert sunrise_to_schema(config).to_domain() == config
+        assert SunriseSchema.from_domain(config).to_domain() == config
 
 
 class TestAlarmRead:
@@ -54,7 +53,7 @@ class TestAlarmRead:
             room_name="Bedroom",
         )
 
-        read = alarm_to_read(alarm)
+        read = AlarmRead.from_domain(alarm)
 
         assert read.schedule.days == [Weekday.MON]
         assert read.next_occurrence is not None
@@ -68,14 +67,14 @@ class TestAlarmRead:
             is_enabled=False,
         )
 
-        assert alarm_to_read(alarm).next_occurrence is None
+        assert AlarmRead.from_domain(alarm).next_occurrence is None
 
 
 class TestProfileRead:
     def test_carries_the_nested_configs(self) -> None:
         profile = make_profile()
 
-        read = profile_to_read(profile)
+        read = ProfileRead.from_domain(profile)
 
         assert read.intro.audio_file == profile.intro_config.audio_file
         assert read.ringtone.volume == profile.ringtone_config.volume
