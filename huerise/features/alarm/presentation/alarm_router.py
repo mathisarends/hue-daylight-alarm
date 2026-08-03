@@ -4,23 +4,25 @@ from dishka.integrations.fastapi import DishkaRoute, FromDishka
 from fastapi import APIRouter
 
 from huerise.features.alarm.application import AlarmService
-from huerise.features.alarm.presentation.schemas import (
+from huerise.features.alarm.presentation.alarm_schemas import (
     AlarmCreate,
     AlarmRead,
     OccurrenceRead,
     SnoozeRequest,
 )
 
-router = APIRouter(prefix="/alarms", tags=["Alarms"], route_class=DishkaRoute)
+alarm_router = APIRouter(prefix="/alarms", tags=["Alarms"], route_class=DishkaRoute)
 
 
-@router.get("", response_model=list[AlarmRead], operation_id="listAlarms")
+@alarm_router.get("", response_model=list[AlarmRead], operation_id="listAlarms")
 async def list_alarms(alarm_service: FromDishka[AlarmService]) -> list[AlarmRead]:
     alarms = await alarm_service.list_alarms()
     return [AlarmRead.from_domain(alarm) for alarm in alarms]
 
 
-@router.post("", response_model=AlarmRead, status_code=201, operation_id="create_alarm")
+@alarm_router.post(
+    "", response_model=AlarmRead, status_code=201, operation_id="create_alarm"
+)
 async def create_alarm(
     body: AlarmCreate,
     alarm_service: FromDishka[AlarmService],
@@ -34,7 +36,7 @@ async def create_alarm(
     return AlarmRead.from_domain(alarm)
 
 
-@router.get("/{alarm_id}", response_model=AlarmRead, operation_id="getAlarm")
+@alarm_router.get("/{alarm_id}", response_model=AlarmRead, operation_id="getAlarm")
 async def get_alarm(
     alarm_id: UUID,
     alarm_service: FromDishka[AlarmService],
@@ -43,7 +45,9 @@ async def get_alarm(
     return AlarmRead.from_domain(alarm)
 
 
-@router.post("/{alarm_id}/enable", response_model=AlarmRead, operation_id="enableAlarm")
+@alarm_router.post(
+    "/{alarm_id}/enable", response_model=AlarmRead, operation_id="enableAlarm"
+)
 async def enable_alarm(
     alarm_id: UUID,
     alarm_service: FromDishka[AlarmService],
@@ -52,7 +56,7 @@ async def enable_alarm(
     return AlarmRead.from_domain(alarm)
 
 
-@router.post(
+@alarm_router.post(
     "/{alarm_id}/disable", response_model=AlarmRead, operation_id="disableAlarm"
 )
 async def disable_alarm(
@@ -63,7 +67,7 @@ async def disable_alarm(
     return AlarmRead.from_domain(alarm)
 
 
-@router.post(
+@alarm_router.post(
     "/{alarm_id}/snooze", response_model=OccurrenceRead, operation_id="snoozeAlarm"
 )
 async def snooze_alarm(
@@ -75,7 +79,7 @@ async def snooze_alarm(
     return OccurrenceRead.from_domain(occurrence)
 
 
-@router.post(
+@alarm_router.post(
     "/{alarm_id}/dismiss", response_model=OccurrenceRead, operation_id="dismissAlarm"
 )
 async def dismiss_alarm(
@@ -85,7 +89,7 @@ async def dismiss_alarm(
     return OccurrenceRead.from_domain(await alarm_service.dismiss(alarm_id))
 
 
-@router.get(
+@alarm_router.get(
     "/{alarm_id}/occurrences",
     response_model=list[OccurrenceRead],
     operation_id="listOccurrences",
@@ -99,7 +103,7 @@ async def list_occurrences(
     return [OccurrenceRead.from_domain(occurrence) for occurrence in occurrences]
 
 
-@router.delete(
+@alarm_router.delete(
     "/{alarm_id}", status_code=204, response_model=None, operation_id="deleteAlarm"
 )
 async def delete_alarm(

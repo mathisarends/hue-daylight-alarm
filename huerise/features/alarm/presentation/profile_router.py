@@ -2,7 +2,10 @@ from dishka.integrations.fastapi import DishkaRoute, FromDishka
 from fastapi import APIRouter
 
 from huerise.features.alarm.application import AlarmProfileService
-from huerise.features.alarm.presentation.schemas import ProfileCreate, ProfileRead
+from huerise.features.alarm.presentation.profile_schemas import (
+    ProfileCreate,
+    ProfileRead,
+)
 
 profile_router = APIRouter(
     prefix="/alarm-profiles", tags=["Alarm Profiles"], route_class=DishkaRoute

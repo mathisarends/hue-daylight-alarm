@@ -5,10 +5,12 @@ import pytest
 from pydantic import ValidationError
 
 from huerise.features.alarm.domain import Alarm, Schedule, SunriseConfig, Weekday
-from huerise.features.alarm.presentation.schemas import (
+from huerise.features.alarm.presentation.alarm_schemas import (
     AlarmRead,
-    ProfileRead,
     ScheduleSchema,
+)
+from huerise.features.alarm.presentation.profile_schemas import (
+    ProfileRead,
     SunriseSchema,
 )
 from tests.application.conftest import make_profile
