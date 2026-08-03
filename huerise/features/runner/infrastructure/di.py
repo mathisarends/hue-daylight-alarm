@@ -1,34 +1,15 @@
 from dishka import Provider, Scope, provide
-from hueify import Hueify
 
-from huerise.features.alarm.application import AudioPlayer
 from huerise.features.alarm.domain import AlarmUnitOfWorkFactory
-from huerise.features.runner.application import AlarmRunner, Lights
+from huerise.features.devices.application import AudioPlayer, Lights
+from huerise.features.runner.application import AlarmRunner
 from huerise.features.runner.application.runner_port import (
     AlarmRunner as AlarmRunnerPort,
 )
-from huerise.features.runner.infrastructure.hue import HueLights
-from huerise.features.runner.infrastructure.pyaudio import SoundDeviceAudioPlayer
-from huerise.features.runner.infrastructure.settings import HueCredentials
-from huerise.infrastructure.storage import StorageBackend
 
 
 class RunnerProvider(Provider):
     scope = Scope.APP
-
-    @provide
-    def hue_credentials(self) -> HueCredentials:
-        return HueCredentials()
-
-    @provide
-    def lights(self, credentials: HueCredentials) -> Lights:
-        return HueLights(
-            Hueify(credentials.bridge_ip, credentials.app_key.get_secret_value())
-        )
-
-    @provide
-    def audio(self, storage: StorageBackend) -> AudioPlayer:
-        return SoundDeviceAudioPlayer(storage)
 
     @provide
     def alarm_runner(

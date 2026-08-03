@@ -1,6 +1,6 @@
 from hueify import Hueify
 
-from huerise.features.runner.application import Lights
+from huerise.features.devices.application import Lights
 
 
 class HueLights(Lights):

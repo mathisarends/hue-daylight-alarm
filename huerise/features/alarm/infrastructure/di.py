@@ -1,11 +1,7 @@
 from dishka import Provider, Scope, provide
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from huerise.features.alarm.application import (
-    AlarmProfileService,
-    AlarmService,
-    AudioPlayer,
-)
+from huerise.features.alarm.application import AlarmProfileService, AlarmService
 from huerise.features.alarm.domain import (
     AlarmOccurrenceRepository,
     AlarmProfileRepository,
@@ -18,6 +14,7 @@ from huerise.features.alarm.infrastructure.persistence import (
     SQLAlarmRepository,
     SQLAlarmUnitOfWorkFactory,
 )
+from huerise.features.devices.application import AudioPlayer
 
 
 class AlarmProvider(Provider):

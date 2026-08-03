@@ -1,7 +1,6 @@
 import logging
 from uuid import UUID
 
-from huerise.features.alarm.application.ports import AudioPlayer
 from huerise.features.alarm.domain import (
     Alarm,
     AlarmNotFoundError,
@@ -14,6 +13,7 @@ from huerise.features.alarm.domain import (
     NoActiveOccurrenceError,
     Schedule,
 )
+from huerise.features.devices.application import AudioPlayer
 
 logger = logging.getLogger(__name__)
 

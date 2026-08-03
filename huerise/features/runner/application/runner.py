@@ -3,7 +3,6 @@ import logging
 from datetime import timedelta
 from uuid import UUID
 
-from huerise.features.alarm.application.ports import AudioPlayer
 from huerise.features.alarm.domain import (
     Alarm,
     AlarmOccurrence,
@@ -11,7 +10,7 @@ from huerise.features.alarm.domain import (
     AlarmUnitOfWorkFactory,
     OccurrenceState,
 )
-from huerise.features.runner.application.ports import Lights
+from huerise.features.devices.application import AudioPlayer, Lights
 from huerise.features.runner.application.runner_port import (
     AlarmRunner as AlarmRunnerPort,
 )

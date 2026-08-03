@@ -2,7 +2,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from huerise.features.runner.infrastructure.pyaudio import SoundDeviceAudioPlayer
+from huerise.features.devices.infrastructure.sound_device import SoundDeviceAudioPlayer
 from huerise.infrastructure.storage import StorageBackend
 
 

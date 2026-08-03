@@ -6,7 +6,7 @@ import numpy as np
 import sounddevice as sd
 import soundfile as sf
 
-from huerise.features.alarm.application import AudioPlayer
+from huerise.features.devices.application import AudioPlayer
 from huerise.infrastructure.storage import StorageBackend
 
 _SOUND_FOLDERS = {

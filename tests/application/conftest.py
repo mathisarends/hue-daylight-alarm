@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
-from huerise.features.alarm.application import AlarmService, AudioPlayer
+from huerise.features.alarm.application import AlarmService
 from huerise.features.alarm.domain import (
     Alarm,
     AlarmOccurrence,
@@ -21,7 +21,7 @@ from huerise.features.alarm.domain import (
     SunriseConfig,
     Weekday,
 )
-from huerise.features.runner.application import Lights
+from huerise.features.devices.application import AudioPlayer, Lights
 
 BERLIN = ZoneInfo("Europe/Berlin")
 
