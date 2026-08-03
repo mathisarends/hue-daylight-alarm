@@ -2,17 +2,23 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from huerise.features.alarm.domain.exceptions import (
-    AlarmAlreadyCancelledError,
-    AlarmAlreadyInStatusError,
+    AlarmAlreadyInStateError,
     AlarmNotFoundError,
-    AlarmNotRunningError,
+    AlarmProfileNotFoundError,
+    InvalidOccurrenceTransitionError,
+    NoActiveOccurrenceError,
+    OccurrenceNotFoundError,
+    OccurrenceNotRunningError,
 )
 
 _HANDLERS: list[tuple[type[Exception], int, str]] = [
     (AlarmNotFoundError, 404, "Alarm not found"),
-    (AlarmAlreadyCancelledError, 409, "Alarm is already cancelled"),
-    (AlarmAlreadyInStatusError, 409, "Alarm status conflict"),
-    (AlarmNotRunningError, 409, "Alarm is not currently running"),
+    (AlarmProfileNotFoundError, 404, "Alarm profile not found"),
+    (OccurrenceNotFoundError, 404, "Occurrence not found"),
+    (AlarmAlreadyInStateError, 409, "Alarm is already in that state"),
+    (NoActiveOccurrenceError, 409, "Alarm has no active occurrence"),
+    (OccurrenceNotRunningError, 409, "Occurrence is not currently running"),
+    (InvalidOccurrenceTransitionError, 409, "Invalid occurrence transition"),
     (ValueError, 400, "Invalid operation"),
 ]
 

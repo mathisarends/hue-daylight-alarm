@@ -6,10 +6,16 @@ from sqlmodel import SQLModel
 
 from alembic import context
 
-from huerise.features.alarm.infrastructure.persistence.orm import AlarmModel
+from huerise.infrastructure.database.models import (
+    AlarmModel,
+    AlarmOccurrenceModel,
+    AlarmProfileModel,
+)
 
 __all__ = [
     "AlarmModel",
+    "AlarmOccurrenceModel",
+    "AlarmProfileModel",
 ]
 
 config = context.config

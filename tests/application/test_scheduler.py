@@ -1,230 +1,176 @@
-from datetime import datetime, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+import asyncio
+from datetime import datetime, timedelta, timezone
+from unittest.mock import AsyncMock, MagicMock
 
-from huerise.features.alarm.domain import AlarmStatus, Weekday
-from huerise.features.alarm.domain.views import Schedule
-from huerise.features.runner.application import AlarmRunner, AudioPlayer, Lights
+from huerise.features.alarm.domain import OccurrenceState, Weekday
+from huerise.features.runner.application.runner_port import AlarmRunner
 from huerise.features.scheduler.application import AlarmScheduler
-from tests.application.conftest import make_alarm, make_repo
+from tests.application.conftest import (
+    FakeUnitOfWork,
+    FakeUnitOfWorkFactory,
+    InMemoryAlarmRepository,
+    InMemoryOccurrenceRepository,
+    InMemoryProfileRepository,
+    make_alarm,
+    make_occurrence,
+    make_profile,
+)
 
-
-def make_lights() -> Lights:
-    lights = MagicMock(spec=Lights)
-    lights.activate_scene = AsyncMock()
-    lights.set_brightness = AsyncMock()
-    return lights
-
-
-def make_audio() -> AudioPlayer:
-    audio = MagicMock(spec=AudioPlayer)
-    audio.play = AsyncMock()
-    audio.stop = AsyncMock()
-    audio.set_volume = AsyncMock()
-    return audio
+# 2026-08-03 is a Monday. 04:00 UTC == 06:00 Berlin.
+NOW = datetime(2026, 8, 3, 4, 0, tzinfo=timezone.utc)
+SEVEN_BERLIN = datetime(2026, 8, 3, 5, 0, tzinfo=timezone.utc)
 
 
 def make_runner() -> AlarmRunner:
-    return MagicMock(spec=AlarmRunner)
+    runner = MagicMock(spec=AlarmRunner)
+    runner.run = AsyncMock()
+    return runner
 
 
-class TestAlarmRunnerStateTransitions:
-    async def test_alarm_reaches_completed_status(self) -> None:
-        alarm = make_alarm(status=AlarmStatus.SCHEDULED)
-        repo = make_repo()
-        runner = AlarmRunner(lights=make_lights(), audio=make_audio(), repo=repo)
-        runner._run_sunrise = AsyncMock()  # type: ignore[method-assign]
-        runner._run_ringtone = AsyncMock()  # type: ignore[method-assign]
-
-        await runner.run(alarm)
-
-        assert alarm.status == AlarmStatus.COMPLETED
-
-    async def test_repo_save_called_after_each_transition(self) -> None:
-        alarm = make_alarm(status=AlarmStatus.SCHEDULED)
-        repo = make_repo()
-        runner = AlarmRunner(lights=make_lights(), audio=make_audio(), repo=repo)
-        runner._run_sunrise = AsyncMock()  # type: ignore[method-assign]
-        runner._run_ringtone = AsyncMock()  # type: ignore[method-assign]
-
-        await runner.run(alarm)
-
-        assert repo.save.await_count == 3
-
-    async def test_run_sunrise_is_called(self) -> None:
-        alarm = make_alarm(status=AlarmStatus.SCHEDULED)
-        repo = make_repo()
-        runner = AlarmRunner(lights=make_lights(), audio=make_audio(), repo=repo)
-        runner._run_sunrise = AsyncMock()  # type: ignore[method-assign]
-        runner._run_ringtone = AsyncMock()  # type: ignore[method-assign]
-
-        await runner.run(alarm)
-
-        runner._run_sunrise.assert_awaited_once_with(alarm)
-
-    async def test_run_ringtone_is_called(self) -> None:
-        alarm = make_alarm(status=AlarmStatus.SCHEDULED)
-        repo = make_repo()
-        runner = AlarmRunner(lights=make_lights(), audio=make_audio(), repo=repo)
-        runner._run_sunrise = AsyncMock()  # type: ignore[method-assign]
-        runner._run_ringtone = AsyncMock()  # type: ignore[method-assign]
-
-        await runner.run(alarm)
-
-        runner._run_ringtone.assert_awaited_once_with(alarm)
+def make_scheduler(
+    alarms: InMemoryAlarmRepository | None = None,
+    occurrences: InMemoryOccurrenceRepository | None = None,
+    runner: AlarmRunner | None = None,
+) -> tuple[
+    AlarmScheduler, InMemoryOccurrenceRepository, AlarmRunner, InMemoryAlarmRepository
+]:
+    alarms = alarms if alarms is not None else InMemoryAlarmRepository()
+    occurrences = (
+        occurrences if occurrences is not None else InMemoryOccurrenceRepository()
+    )
+    runner = runner if runner is not None else make_runner()
+    unit_of_work = FakeUnitOfWork(
+        alarms=alarms,
+        profiles=InMemoryProfileRepository([make_profile()]),
+        occurrences=occurrences,
+    )
+    scheduler = AlarmScheduler(
+        unit_of_work_factory=FakeUnitOfWorkFactory(unit_of_work), runner=runner
+    )
+    return scheduler, occurrences, runner, alarms
 
 
-class TestAlarmRunnerRunSunrise:
-    async def test_activates_light_scene(self) -> None:
-        alarm = make_alarm(status=AlarmStatus.SCHEDULED)
-        lights = make_lights()
-        runner = AlarmRunner(lights=lights, audio=make_audio(), repo=make_repo())
-
-        with patch("huerise.features.runner.application.runner.asyncio.create_task"):
-            await runner._run_sunrise(alarm)
-
-        lights.activate_scene.assert_awaited_once_with(
-            alarm.sunrise_config.room_name,
-            alarm.sunrise_config.scene_name,
+class TestMaterialise:
+    async def test_creates_the_next_occurrence_for_an_enabled_alarm(self) -> None:
+        alarm = make_alarm(hour=7, minute=0)
+        scheduler, occurrences, _, _ = make_scheduler(
+            alarms=InMemoryAlarmRepository([alarm])
         )
 
-    async def test_sets_brightness_for_each_step(self) -> None:
-        alarm = make_alarm(status=AlarmStatus.SCHEDULED)
-        lights = make_lights()
-        runner = AlarmRunner(lights=lights, audio=make_audio(), repo=make_repo())
+        await scheduler.tick(NOW)
 
-        with patch("huerise.features.runner.application.runner.asyncio.create_task"):
-            await runner._run_sunrise(alarm)
+        created = list(occurrences.items.values())
+        assert len(created) == 1
+        assert created[0].scheduled_for == SEVEN_BERLIN
 
-        # make_alarm uses steps=1
-        assert lights.set_brightness.await_count == alarm.sunrise_config.steps
-
-
-class TestAlarmRunnerRunRingtone:
-    async def test_stops_audio_before_playing(self) -> None:
-        alarm = make_alarm(status=AlarmStatus.SCHEDULED)
-        audio = make_audio()
-        runner = AlarmRunner(lights=make_lights(), audio=audio, repo=make_repo())
-
-        await runner._run_ringtone(alarm)
-
-        audio.stop.assert_awaited_once()
-
-    async def test_plays_ringtone_with_correct_file_and_volume(self) -> None:
-        alarm = make_alarm(status=AlarmStatus.SCHEDULED)
-        audio = make_audio()
-        runner = AlarmRunner(lights=make_lights(), audio=audio, repo=make_repo())
-
-        await runner._run_ringtone(alarm)
-
-        audio.play.assert_awaited_once_with(
-            alarm.ringtone_config.audio_file,
-            alarm.ringtone_config.volume,
+    async def test_is_idempotent_across_ticks(self) -> None:
+        alarm = make_alarm(hour=7, minute=0)
+        scheduler, occurrences, _, _ = make_scheduler(
+            alarms=InMemoryAlarmRepository([alarm])
         )
 
+        await scheduler.tick(NOW)
+        await scheduler.tick(NOW + timedelta(minutes=1))
 
-# April 6, 2026 is a Monday (weekday() == 0)
-_MONDAY_7_00 = datetime(2026, 4, 6, 7, 0, tzinfo=timezone.utc)
-_MONDAY_8_30 = datetime(2026, 4, 6, 8, 30, tzinfo=timezone.utc)
+        assert len(occurrences.items) == 1
 
-
-class TestAlarmSchedulerShouldTrigger:
-    def test_returns_true_when_hour_and_minute_match_no_recurrence(self) -> None:
-        schedule = Schedule(hour=7, minute=0)
-        assert AlarmScheduler._should_trigger(schedule, _MONDAY_7_00) is True
-
-    def test_returns_false_when_hour_does_not_match(self) -> None:
-        schedule = Schedule(hour=8, minute=0)
-        assert AlarmScheduler._should_trigger(schedule, _MONDAY_7_00) is False
-
-    def test_returns_false_when_minute_does_not_match(self) -> None:
-        schedule = Schedule(hour=7, minute=15)
-        assert AlarmScheduler._should_trigger(schedule, _MONDAY_7_00) is False
-
-    def test_returns_true_when_weekday_in_recurrence(self) -> None:
-        schedule = Schedule(hour=7, minute=0, recurrence=frozenset({Weekday.MON}))
-        assert AlarmScheduler._should_trigger(schedule, _MONDAY_7_00) is True
-
-    def test_returns_false_when_weekday_not_in_recurrence(self) -> None:
-        schedule = Schedule(hour=7, minute=0, recurrence=frozenset({Weekday.TUE}))
-        assert AlarmScheduler._should_trigger(schedule, _MONDAY_7_00) is False
-
-    def test_returns_true_when_one_of_multiple_days_matches(self) -> None:
-        schedule = Schedule(
-            hour=7,
-            minute=0,
-            recurrence=frozenset({Weekday.MON, Weekday.WED, Weekday.FRI}),
+    async def test_ignores_disabled_alarms(self) -> None:
+        alarm = make_alarm(hour=7, minute=0, is_enabled=False)
+        scheduler, occurrences, _, _ = make_scheduler(
+            alarms=InMemoryAlarmRepository([alarm])
         )
-        assert AlarmScheduler._should_trigger(schedule, _MONDAY_7_00) is True
+
+        await scheduler.tick(NOW)
+
+        assert occurrences.items == {}
+
+    async def test_ignores_alarms_beyond_the_lookahead(self) -> None:
+        # Next Wednesday is more than 24h out from Monday 06:00 local.
+        alarm = make_alarm(hour=7, minute=0, weekdays=frozenset({Weekday.WED}))
+        scheduler, occurrences, _, _ = make_scheduler(
+            alarms=InMemoryAlarmRepository([alarm])
+        )
+
+        await scheduler.tick(NOW)
+
+        assert occurrences.items == {}
 
 
-class TestAlarmSchedulerTick:
-    async def test_triggers_alarm_due_at_current_time(self) -> None:
-        alarm = make_alarm(status=AlarmStatus.SCHEDULED, hour=7, minute=0)
-        repo = make_repo(get_scheduled_return=[alarm])
-        runner = make_runner()
-        runner.run = AsyncMock()
-        scheduler = AlarmScheduler(repo=repo, runner=runner)
+class TestDispatch:
+    async def test_hands_a_due_occurrence_to_the_runner(self) -> None:
+        alarm = make_alarm(hour=7, minute=0, weekdays=frozenset({Weekday.MON}))
+        occurrence = make_occurrence(alarm.id, NOW)
+        scheduler, occurrences, runner, _ = make_scheduler(
+            alarms=InMemoryAlarmRepository([alarm]),
+            occurrences=InMemoryOccurrenceRepository([occurrence]),
+        )
 
-        with patch(
-            "huerise.features.scheduler.application.scheduler.datetime"
-        ) as mock_dt:
-            mock_dt.now.return_value = _MONDAY_7_00
-            with patch(
-                "huerise.features.scheduler.application.scheduler.asyncio.create_task"
-            ) as mock_task:
-                await scheduler._tick()
+        await scheduler.tick(NOW)
+        await asyncio.sleep(0)  # let the spawned runner task start
 
-        mock_task.assert_called_once()
+        runner.run.assert_awaited_once()
+        assert occurrences.items[occurrence.id].state is OccurrenceState.SUNRISE
 
-    async def test_does_not_trigger_alarm_at_wrong_time(self) -> None:
-        alarm = make_alarm(status=AlarmStatus.SCHEDULED, hour=8, minute=30)
-        repo = make_repo(get_scheduled_return=[alarm])
-        runner = make_runner()
-        scheduler = AlarmScheduler(repo=repo, runner=runner)
+    async def test_claims_the_occurrence_so_the_next_tick_skips_it(self) -> None:
+        alarm = make_alarm(hour=7, minute=0, weekdays=frozenset({Weekday.MON}))
+        occurrence = make_occurrence(alarm.id, NOW)
+        scheduler, _, runner, _ = make_scheduler(
+            alarms=InMemoryAlarmRepository([alarm]),
+            occurrences=InMemoryOccurrenceRepository([occurrence]),
+        )
 
-        with patch(
-            "huerise.features.scheduler.application.scheduler.datetime"
-        ) as mock_dt:
-            mock_dt.now.return_value = _MONDAY_7_00
-            with patch(
-                "huerise.features.scheduler.application.scheduler.asyncio.create_task"
-            ) as mock_task:
-                await scheduler._tick()
+        await scheduler.tick(NOW)
+        await scheduler.tick(NOW + timedelta(seconds=30))
+        await asyncio.sleep(0)
 
-        mock_task.assert_not_called()
+        assert runner.run.await_count == 1
 
-    async def test_skips_tick_when_repository_raises(self) -> None:
-        repo = make_repo()
-        repo.get_scheduled = AsyncMock(side_effect=RuntimeError("db error"))
-        runner = make_runner()
-        scheduler = AlarmScheduler(repo=repo, runner=runner)
+    async def test_skips_an_occurrence_missed_beyond_the_grace_period(self) -> None:
+        alarm = make_alarm(hour=7, minute=0, weekdays=frozenset({Weekday.MON}))
+        occurrence = make_occurrence(alarm.id, NOW - timedelta(hours=3))
+        scheduler, occurrences, runner, _ = make_scheduler(
+            alarms=InMemoryAlarmRepository([alarm]),
+            occurrences=InMemoryOccurrenceRepository([occurrence]),
+        )
 
-        with patch(
-            "huerise.features.scheduler.application.scheduler.datetime"
-        ) as mock_dt:
-            mock_dt.now.return_value = _MONDAY_7_00
-            with patch(
-                "huerise.features.scheduler.application.scheduler.asyncio.create_task"
-            ) as mock_task:
-                await scheduler._tick()
+        await scheduler.tick(NOW)
 
-        mock_task.assert_not_called()
+        runner.run.assert_not_awaited()
+        assert occurrences.items[occurrence.id].state is OccurrenceState.SKIPPED
 
-    async def test_triggers_only_alarms_matching_current_time(self) -> None:
-        alarm_due = make_alarm(status=AlarmStatus.SCHEDULED, hour=7, minute=0)
-        alarm_not_due = make_alarm(status=AlarmStatus.SCHEDULED, hour=8, minute=30)
-        repo = make_repo(get_scheduled_return=[alarm_due, alarm_not_due])
-        runner = make_runner()
-        runner.run = AsyncMock()
-        scheduler = AlarmScheduler(repo=repo, runner=runner)
+    async def test_fires_a_snoozed_occurrence_again(self) -> None:
+        alarm = make_alarm(hour=7, minute=0, weekdays=frozenset({Weekday.MON}))
+        occurrence = make_occurrence(alarm.id, NOW, OccurrenceState.SNOOZED)
+        scheduler, _, runner, _ = make_scheduler(
+            alarms=InMemoryAlarmRepository([alarm]),
+            occurrences=InMemoryOccurrenceRepository([occurrence]),
+        )
 
-        with patch(
-            "huerise.features.scheduler.application.scheduler.datetime"
-        ) as mock_dt:
-            mock_dt.now.return_value = _MONDAY_7_00
-            with patch(
-                "huerise.features.scheduler.application.scheduler.asyncio.create_task"
-            ) as mock_task:
-                await scheduler._tick()
+        await scheduler.tick(NOW)
+        await asyncio.sleep(0)
 
-        assert mock_task.call_count == 1
+        runner.run.assert_awaited_once()
+
+    async def test_one_time_alarm_disables_itself_when_it_fires(self) -> None:
+        alarm = make_alarm(hour=7, minute=0)
+        occurrence = make_occurrence(alarm.id, NOW)
+        scheduler, _, _, alarms = make_scheduler(
+            alarms=InMemoryAlarmRepository([alarm]),
+            occurrences=InMemoryOccurrenceRepository([occurrence]),
+        )
+
+        await scheduler.tick(NOW)
+
+        assert alarms.items[alarm.id].is_enabled is False
+
+    async def test_recurring_alarm_stays_enabled(self) -> None:
+        alarm = make_alarm(hour=7, minute=0, weekdays=frozenset({Weekday.MON}))
+        occurrence = make_occurrence(alarm.id, NOW)
+        scheduler, _, _, alarms = make_scheduler(
+            alarms=InMemoryAlarmRepository([alarm]),
+            occurrences=InMemoryOccurrenceRepository([occurrence]),
+        )
+
+        await scheduler.tick(NOW)
+
+        assert alarms.items[alarm.id].is_enabled is True

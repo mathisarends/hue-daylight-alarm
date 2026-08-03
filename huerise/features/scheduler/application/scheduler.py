@@ -1,40 +1,111 @@
 import asyncio
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
-from huerise.features.alarm.domain import AlarmRepository, Weekday
-from huerise.features.alarm.domain.views import Schedule
+from huerise.features.alarm.domain import (
+    AlarmOccurrence,
+    AlarmUnitOfWork,
+    AlarmUnitOfWorkFactory,
+)
 from huerise.features.runner.application.runner_port import AlarmRunner
 
 logger = logging.getLogger(__name__)
 
+TICK_INTERVAL = timedelta(seconds=30)
+# How far ahead occurrences are materialised. One day is enough to see every
+# rule at least once while keeping the table small.
+LOOKAHEAD = timedelta(hours=24)
+# An occurrence missed by more than this (process was down) is skipped rather
+# than fired hours late.
+GRACE_PERIOD = timedelta(minutes=15)
+
 
 class AlarmScheduler:
-    def __init__(self, repo: AlarmRepository, runner: AlarmRunner) -> None:
-        self._repo = repo
+    """Turns alarm rules into occurrences and hands due ones to the runner."""
+
+    def __init__(
+        self,
+        unit_of_work_factory: AlarmUnitOfWorkFactory,
+        runner: AlarmRunner,
+        tick_interval: timedelta = TICK_INTERVAL,
+        lookahead: timedelta = LOOKAHEAD,
+        grace_period: timedelta = GRACE_PERIOD,
+    ) -> None:
+        self._unit_of_work_factory = unit_of_work_factory
         self._runner = runner
+        self._tick_interval = tick_interval
+        self._lookahead = lookahead
+        self._grace_period = grace_period
+        self._running_tasks: set[asyncio.Task[None]] = set()
 
     async def run(self) -> None:
         while True:
-            await self._tick()
-            await asyncio.sleep(30)
+            try:
+                await self.tick()
+            except Exception:
+                logger.exception("Scheduler tick failed")
+            await asyncio.sleep(self._tick_interval.total_seconds())
 
-    async def _tick(self) -> None:
-        now = datetime.now(timezone.utc)
-        try:
-            alarms = await self._repo.get_scheduled()
-        except Exception:
-            logger.exception("Error fetching scheduled alarms")
-            return
+    async def tick(self, now: datetime | None = None) -> None:
+        now = now or datetime.now(timezone.utc)
+        await self._materialise(now)
+        for occurrence in await self._claim_due(now):
+            self._spawn(occurrence)
 
-        for alarm in alarms:
-            if self._should_trigger(alarm.schedule, now):
-                asyncio.create_task(self._runner.run(alarm))
+    async def _materialise(self, now: datetime) -> None:
+        """Create the next pending occurrence for every enabled alarm.
+
+        Idempotent: the unique constraint on (alarm_id, scheduled_for) means a
+        restart mid-day cannot produce a duplicate run.
+        """
+        async with self._unit_of_work_factory.create() as uow:
+            for alarm in await uow.alarms.find_enabled():
+                scheduled_for = alarm.next_occurrence(now)
+                if scheduled_for is None or scheduled_for - now > self._lookahead:
+                    continue
+                created = await uow.occurrences.ensure_scheduled(
+                    alarm.id, scheduled_for
+                )
+                if created is not None:
+                    logger.info(
+                        "Scheduled '%s' for %s", alarm.label, scheduled_for.isoformat()
+                    )
+
+    async def _claim_due(self, now: datetime) -> list[AlarmOccurrence]:
+        """Move due occurrences into SUNRISE so a later tick cannot re-fire them."""
+        claimed: list[AlarmOccurrence] = []
+
+        async with self._unit_of_work_factory.create() as uow:
+            for occurrence in await uow.occurrences.find_due(now):
+                if occurrence.scheduled_for < now - self._grace_period:
+                    logger.warning(
+                        "Skipping occurrence %s, overdue since %s",
+                        occurrence.id,
+                        occurrence.scheduled_for.isoformat(),
+                    )
+                    occurrence.skip(now)
+                    await uow.occurrences.save(occurrence)
+                    continue
+
+                occurrence.start_sunrise(now)
+                await uow.occurrences.save(occurrence)
+                await self._retire_one_time_alarm(uow, occurrence)
+                claimed.append(occurrence)
+
+        return claimed
 
     @staticmethod
-    def _should_trigger(schedule: Schedule, now: datetime) -> bool:
-        if schedule.hour != now.hour or schedule.minute != now.minute:
-            return False
-        if schedule.recurrence is None:
-            return True
-        return Weekday(now.weekday()) in schedule.recurrence
+    async def _retire_one_time_alarm(
+        uow: AlarmUnitOfWork, occurrence: AlarmOccurrence
+    ) -> None:
+        """A one-time alarm is done the moment its single run starts."""
+        alarm = await uow.alarms.find_by_id(occurrence.alarm_id)
+        if alarm is None or alarm.schedule.is_recurring or not alarm.is_enabled:
+            return
+        alarm.disable()
+        await uow.alarms.save(alarm)
+
+    def _spawn(self, occurrence: AlarmOccurrence) -> None:
+        task = asyncio.create_task(self._runner.run(occurrence))
+        self._running_tasks.add(task)
+        task.add_done_callback(self._running_tasks.discard)

@@ -18,6 +18,7 @@ dependencies = [
     "fastapi>=0.124.0",
     "uvicorn[standard]>=0.34.0",
     "aioboto3>=15.5.0",
+    "tzdata>=2026.3",
 ]
 
 [dependency-groups]

@@ -1,5 +1,11 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import datetime, time, timedelta, timezone
 from enum import IntEnum, StrEnum
+from zoneinfo import ZoneInfo
+
+DEFAULT_TIMEZONE = ZoneInfo("Europe/Berlin")
+
+_DAYS_IN_WEEK = 7
 
 
 class Weekday(IntEnum):
@@ -12,26 +18,29 @@ class Weekday(IntEnum):
     SUN = 6
 
 
-class AlarmStatus(StrEnum):
-    SCHEDULED = "scheduled"
-    INTRO = "intro"
+class OccurrenceState(StrEnum):
+    PENDING = "pending"
     SUNRISE = "sunrise"
     RINGING = "ringing"
-    COMPLETED = "completed"
-    INACTIVE = "inactive"
-    CANCELLED = "cancelled"
-
-
-class AlarmType(StrEnum):
-    ONE_TIME = "one_time"
-    RECURRING = "recurring"
+    SNOOZED = "snoozed"
+    DISMISSED = "dismissed"
+    SKIPPED = "skipped"
+    FAILED = "failed"
 
 
 @dataclass(frozen=True)
 class Schedule:
+    """A wall-clock wake-up rule in a specific IANA timezone.
+
+    The alarm time is never stored as a UTC instant: 07:00 must stay 07:00 local
+    across DST transitions. Concrete instants are derived on demand via
+    :meth:`next_occurrence`.
+    """
+
     hour: int
     minute: int
-    recurrence: frozenset[Weekday] | None = None
+    tz: ZoneInfo = DEFAULT_TIMEZONE
+    weekdays: frozenset[Weekday] = field(default_factory=frozenset)
 
     def __post_init__(self) -> None:
         if not (0 <= self.hour <= 23):
@@ -39,8 +48,64 @@ class Schedule:
         if not (0 <= self.minute <= 59):
             raise ValueError("Minute must be 0-59")
 
+    @property
     def is_recurring(self) -> bool:
-        return self.recurrence is not None
+        return bool(self.weekdays)
+
+    @property
+    def tz_name(self) -> str:
+        return self.tz.key
+
+    @property
+    def recurrence_mask(self) -> int:
+        return sum(1 << int(day) for day in self.weekdays)
+
+    @classmethod
+    def from_mask(
+        cls, hour: int, minute: int, tz: ZoneInfo, recurrence_mask: int
+    ) -> "Schedule":
+        weekdays = frozenset(
+            Weekday(day) for day in range(_DAYS_IN_WEEK) if recurrence_mask >> day & 1
+        )
+        return cls(hour=hour, minute=minute, tz=tz, weekdays=weekdays)
+
+    def next_occurrence(self, after: datetime) -> datetime:
+        """First UTC instant strictly after ``after`` matching this rule.
+
+        ``after`` must be timezone-aware. A one-time schedule (no weekdays)
+        matches the next calendar day carrying the wall-clock time.
+        """
+        if after.tzinfo is None:
+            raise ValueError("`after` must be timezone-aware")
+
+        local_date = after.astimezone(self.tz).date()
+        # Scan one extra day: the local wall time may still resolve to an
+        # instant before `after` on the first candidate day.
+        for offset in range(_DAYS_IN_WEEK + 1):
+            day = local_date + timedelta(days=offset)
+            if self.is_recurring and Weekday(day.weekday()) not in self.weekdays:
+                continue
+            candidate = self._resolve(day)
+            if candidate > after:
+                return candidate
+
+        raise AssertionError("Unreachable: a schedule always has a next occurrence")
+
+    def _resolve(self, day) -> datetime:
+        """Map a local calendar day to the UTC instant this alarm should fire.
+
+        DST edge cases, both handled by ``fold=0``:
+
+        * Spring forward -- 02:30 does not exist. ``fold=0`` uses the offset
+          from *before* the transition, so the alarm fires at the instant it
+          would have without the jump (locally 03:30).
+        * Fall back -- 02:30 exists twice. ``fold=0`` picks the first one, so
+          the alarm fires once, at the earlier of the two.
+        """
+        local = datetime.combine(day, time(self.hour, self.minute)).replace(
+            tzinfo=self.tz, fold=0
+        )
+        return local.astimezone(timezone.utc)
 
 
 @dataclass(frozen=True)
@@ -50,22 +115,20 @@ class IntroConfig:
 
 @dataclass(frozen=True)
 class SunriseConfig:
-    room_name: str
     scene_name: str = "Tageslichtwecker"
-    duration_minutes: int = 7
+    duration: timedelta = timedelta(minutes=7)
     brightness_start: int = 1
     brightness_end: int = 100
-    steps: int = 70
 
     def __post_init__(self) -> None:
         if not (1 <= self.brightness_start < self.brightness_end <= 100):
             raise ValueError("Invalid brightness range")
-        if self.steps < 1:
-            raise ValueError("steps must be >= 1")
+        if self.duration < timedelta(0):
+            raise ValueError("duration must not be negative")
 
     @property
-    def step_interval_seconds(self) -> float:
-        return (self.duration_minutes * 60) / self.steps
+    def duration_minutes(self) -> int:
+        return int(self.duration.total_seconds() // 60)
 
 
 @dataclass(frozen=True)

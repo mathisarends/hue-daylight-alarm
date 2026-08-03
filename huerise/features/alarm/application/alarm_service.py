@@ -1,112 +1,146 @@
 import logging
-from collections.abc import Sequence
-from uuid import UUID, uuid4
+from uuid import UUID
+from zoneinfo import ZoneInfo
 
+from huerise.features.alarm.application.ports import AudioPlayer
 from huerise.features.alarm.domain import (
+    DEFAULT_TIMEZONE,
     Alarm,
     AlarmNotFoundError,
+    AlarmOccurrence,
+    AlarmOccurrenceRepository,
+    AlarmProfile,
+    AlarmProfileNotFoundError,
+    AlarmProfileRepository,
     AlarmRepository,
+    NoActiveOccurrenceError,
+    Schedule,
     Weekday,
 )
-from huerise.features.alarm.application.ports import AudioPlayer
 
 logger = logging.getLogger(__name__)
 
 
 class AlarmService:
-    def __init__(self, alarm_repository: AlarmRepository, audio: AudioPlayer) -> None:
-        self._alarm_repository = alarm_repository
+    def __init__(
+        self,
+        alarms: AlarmRepository,
+        profiles: AlarmProfileRepository,
+        occurrences: AlarmOccurrenceRepository,
+        audio: AudioPlayer,
+    ) -> None:
+        self._alarms = alarms
+        self._profiles = profiles
+        self._occurrences = occurrences
         self._audio = audio
 
-    async def list_alarms(self) -> Sequence[Alarm]:
-        return await self._alarm_repository.get_all()
+    async def list_alarms(self) -> list[Alarm]:
+        return await self._alarms.find_all()
 
-    async def create_one_time(
+    async def get_alarm(self, alarm_id: UUID) -> Alarm:
+        return await self._get_or_raise(alarm_id)
+
+    async def create_alarm(
         self,
         label: str,
         hour: int,
         minute: int,
         room_name: str,
-        intro_audio_file: str = "wake-up-bowls.mp3",
-        ringtone_audio_file: str = "get-up-aurora.mp3",
+        weekdays: frozenset[Weekday] = frozenset(),
+        tz: ZoneInfo = DEFAULT_TIMEZONE,
+        profile_id: UUID | None = None,
     ) -> Alarm:
-        logger.info("Creating one-time alarm '%s' at %02d:%02d", label, hour, minute)
-        alarm = Alarm.create_one_time(
-            label=label,
-            hour=hour,
-            minute=minute,
-            room_name=room_name,
-            intro_audio_file=intro_audio_file,
-            ringtone_audio_file=ringtone_audio_file,
+        """Create a wake-up rule. Without weekdays it fires once and disables itself."""
+        profile = await self._resolve_profile(profile_id)
+
+        logger.info(
+            "Creating alarm '%s' at %02d:%02d %s (%s)",
+            label,
+            hour,
+            minute,
+            tz.key,
+            "recurring" if weekdays else "one-time",
         )
-        return await self._alarm_repository.save(alarm)
-
-    async def create_recurring(
-        self,
-        label: str,
-        hour: int,
-        minute: int,
-        days: frozenset[Weekday],
-        room_name: str,
-        intro_audio_file: str = "wake-up-bowls.mp3",
-        ringtone_audio_file: str = "get-up-aurora.mp3",
-    ) -> Alarm:
-        logger.info("Creating recurring alarm '%s' at %02d:%02d", label, hour, minute)
-        alarm = Alarm.create_recurring(
+        alarm = Alarm(
             label=label,
-            hour=hour,
-            minute=minute,
-            days=set(days),
-            series_id=uuid4(),
+            schedule=Schedule(hour=hour, minute=minute, tz=tz, weekdays=weekdays),
+            profile_id=profile.id,
             room_name=room_name,
-            intro_audio_file=intro_audio_file,
-            ringtone_audio_file=ringtone_audio_file,
         )
-        return await self._alarm_repository.save(alarm)
+        return await self._alarms.save(alarm)
 
-    async def activate(self, alarm_id: UUID) -> Alarm:
-        logger.info("Activating alarm %s", alarm_id)
+    async def enable(self, alarm_id: UUID) -> Alarm:
+        logger.info("Enabling alarm %s", alarm_id)
         alarm = await self._get_or_raise(alarm_id)
-        alarm.activate()
-        return await self._alarm_repository.save(alarm)
+        alarm.enable()
+        return await self._alarms.save(alarm)
 
-    async def deactivate(self, alarm_id: UUID) -> Alarm:
-        logger.info("Deactivating alarm %s", alarm_id)
+    async def disable(self, alarm_id: UUID) -> Alarm:
+        logger.info("Disabling alarm %s", alarm_id)
         alarm = await self._get_or_raise(alarm_id)
-        alarm.deactivate()
-        return await self._alarm_repository.save(alarm)
-
-    async def cancel(self, alarm_id: UUID) -> Alarm:
-        logger.info("Cancelling alarm %s", alarm_id)
-        alarm = await self._get_or_raise(alarm_id)
-        alarm.cancel()
-        return await self._alarm_repository.save(alarm)
-
-    async def snooze(self, alarm_id: UUID, minutes: int = 10) -> Alarm:
-        logger.info("Snoozing alarm %s for %d minutes", alarm_id, minutes)
-        alarm = await self._get_or_raise(alarm_id)
-        alarm.snooze(minutes)
-        await self._audio.stop()
-        return await self._alarm_repository.save(alarm)
+        alarm.disable()
+        await self._cancel_active_occurrence(alarm_id)
+        return await self._alarms.save(alarm)
 
     async def delete(self, alarm_id: UUID) -> None:
         logger.info("Deleting alarm %s", alarm_id)
-        await self._get_or_raise(alarm_id)
-        await self._alarm_repository.delete(alarm_id)
+        if not await self._alarms.delete_by_id(alarm_id):
+            raise AlarmNotFoundError(alarm_id)
 
-    async def delete_series(self, series_id: UUID) -> None:
-        logger.info("Deleting alarm series %s", series_id)
-        alarms = await self._alarm_repository.get_all()
-        series_alarms = [a for a in alarms if a.series_id == series_id]
-        for alarm in series_alarms:
-            await self._alarm_repository.delete(alarm.id)
+    async def list_occurrences(
+        self, alarm_id: UUID, limit: int = 20
+    ) -> list[AlarmOccurrence]:
+        await self._get_or_raise(alarm_id)
+        return await self._occurrences.find_for_alarm(alarm_id, limit=limit)
+
+    async def snooze(self, alarm_id: UUID, minutes: int = 10) -> AlarmOccurrence:
+        logger.info("Snoozing alarm %s for %d minutes", alarm_id, minutes)
+        occurrence = await self._get_active_or_raise(alarm_id)
+        occurrence.snooze(minutes)
+        await self._audio.stop()
+        return await self._occurrences.save(occurrence)
+
+    async def dismiss(self, alarm_id: UUID) -> AlarmOccurrence:
+        logger.info("Dismissing alarm %s", alarm_id)
+        occurrence = await self._get_active_or_raise(alarm_id)
+        occurrence.dismiss()
+        await self._audio.stop()
+        return await self._occurrences.save(occurrence)
 
     async def set_volume(self, volume: int) -> None:
         logger.info("Setting volume to %d", volume)
         await self._audio.set_volume(volume)
 
+    async def _resolve_profile(self, profile_id: UUID | None) -> AlarmProfile:
+        profile = (
+            await self._profiles.find_by_id(profile_id)
+            if profile_id is not None
+            else await self._profiles.find_default()
+        )
+        if profile is None:
+            raise AlarmProfileNotFoundError(profile_id)
+        return profile
+
+    async def _cancel_active_occurrence(self, alarm_id: UUID) -> None:
+        occurrence = await self._occurrences.find_active_for_alarm(alarm_id)
+        if occurrence is None:
+            return
+        if occurrence.is_running:
+            occurrence.dismiss()
+            await self._audio.stop()
+        else:
+            occurrence.skip()
+        await self._occurrences.save(occurrence)
+
     async def _get_or_raise(self, alarm_id: UUID) -> Alarm:
-        alarm = await self._alarm_repository.get(alarm_id)
+        alarm = await self._alarms.find_by_id(alarm_id)
         if alarm is None:
             raise AlarmNotFoundError(alarm_id)
         return alarm
+
+    async def _get_active_or_raise(self, alarm_id: UUID) -> AlarmOccurrence:
+        await self._get_or_raise(alarm_id)
+        occurrence = await self._occurrences.find_active_for_alarm(alarm_id)
+        if occurrence is None:
+            raise NoActiveOccurrenceError(alarm_id)
+        return occurrence

@@ -1,10 +1,8 @@
 from dishka import Provider, Scope, provide
 from hueify import Hueify
 
-from huerise.features.alarm.infrastructure.persistence import (
-    BackgroundAlarmRepository,
-)
 from huerise.features.alarm.application import AudioPlayer
+from huerise.features.alarm.domain import AlarmUnitOfWorkFactory
 from huerise.features.runner.application import AlarmRunner, Lights
 from huerise.features.runner.application.runner_port import (
     AlarmRunner as AlarmRunnerPort,
@@ -37,6 +35,10 @@ class RunnerProvider(Provider):
         self,
         lights: Lights,
         audio: AudioPlayer,
-        repo: BackgroundAlarmRepository,
+        unit_of_work_factory: AlarmUnitOfWorkFactory,
     ) -> AlarmRunnerPort:
-        return AlarmRunner(lights=lights, audio=audio, repo=repo)
+        return AlarmRunner(
+            lights=lights,
+            audio=audio,
+            unit_of_work_factory=unit_of_work_factory,
+        )
