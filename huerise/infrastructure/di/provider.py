@@ -1,7 +1,12 @@
 from collections.abc import AsyncIterator
 
 from dishka import Provider, Scope, provide
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 
 from huerise.application.ports import AudioPlayer, Lights
 from huerise.application.scheduler import AlarmRunner, AlarmScheduler
@@ -21,6 +26,7 @@ from huerise.application.queries import ListAlarmsQueryHandler
 from huerise.domain import AlarmRepository
 from huerise.infrastructure.adapters.mock_hue import MockHueLights
 from huerise.infrastructure.adapters.pyaudio import SoundDeviceAudioPlayer
+from huerise.infrastructure.credentials import DatabaseSettings
 from huerise.infrastructure.persistence import (
     BackgroundAlarmRepository,
     SQLModelAlarmRepository,
@@ -28,18 +34,27 @@ from huerise.infrastructure.persistence import (
 
 
 class DatabaseProvider(Provider):
-    def __init__(self, database_url: str) -> None:
-        super().__init__()
-        engine = create_async_engine(database_url, echo=False)
-        self._factory = async_sessionmaker(engine, expire_on_commit=False)
+    scope = Scope.APP
 
-    @provide(scope=Scope.APP)
-    def get_session_factory(self) -> async_sessionmaker[AsyncSession]:
-        return self._factory
+    @provide
+    def get_settings(self) -> DatabaseSettings:
+        return DatabaseSettings()
+
+    @provide
+    def get_engine(self, settings: DatabaseSettings) -> AsyncEngine:
+        return create_async_engine(settings.async_url, echo=False)
+
+    @provide
+    def get_session_factory(
+        self, engine: AsyncEngine
+    ) -> async_sessionmaker[AsyncSession]:
+        return async_sessionmaker(engine, expire_on_commit=False)
 
     @provide(scope=Scope.REQUEST)
-    async def get_session(self) -> AsyncIterator[AsyncSession]:
-        async with self._factory() as session:
+    async def get_session(
+        self, factory: async_sessionmaker[AsyncSession]
+    ) -> AsyncIterator[AsyncSession]:
+        async with factory() as session:
             try:
                 yield session
                 await session.commit()
