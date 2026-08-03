@@ -3,7 +3,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from huerise.domain.views import AlarmStatus, AlarmType, Weekday
+from huerise.alarm.domain.views import AlarmStatus, AlarmType, Weekday
 
 
 class CreateOneTimeAlarmBody(BaseModel):

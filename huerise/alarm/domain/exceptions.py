@@ -1,6 +1,6 @@
 import uuid
 
-from huerise.domain.views import AlarmStatus
+from huerise.alarm.domain.views import AlarmStatus
 
 
 class HueriseError(Exception):

@@ -2,9 +2,9 @@ import asyncio
 import logging
 from datetime import datetime, timezone
 
-from huerise.application.ports import AudioPlayer, Lights
-from huerise.domain import Alarm, AlarmRepository, Weekday
-from huerise.domain.views import Schedule
+from huerise.alarm.application.ports import AudioPlayer, Lights
+from huerise.alarm.domain import Alarm, AlarmRepository, Weekday
+from huerise.alarm.domain.views import Schedule
 
 logger = logging.getLogger(__name__)
 

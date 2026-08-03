@@ -3,9 +3,9 @@ from uuid import UUID
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
 from fastapi import APIRouter
 
-from huerise.application import AlarmService
-from huerise.presentation.mapper import to_alarm_out
-from huerise.presentation.schemas import (
+from huerise.alarm.application import AlarmService
+from huerise.alarm.presentation.mapper import to_alarm_out
+from huerise.alarm.presentation.schemas import (
     AlarmOut,
     CreateOneTimeAlarmBody,
     CreateRecurringAlarmBody,

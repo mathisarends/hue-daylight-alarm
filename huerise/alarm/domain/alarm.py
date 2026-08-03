@@ -1,12 +1,12 @@
 import uuid
 from datetime import datetime, timedelta, timezone
 
-from huerise.domain.exceptions import (
+from huerise.alarm.domain.exceptions import (
     AlarmAlreadyCancelledError,
     AlarmAlreadyInStatusError,
     AlarmNotRunningError,
 )
-from huerise.domain.views import (
+from huerise.alarm.domain.views import (
     AlarmStatus,
     AlarmType,
     IntroConfig,

@@ -1,6 +1,6 @@
 from hueify import Hueify
 
-from huerise.application import Lights
+from huerise.alarm.application import Lights
 
 
 class HueLights(Lights):

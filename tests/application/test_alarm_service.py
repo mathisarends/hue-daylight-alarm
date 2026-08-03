@@ -3,8 +3,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from huerise.application import AlarmService, AudioPlayer
-from huerise.domain import (
+from huerise.alarm.application import AlarmService, AudioPlayer
+from huerise.alarm.domain import (
     AlarmNotFoundError,
     AlarmNotRunningError,
     AlarmStatus,

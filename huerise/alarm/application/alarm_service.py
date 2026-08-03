@@ -2,8 +2,8 @@ import logging
 from collections.abc import Sequence
 from uuid import UUID, uuid4
 
-from huerise.application.ports import AudioPlayer
-from huerise.domain import Alarm, AlarmNotFoundError, AlarmRepository, Weekday
+from huerise.alarm.application.ports import AudioPlayer
+from huerise.alarm.domain import Alarm, AlarmNotFoundError, AlarmRepository, Weekday
 
 logger = logging.getLogger(__name__)
 

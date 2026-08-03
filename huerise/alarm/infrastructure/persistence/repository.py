@@ -5,8 +5,8 @@ from collections.abc import Sequence
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from huerise.domain import Alarm, AlarmRepository
-from huerise.domain.views import (
+from huerise.alarm.domain import Alarm, AlarmRepository
+from huerise.alarm.domain.views import (
     AlarmStatus,
     AlarmType,
     IntroConfig,
@@ -15,7 +15,7 @@ from huerise.domain.views import (
     SunriseConfig,
     Weekday,
 )
-from huerise.infrastructure.persistence.orm import AlarmModel
+from huerise.alarm.infrastructure.persistence.orm import AlarmModel
 
 
 class SQLModelAlarmRepository(AlarmRepository):

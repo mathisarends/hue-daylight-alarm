@@ -1,7 +1,7 @@
 import uuid
 from unittest.mock import AsyncMock, MagicMock
 
-from huerise.domain import (
+from huerise.alarm.domain import (
     Alarm,
     AlarmRepository,
     AlarmStatus,

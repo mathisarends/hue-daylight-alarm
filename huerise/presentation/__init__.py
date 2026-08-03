@@ -1,5 +1,3 @@
-from .api import router
+from .feature import Feature
 
-__all__ = [
-    "router",
-]
+__all__ = ["Feature"]

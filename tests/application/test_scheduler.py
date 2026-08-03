@@ -1,9 +1,9 @@
 from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from huerise.application import AlarmRunner, AlarmScheduler, AudioPlayer, Lights
-from huerise.domain import AlarmStatus, Weekday
-from huerise.domain.views import Schedule
+from huerise.alarm.application import AlarmRunner, AlarmScheduler, AudioPlayer, Lights
+from huerise.alarm.domain import AlarmStatus, Weekday
+from huerise.alarm.domain.views import Schedule
 from tests.application.conftest import make_alarm, make_repo
 
 
@@ -78,7 +78,7 @@ class TestAlarmRunnerRunSunrise:
         lights = make_lights()
         runner = AlarmRunner(lights=lights, audio=make_audio(), repo=make_repo())
 
-        with patch("huerise.application.scheduler.asyncio.create_task"):
+        with patch("huerise.alarm.application.scheduler.asyncio.create_task"):
             await runner._run_sunrise(alarm)
 
         lights.activate_scene.assert_awaited_once_with(
@@ -91,7 +91,7 @@ class TestAlarmRunnerRunSunrise:
         lights = make_lights()
         runner = AlarmRunner(lights=lights, audio=make_audio(), repo=make_repo())
 
-        with patch("huerise.application.scheduler.asyncio.create_task"):
+        with patch("huerise.alarm.application.scheduler.asyncio.create_task"):
             await runner._run_sunrise(alarm)
 
         # make_alarm uses steps=1
@@ -164,10 +164,10 @@ class TestAlarmSchedulerTick:
         runner.run = AsyncMock()
         scheduler = AlarmScheduler(repo=repo, runner=runner)
 
-        with patch("huerise.application.scheduler.datetime") as mock_dt:
+        with patch("huerise.alarm.application.scheduler.datetime") as mock_dt:
             mock_dt.now.return_value = _MONDAY_7_00
             with patch(
-                "huerise.application.scheduler.asyncio.create_task"
+                "huerise.alarm.application.scheduler.asyncio.create_task"
             ) as mock_task:
                 await scheduler._tick()
 
@@ -179,10 +179,10 @@ class TestAlarmSchedulerTick:
         runner = make_runner()
         scheduler = AlarmScheduler(repo=repo, runner=runner)
 
-        with patch("huerise.application.scheduler.datetime") as mock_dt:
+        with patch("huerise.alarm.application.scheduler.datetime") as mock_dt:
             mock_dt.now.return_value = _MONDAY_7_00
             with patch(
-                "huerise.application.scheduler.asyncio.create_task"
+                "huerise.alarm.application.scheduler.asyncio.create_task"
             ) as mock_task:
                 await scheduler._tick()
 
@@ -194,10 +194,10 @@ class TestAlarmSchedulerTick:
         runner = make_runner()
         scheduler = AlarmScheduler(repo=repo, runner=runner)
 
-        with patch("huerise.application.scheduler.datetime") as mock_dt:
+        with patch("huerise.alarm.application.scheduler.datetime") as mock_dt:
             mock_dt.now.return_value = _MONDAY_7_00
             with patch(
-                "huerise.application.scheduler.asyncio.create_task"
+                "huerise.alarm.application.scheduler.asyncio.create_task"
             ) as mock_task:
                 await scheduler._tick()
 
@@ -211,10 +211,10 @@ class TestAlarmSchedulerTick:
         runner.run = AsyncMock()
         scheduler = AlarmScheduler(repo=repo, runner=runner)
 
-        with patch("huerise.application.scheduler.datetime") as mock_dt:
+        with patch("huerise.alarm.application.scheduler.datetime") as mock_dt:
             mock_dt.now.return_value = _MONDAY_7_00
             with patch(
-                "huerise.application.scheduler.asyncio.create_task"
+                "huerise.alarm.application.scheduler.asyncio.create_task"
             ) as mock_task:
                 await scheduler._tick()
 

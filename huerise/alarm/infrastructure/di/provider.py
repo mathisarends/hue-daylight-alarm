@@ -1,6 +1,7 @@
 from collections.abc import AsyncIterator
 
 from dishka import Provider, Scope, provide
+from hueify import Hueify
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -8,19 +9,21 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from huerise.application.alarm_service import (
+from huerise.alarm.application import (
     AlarmRunner,
     AlarmScheduler,
     AlarmService,
     AudioPlayer,
     Lights,
 )
-
-from huerise.domain import AlarmRepository
-from huerise.infrastructure.adapters.mock_hue import MockHueLights
-from huerise.infrastructure.adapters.pyaudio import SoundDeviceAudioPlayer
-from huerise.infrastructure.credentials import DatabaseSettings
-from huerise.infrastructure.persistence import (
+from huerise.alarm.domain import AlarmRepository
+from huerise.alarm.infrastructure.adapters.hue import HueLights
+from huerise.alarm.infrastructure.adapters.pyaudio import SoundDeviceAudioPlayer
+from huerise.alarm.infrastructure.credentials import (
+    DatabaseSettings,
+    HueCredentials,
+)
+from huerise.alarm.infrastructure.persistence import (
     BackgroundAlarmRepository,
     SQLModelAlarmRepository,
 )
@@ -74,8 +77,12 @@ class SchedulerProvider(Provider):
     scope = Scope.APP
 
     @provide
-    def get_lights(self) -> Lights:
-        return MockHueLights()
+    def get_hue_credentials(self) -> HueCredentials:
+        return HueCredentials()
+
+    @provide
+    def get_lights(self, credentials: HueCredentials) -> Lights:
+        return HueLights(Hueify(credentials.bridge_ip, credentials.app_key))
 
     @provide
     def get_audio(self) -> AudioPlayer:

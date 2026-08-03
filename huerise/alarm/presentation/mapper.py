@@ -1,5 +1,5 @@
-from huerise.domain import Alarm
-from huerise.presentation.api.schemas import AlarmOut, ScheduleOut
+from huerise.alarm.domain import Alarm
+from huerise.alarm.presentation.schemas import AlarmOut, ScheduleOut
 
 
 def to_alarm_out(alarm: Alarm) -> AlarmOut:

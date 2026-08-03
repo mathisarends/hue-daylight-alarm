@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from huerise.domain.exceptions import (
+from huerise.alarm.domain.exceptions import (
     AlarmAlreadyCancelledError,
     AlarmAlreadyInStatusError,
     AlarmNotFoundError,

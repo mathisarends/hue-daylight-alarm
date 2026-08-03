@@ -2,7 +2,7 @@ import uuid
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 
-from huerise.domain.alarm import Alarm
+from huerise.alarm.domain.alarm import Alarm
 
 
 class AlarmRepository(ABC):

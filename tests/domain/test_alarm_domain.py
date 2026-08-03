@@ -3,7 +3,7 @@ from datetime import timezone
 
 import pytest
 
-from huerise.domain import (
+from huerise.alarm.domain import (
     Alarm,
     AlarmAlreadyCancelledError,
     AlarmAlreadyInStatusError,
