@@ -23,6 +23,7 @@ from huerise.features.alarm.domain import (
 )
 from huerise.features.devices.application import AudioPlayer, Lights
 from huerise.infrastructure.storage import StorageBackend, StorageFile, UploadResponse
+from huerise.infrastructure.storage.port import DEFAULT_LINK_LIFETIME
 
 BERLIN = ZoneInfo("Europe/Berlin")
 
@@ -49,6 +50,11 @@ class FakeStorage(StorageBackend):
         self, path: str, data: bytes, content_type: str | None = None
     ) -> UploadResponse:
         raise NotImplementedError
+
+    async def public_url(
+        self, path: str, lifetime: timedelta = DEFAULT_LINK_LIFETIME
+    ) -> str:
+        return f"https://storage.test/{path}"
 
 
 def make_sound_storage() -> FakeStorage:

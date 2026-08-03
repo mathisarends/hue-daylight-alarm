@@ -1,11 +1,13 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from datetime import timedelta
 from typing import Any
 
 import aioboto3
 from botocore.config import Config
 
 from huerise.infrastructure.storage.port import (
+    DEFAULT_LINK_LIFETIME,
     StorageBackend,
     StorageFile,
     UploadResponse,
@@ -26,10 +28,10 @@ class S3StorageBackend(StorageBackend):
         self._settings = settings
 
     @asynccontextmanager
-    async def _client(self) -> AsyncGenerator[Any]:
+    async def _client(self, endpoint_url: str | None = None) -> AsyncGenerator[Any]:
         async with self._session.client(
             service_name="s3",
-            endpoint_url=self._settings.endpoint_url,
+            endpoint_url=endpoint_url or self._settings.endpoint_url,
             region_name="us-east-1",
             aws_access_key_id=self._settings.access_key.get_secret_value(),
             aws_secret_access_key=self._settings.secret_key.get_secret_value(),
@@ -93,3 +95,15 @@ class S3StorageBackend(StorageBackend):
                 continuation_token = response["NextContinuationToken"]
 
         return files
+
+    async def public_url(
+        self,
+        path: str,
+        lifetime: timedelta = DEFAULT_LINK_LIFETIME,
+    ) -> str:
+        async with self._client(self._settings.public_endpoint_url) as s3:
+            return await s3.generate_presigned_url(
+                "get_object",
+                Params={"Bucket": self._settings.bucket_name, "Key": path},
+                ExpiresIn=int(lifetime.total_seconds()),
+            )
