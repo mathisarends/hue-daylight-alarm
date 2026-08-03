@@ -39,7 +39,7 @@ async def list_alarms(alarm_service: FromDishka[AlarmService]) -> list[AlarmOut]
     return [to_alarm_out(alarm) for alarm in alarms]
 
 
-@router.post("", response_model=AlarmOut, status_code=201, operation_id="createAlarm")
+@router.post("", response_model=AlarmOut, status_code=201, operation_id="create_alarm")
 async def create_alarm(
     body: CreateAlarmBody,
     alarm_service: FromDishka[AlarmService],
