@@ -1,5 +1,4 @@
 import logging
-from datetime import timedelta
 from uuid import UUID
 
 from huerise.features.alarm.domain import (
@@ -30,26 +29,15 @@ class AlarmProfileService:
     async def create_profile(
         self,
         name: str,
-        intro_audio_file: str,
-        ringtone_audio_file: str,
-        scene_name: str = "Tageslichtwecker",
-        sunrise_duration_minutes: int = 7,
-        brightness_start: int = 1,
-        brightness_end: int = 100,
-        ringtone_volume: int = 80,
+        intro_config: IntroConfig,
+        ringtone_config: RingtoneConfig,
+        sunrise_config: SunriseConfig | None = None,
     ) -> AlarmProfile:
         logger.info("Creating alarm profile '%s'", name)
         profile = AlarmProfile(
             name=name,
-            intro_config=IntroConfig(audio_file=intro_audio_file),
-            sunrise_config=SunriseConfig(
-                scene_name=scene_name,
-                duration=timedelta(minutes=sunrise_duration_minutes),
-                brightness_start=brightness_start,
-                brightness_end=brightness_end,
-            ),
-            ringtone_config=RingtoneConfig(
-                audio_file=ringtone_audio_file, volume=ringtone_volume
-            ),
+            intro_config=intro_config,
+            sunrise_config=sunrise_config or SunriseConfig(),
+            ringtone_config=ringtone_config,
         )
         return await self._profiles.save(profile)

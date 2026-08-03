@@ -1,10 +1,8 @@
 import logging
 from uuid import UUID
-from zoneinfo import ZoneInfo
 
 from huerise.features.alarm.application.ports import AudioPlayer
 from huerise.features.alarm.domain import (
-    DEFAULT_TIMEZONE,
     Alarm,
     AlarmNotFoundError,
     AlarmOccurrence,
@@ -15,7 +13,6 @@ from huerise.features.alarm.domain import (
     AlarmRepository,
     NoActiveOccurrenceError,
     Schedule,
-    Weekday,
 )
 
 logger = logging.getLogger(__name__)
@@ -43,11 +40,8 @@ class AlarmService:
     async def create_alarm(
         self,
         label: str,
-        hour: int,
-        minute: int,
+        schedule: Schedule,
         room_name: str,
-        weekdays: frozenset[Weekday] = frozenset(),
-        tz: ZoneInfo = DEFAULT_TIMEZONE,
         profile_id: UUID | None = None,
     ) -> Alarm:
         """Create a wake-up rule. Without weekdays it fires once and disables itself."""
@@ -56,14 +50,14 @@ class AlarmService:
         logger.info(
             "Creating alarm '%s' at %02d:%02d %s (%s)",
             label,
-            hour,
-            minute,
-            tz.key,
-            "recurring" if weekdays else "one-time",
+            schedule.hour,
+            schedule.minute,
+            schedule.tz_name,
+            "recurring" if schedule.is_recurring else "one-time",
         )
         alarm = Alarm(
             label=label,
-            schedule=Schedule(hour=hour, minute=minute, tz=tz, weekdays=weekdays),
+            schedule=schedule,
             profile_id=profile.id,
             room_name=room_name,
         )
