@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from huerise.features.devices.domain import (
+    AudioOutputUnavailableError,
     RoomNotFoundError,
     SceneNotFoundError,
     SoundNotFoundError,
@@ -11,6 +12,7 @@ _HANDLERS: list[tuple[type[Exception], int, str]] = [
     (SoundNotFoundError, 404, "Sound not found"),
     (RoomNotFoundError, 404, "Room not found"),
     (SceneNotFoundError, 404, "Scene not found"),
+    (AudioOutputUnavailableError, 503, "Audio output unavailable"),
 ]
 
 

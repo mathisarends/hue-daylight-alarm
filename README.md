@@ -9,10 +9,12 @@ Sunrise alarm clock powered by Philips Hue. Gradually increases light brightness
 - **One-time & recurring alarms** — schedule single alarms or recurring series on specific weekdays
 - **Alarm lifecycle** — activate, deactivate, cancel, and delete alarms through the API
 - **Sound & scene browsing** — list the available sounds and Hue scenes and preview them before putting them into a profile
+- **Switchable audio output** — play through the local sound device or a Sonos speaker on the network, switched at runtime
 
 ## Tech Stack
 
-Python 3.13+ · FastAPI · SQLite (aiosqlite) · SQLModel · Alembic · Dishka (DI) · [hueify](https://pypi.org/project/hueify/) · uv
+Python 3.13+ · FastAPI · SQLite (aiosqlite) · SQLModel · Alembic · Dishka (DI) · [hueify](https://pypi.org/project/hueify/) ·
+[sonosify](https://pypi.org/project/sonosify/) · uv
 
 ## Prerequisites
 
@@ -128,6 +130,48 @@ click **Authorize** and paste the token to call endpoints from there.
 | POST   | `/sounds/preview` | Preview a sound                           |
 | POST   | `/sounds/stop`    | Stop the current sound                    |
 | POST   | `/sounds/volume`  | Set playback volume                       |
+
+### Audio output
+
+Sounds play either through the machine running the API (`local`) or through a
+Sonos speaker on the same network (`sonos`). Both alarms and previews follow
+the selected output, and switching stops whatever is currently playing.
+
+| Method | Path             | Description                          |
+| ------ | ---------------- | ------------------------------------ |
+| GET    | `/audio-output`  | Show the active output               |
+| PUT    | `/audio-output`  | Switch the output                    |
+
+```bash
+curl -X PUT http://localhost:8000/audio-output \
+  -H "Authorization: Bearer $API_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"output": "sonos"}'
+```
+
+The selection lives in memory: a restart falls back to `AUDIO_DEFAULT_OUTPUT`
+(default `local`).
+
+#### Sonos setup
+
+A Sonos speaker streams the sound itself instead of receiving audio from the
+API, so it needs two things:
+
+```
+SONOS_ROOM_NAME=Bedroom
+MINIO_PUBLIC_ENDPOINT_URL=http://192.168.1.5:9000
+```
+
+- `SONOS_ROOM_NAME` — the speaker to play on. Left empty, discovery picks the
+  first group coordinator it finds. Set `SONOS_IP` instead if your network
+  swallows the SSDP multicast that discovery relies on.
+- `MINIO_PUBLIC_ENDPOINT_URL` — the address the **speaker** reaches MinIO
+  under. Sounds are handed over as presigned links, and a link is only valid
+  for the host it was signed for, so `localhost` does not work here.
+
+Discovery happens on the first playback, not at startup — running with the
+local output never touches the network. When the speaker cannot be reached,
+the affected request answers `503`.
 
 ## Local Development
 

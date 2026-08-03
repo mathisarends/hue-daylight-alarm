@@ -1,17 +1,25 @@
 from collections.abc import AsyncIterator
 
-from dishka import Provider, Scope, provide
+from dishka import Provider, Scope, alias, provide
 from hueify import Hueify
 
 from huerise.features.devices.application import (
+    AudioOutputService,
     AudioPlayer,
     Lights,
     SceneService,
     SoundCatalog,
     SoundService,
+    SwitchableAudioPlayer,
 )
+from huerise.features.devices.domain import AudioOutput
 from huerise.features.devices.infrastructure.hue import HueLights
-from huerise.features.devices.infrastructure.settings import HueCredentials
+from huerise.features.devices.infrastructure.settings import (
+    AudioSettings,
+    HueCredentials,
+    SonosSettings,
+)
+from huerise.features.devices.infrastructure.sonos import SonosAudioPlayer
 from huerise.features.devices.infrastructure.sound_device import SoundDeviceAudioPlayer
 from huerise.infrastructure.storage import StorageBackend
 
@@ -40,8 +48,44 @@ class DevicesProvider(Provider):
         return SoundCatalog(storage)
 
     @provide
-    def audio(self, catalog: SoundCatalog, storage: StorageBackend) -> AudioPlayer:
+    def audio_settings(self) -> AudioSettings:
+        return AudioSettings()
+
+    @provide
+    def sonos_settings(self) -> SonosSettings:
+        return SonosSettings()
+
+    @provide
+    def local_audio(
+        self, catalog: SoundCatalog, storage: StorageBackend
+    ) -> SoundDeviceAudioPlayer:
         return SoundDeviceAudioPlayer(catalog, storage)
+
+    @provide
+    async def sonos_audio(
+        self,
+        catalog: SoundCatalog,
+        storage: StorageBackend,
+        settings: SonosSettings,
+    ) -> AsyncIterator[SonosAudioPlayer]:
+        """Owns the speaker connection, so shutdown closes it."""
+        player = SonosAudioPlayer(catalog, storage, settings)
+        yield player
+        await player.close()
+
+    @provide
+    def switchable_audio(
+        self,
+        local: SoundDeviceAudioPlayer,
+        sonos: SonosAudioPlayer,
+        settings: AudioSettings,
+    ) -> SwitchableAudioPlayer:
+        return SwitchableAudioPlayer(
+            {AudioOutput.LOCAL: local, AudioOutput.SONOS: sonos},
+            active=settings.default_output,
+        )
+
+    audio = alias(source=SwitchableAudioPlayer, provides=AudioPlayer)
 
     @provide(scope=Scope.REQUEST)
     def scene_service(self, lights: Lights) -> SceneService:
@@ -50,3 +94,7 @@ class DevicesProvider(Provider):
     @provide(scope=Scope.REQUEST)
     def sound_service(self, catalog: SoundCatalog, audio: AudioPlayer) -> SoundService:
         return SoundService(catalog, audio)
+
+    @provide(scope=Scope.REQUEST)
+    def audio_output_service(self, player: SwitchableAudioPlayer) -> AudioOutputService:
+        return AudioOutputService(player)
