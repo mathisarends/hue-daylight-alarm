@@ -1,11 +1,15 @@
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from huerise.features.devices.application import SceneService
 from huerise.features.devices.presentation.schemas import RoomRead
+from huerise.presentation import require_access_token
 
 scene_router = APIRouter(
-    prefix="/rooms", tags=["Rooms & Scenes"], route_class=DishkaRoute
+    prefix="/rooms",
+    tags=["Rooms & Scenes"],
+    route_class=DishkaRoute,
+    dependencies=[Depends(require_access_token)],
 )
 
 

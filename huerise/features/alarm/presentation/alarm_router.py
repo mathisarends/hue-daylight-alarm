@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from huerise.features.alarm.application import AlarmService
 from huerise.features.alarm.presentation.alarm_schemas import (
@@ -10,8 +10,14 @@ from huerise.features.alarm.presentation.alarm_schemas import (
     OccurrenceRead,
     SnoozeRequest,
 )
+from huerise.presentation import require_access_token
 
-alarm_router = APIRouter(prefix="/alarms", tags=["Alarms"], route_class=DishkaRoute)
+alarm_router = APIRouter(
+    prefix="/alarms",
+    tags=["Alarms"],
+    route_class=DishkaRoute,
+    dependencies=[Depends(require_access_token)],
+)
 
 
 @alarm_router.get("", response_model=list[AlarmRead], operation_id="listAlarms")

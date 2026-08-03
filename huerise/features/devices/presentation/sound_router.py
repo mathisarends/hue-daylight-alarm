@@ -1,5 +1,5 @@
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from huerise.features.devices.application import SoundService
 from huerise.features.devices.domain import SoundCategory
@@ -8,8 +8,14 @@ from huerise.features.devices.presentation.schemas import (
     SoundRead,
     VolumeRequest,
 )
+from huerise.presentation import require_access_token
 
-sound_router = APIRouter(prefix="/sounds", tags=["Sounds"], route_class=DishkaRoute)
+sound_router = APIRouter(
+    prefix="/sounds",
+    tags=["Sounds"],
+    route_class=DishkaRoute,
+    dependencies=[Depends(require_access_token)],
+)
 
 
 @sound_router.get("", response_model=list[SoundRead], operation_id="list_sounds")
