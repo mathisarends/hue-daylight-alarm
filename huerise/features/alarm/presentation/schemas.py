@@ -1,10 +1,3 @@
-"""Wire format for the alarm API.
-
-Two conventions keep this small: nested schemas mirror the domain's value
-objects instead of flattening them into prefixed fields, and every schema owns
-its own translation to and from the domain, so there is no separate mapper.
-"""
-
 from datetime import datetime, timedelta
 from typing import Self
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
