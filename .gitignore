@@ -98,3 +98,4 @@ bandit-report.json
 *.sqlite3
 *.db-journal
 *.db-wal
+data/
