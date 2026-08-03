@@ -1,4 +1,4 @@
-from huerise.application.alarm_service import Lights
+from huerise.application import Lights
 
 
 class MockHueLights(Lights):

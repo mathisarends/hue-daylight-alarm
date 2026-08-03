@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from huerise.application.alarm_service import AlarmScheduler
+from huerise.application import AlarmScheduler
 
 
 @asynccontextmanager

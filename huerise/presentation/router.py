@@ -3,7 +3,7 @@ from uuid import UUID
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
 from fastapi import APIRouter
 
-from huerise.application.alarm_service import AlarmService
+from huerise.application import AlarmService
 from huerise.presentation.mapper import to_alarm_out
 from huerise.presentation.schemas import (
     AlarmOut,
@@ -18,9 +18,9 @@ router = APIRouter(prefix="/alarms", tags=["Alarms"], route_class=DishkaRoute)
 
 @router.get("", response_model=list[AlarmOut], operation_id="listAlarms")
 async def list_alarms(
-    service: FromDishka[AlarmService],
+    alarm_service: FromDishka[AlarmService],
 ) -> list[AlarmOut]:
-    alarms = await service.list_alarms()
+    alarms = await alarm_service.list_alarms()
     return [to_alarm_out(a) for a in alarms]
 
 
@@ -32,9 +32,9 @@ async def list_alarms(
 )
 async def create_one_time_alarm(
     body: CreateOneTimeAlarmBody,
-    service: FromDishka[AlarmService],
+    alarm_service: FromDishka[AlarmService],
 ) -> AlarmOut:
-    alarm = await service.create_one_time(
+    alarm = await alarm_service.create_one_time(
         label=body.label,
         hour=body.hour,
         minute=body.minute,
@@ -53,9 +53,9 @@ async def create_one_time_alarm(
 )
 async def create_recurring_alarm(
     body: CreateRecurringAlarmBody,
-    service: FromDishka[AlarmService],
+    alarm_service: FromDishka[AlarmService],
 ) -> AlarmOut:
-    alarm = await service.create_recurring(
+    alarm = await alarm_service.create_recurring(
         label=body.label,
         hour=body.hour,
         minute=body.minute,
@@ -72,9 +72,9 @@ async def create_recurring_alarm(
 )
 async def activate_alarm(
     alarm_id: UUID,
-    service: FromDishka[AlarmService],
+    alarm_service: FromDishka[AlarmService],
 ) -> AlarmOut:
-    alarm = await service.activate(alarm_id)
+    alarm = await alarm_service.activate(alarm_id)
     return to_alarm_out(alarm)
 
 
@@ -83,18 +83,18 @@ async def activate_alarm(
 )
 async def deactivate_alarm(
     alarm_id: UUID,
-    service: FromDishka[AlarmService],
+    alarm_service: FromDishka[AlarmService],
 ) -> AlarmOut:
-    alarm = await service.deactivate(alarm_id)
+    alarm = await alarm_service.deactivate(alarm_id)
     return to_alarm_out(alarm)
 
 
 @router.post("/{alarm_id}/cancel", response_model=AlarmOut, operation_id="cancelAlarm")
 async def cancel_alarm(
     alarm_id: UUID,
-    service: FromDishka[AlarmService],
+    alarm_service: FromDishka[AlarmService],
 ) -> AlarmOut:
-    alarm = await service.cancel(alarm_id)
+    alarm = await alarm_service.cancel(alarm_id)
     return to_alarm_out(alarm)
 
 
@@ -102,18 +102,18 @@ async def cancel_alarm(
 async def snooze_alarm(
     alarm_id: UUID,
     body: SnoozeAlarmBody,
-    service: FromDishka[AlarmService],
+    alarm_service: FromDishka[AlarmService],
 ) -> AlarmOut:
-    alarm = await service.snooze(alarm_id, minutes=body.minutes)
+    alarm = await alarm_service.snooze(alarm_id, minutes=body.minutes)
     return to_alarm_out(alarm)
 
 
 @router.post("/volume", status_code=204, response_model=None, operation_id="setVolume")
 async def set_volume(
     body: SetVolumeBody,
-    service: FromDishka[AlarmService],
+    alarm_service: FromDishka[AlarmService],
 ) -> None:
-    await service.set_volume(body.volume)
+    await alarm_service.set_volume(body.volume)
 
 
 @router.delete(
@@ -124,9 +124,9 @@ async def set_volume(
 )
 async def delete_series(
     series_id: UUID,
-    service: FromDishka[AlarmService],
+    alarm_service: FromDishka[AlarmService],
 ) -> None:
-    await service.delete_series(series_id)
+    await alarm_service.delete_series(series_id)
 
 
 @router.delete(
@@ -134,6 +134,6 @@ async def delete_series(
 )
 async def delete_alarm(
     alarm_id: UUID,
-    service: FromDishka[AlarmService],
+    alarm_service: FromDishka[AlarmService],
 ) -> None:
-    await service.delete(alarm_id)
+    await alarm_service.delete(alarm_id)
