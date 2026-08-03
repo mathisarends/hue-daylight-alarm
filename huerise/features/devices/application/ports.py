@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 
+from huerise.features.devices.domain import Room
+
 
 class AudioPlayer(ABC):
     @abstractmethod
@@ -13,6 +15,9 @@ class AudioPlayer(ABC):
 
 
 class Lights(ABC):
+    @abstractmethod
+    async def list_rooms(self) -> list[Room]: ...
+
     @abstractmethod
     async def activate_scene(self, room_name: str, scene_name: str) -> None: ...
 

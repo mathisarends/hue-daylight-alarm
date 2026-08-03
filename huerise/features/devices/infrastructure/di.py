@@ -6,6 +6,7 @@ from hueify import Hueify
 from huerise.features.devices.application import (
     AudioPlayer,
     Lights,
+    SceneService,
     SoundCatalog,
     SoundService,
 )
@@ -41,6 +42,10 @@ class DevicesProvider(Provider):
     @provide
     def audio(self, catalog: SoundCatalog, storage: StorageBackend) -> AudioPlayer:
         return SoundDeviceAudioPlayer(catalog, storage)
+
+    @provide(scope=Scope.REQUEST)
+    def scene_service(self, lights: Lights) -> SceneService:
+        return SceneService(lights)
 
     @provide(scope=Scope.REQUEST)
     def sound_service(self, catalog: SoundCatalog, audio: AudioPlayer) -> SoundService:

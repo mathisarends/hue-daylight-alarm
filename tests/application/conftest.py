@@ -225,6 +225,7 @@ def make_audio() -> AudioPlayer:
 
 def make_lights() -> Lights:
     lights = MagicMock(spec=Lights)
+    lights.list_rooms = AsyncMock(return_value=[])
     lights.activate_scene = AsyncMock()
     lights.set_brightness = AsyncMock()
     return lights

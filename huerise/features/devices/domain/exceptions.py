@@ -5,3 +5,13 @@ class DeviceError(Exception):
 class SoundNotFoundError(DeviceError):
     def __init__(self, sound_id: str) -> None:
         super().__init__(f"Sound {sound_id} not found")
+
+
+class RoomNotFoundError(DeviceError):
+    def __init__(self, room_name: str) -> None:
+        super().__init__(f"Room '{room_name}' not found")
+
+
+class SceneNotFoundError(DeviceError):
+    def __init__(self, room_name: str, scene_name: str) -> None:
+        super().__init__(f"Room '{room_name}' has no scene '{scene_name}'")

@@ -3,7 +3,7 @@ from typing import Self
 from pydantic import BaseModel, Field
 
 from huerise.features.devices.application.sound_service import PREVIEW_VOLUME
-from huerise.features.devices.domain import Sound, SoundCategory
+from huerise.features.devices.domain import Room, Sound, SoundCategory
 
 
 class SoundRead(BaseModel):
@@ -25,3 +25,12 @@ class SoundPreviewRequest(BaseModel):
 
 class VolumeRequest(BaseModel):
     volume: int = Field(ge=0, le=100)
+
+
+class RoomRead(BaseModel):
+    name: str
+    scene_names: list[str]
+
+    @classmethod
+    def from_domain(cls, room: Room) -> Self:
+        return cls(name=room.name, scene_names=list(room.scene_names))
