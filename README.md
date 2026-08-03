@@ -31,8 +31,16 @@ Python 3.13+ · FastAPI · SQLite (aiosqlite) · SQLModel · Alembic · Dishka (
    Edit `.env` and fill in your values:
 
    ```
+   API_ACCESS_TOKEN=your-api-access-token
    HUE_APP_KEY=your-hue-app-key
    HUE_BRIDGE_IP=your-hue-bridge-ip
+   ```
+
+   `API_ACCESS_TOKEN` is required — the app refuses to start without it.
+   Generate one with:
+
+   ```bash
+   python -c "import secrets; print(secrets.token_urlsafe(32))"
    ```
 
 2. **Start the stack**
@@ -63,12 +71,25 @@ Python 3.13+ · FastAPI · SQLite (aiosqlite) · SQLModel · Alembic · Dishka (
 3. **Verify**
 
    ```bash
-   curl http://localhost:8000/alarms
+   curl -H "Authorization: Bearer $API_ACCESS_TOKEN" http://localhost:8000/alarms
    ```
 
 ## API
 
-Interactive docs are available at `http://localhost:8000/docs` (Swagger UI).
+### Authentication
+
+Every endpoint is protected by a single static access token — there are no user
+accounts. Send it as a bearer token:
+
+```bash
+curl -H "Authorization: Bearer $API_ACCESS_TOKEN" http://localhost:8000/alarms
+```
+
+Requests with a missing, malformed, or wrong token get `401 Unauthorized` with a
+`WWW-Authenticate: Bearer` header.
+
+Interactive docs are available at `http://localhost:8000/docs` (Swagger UI) —
+click **Authorize** and paste the token to call endpoints from there.
 
 Key endpoints:
 
