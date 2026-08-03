@@ -4,6 +4,11 @@ from dishka.integrations.fastapi import DishkaRoute, FromDishka
 from fastapi import APIRouter
 
 from huerise.features.alarm.application import AlarmProfileService, AlarmService
+from huerise.features.alarm.presentation.mappers import (
+    alarm_to_read,
+    occurrence_to_read,
+    profile_to_read,
+)
 from huerise.features.alarm.presentation.schemas import (
     AlarmCreate,
     AlarmRead,
@@ -23,7 +28,7 @@ profile_router = APIRouter(
 @router.get("", response_model=list[AlarmRead], operation_id="listAlarms")
 async def list_alarms(alarm_service: FromDishka[AlarmService]) -> list[AlarmRead]:
     alarms = await alarm_service.list_alarms()
-    return [AlarmRead.from_domain(alarm) for alarm in alarms]
+    return [alarm_to_read(alarm) for alarm in alarms]
 
 
 @router.post("", response_model=AlarmRead, status_code=201, operation_id="create_alarm")
@@ -37,7 +42,7 @@ async def create_alarm(
         room_name=body.room_name,
         profile_id=body.profile_id,
     )
-    return AlarmRead.from_domain(alarm)
+    return alarm_to_read(alarm)
 
 
 @router.get("/{alarm_id}", response_model=AlarmRead, operation_id="getAlarm")
@@ -45,7 +50,8 @@ async def get_alarm(
     alarm_id: UUID,
     alarm_service: FromDishka[AlarmService],
 ) -> AlarmRead:
-    return AlarmRead.from_domain(await alarm_service.get_alarm(alarm_id))
+    alarm = await alarm_service.get_alarm(alarm_id)
+    return alarm_to_read(alarm)
 
 
 @router.post("/{alarm_id}/enable", response_model=AlarmRead, operation_id="enableAlarm")
@@ -53,7 +59,8 @@ async def enable_alarm(
     alarm_id: UUID,
     alarm_service: FromDishka[AlarmService],
 ) -> AlarmRead:
-    return AlarmRead.from_domain(await alarm_service.enable(alarm_id))
+    alarm = await alarm_service.enable(alarm_id)
+    return alarm_to_read(alarm)
 
 
 @router.post(
@@ -63,7 +70,8 @@ async def disable_alarm(
     alarm_id: UUID,
     alarm_service: FromDishka[AlarmService],
 ) -> AlarmRead:
-    return AlarmRead.from_domain(await alarm_service.disable(alarm_id))
+    alarm = await alarm_service.disable(alarm_id)
+    return alarm_to_read(alarm)
 
 
 @router.post(
@@ -75,7 +83,7 @@ async def snooze_alarm(
     alarm_service: FromDishka[AlarmService],
 ) -> OccurrenceRead:
     occurrence = await alarm_service.snooze(alarm_id, minutes=body.minutes)
-    return OccurrenceRead.from_domain(occurrence)
+    return occurrence_to_read(occurrence)
 
 
 @router.post(
@@ -85,7 +93,8 @@ async def dismiss_alarm(
     alarm_id: UUID,
     alarm_service: FromDishka[AlarmService],
 ) -> OccurrenceRead:
-    return OccurrenceRead.from_domain(await alarm_service.dismiss(alarm_id))
+    occurrence = await alarm_service.dismiss(alarm_id)
+    return occurrence_to_read(occurrence)
 
 
 @router.get(
@@ -99,7 +108,7 @@ async def list_occurrences(
     limit: int = 20,
 ) -> list[OccurrenceRead]:
     occurrences = await alarm_service.list_occurrences(alarm_id, limit=limit)
-    return [OccurrenceRead.from_domain(occurrence) for occurrence in occurrences]
+    return [occurrence_to_read(occurrence) for occurrence in occurrences]
 
 
 @router.post("/volume", status_code=204, response_model=None, operation_id="setVolume")
@@ -125,7 +134,7 @@ async def list_profiles(
     profile_service: FromDishka[AlarmProfileService],
 ) -> list[ProfileRead]:
     profiles = await profile_service.list_profiles()
-    return [ProfileRead.from_domain(profile) for profile in profiles]
+    return [profile_to_read(profile) for profile in profiles]
 
 
 @profile_router.post(
@@ -141,4 +150,4 @@ async def create_profile(
         sunrise_config=body.sunrise.to_domain(),
         ringtone_config=body.ringtone.to_domain(),
     )
-    return ProfileRead.from_domain(profile)
+    return profile_to_read(profile)

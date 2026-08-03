@@ -1,21 +1,17 @@
 """Wire format for the alarm API.
 
-Two conventions keep this small: nested schemas mirror the domain's value
-objects instead of flattening them into prefixed fields, and every schema owns
-its own translation to and from the domain, so there is no separate mapper.
+Nested schemas mirror the domain's value objects instead of flattening them
+into prefixed fields. Schemas own their translation to the domain via
+`to_domain`; translation from the domain lives in `mappers.py`.
 """
 
 from datetime import datetime, timedelta
-from typing import Self
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import BaseModel, Field, field_validator
 from uuid import UUID
 
 from huerise.features.alarm.domain import (
-    Alarm,
-    AlarmOccurrence,
-    AlarmProfile,
     IntroConfig,
     OccurrenceState,
     RingtoneConfig,
@@ -56,15 +52,6 @@ class ScheduleSchema(BaseModel):
             weekdays=frozenset(self.days),
         )
 
-    @classmethod
-    def from_domain(cls, schedule: Schedule) -> Self:
-        return cls(
-            hour=schedule.hour,
-            minute=schedule.minute,
-            timezone=schedule.tz_name,
-            days=sorted(schedule.weekdays),
-        )
-
 
 class SunriseSchema(BaseModel):
     scene_name: str = "Tageslichtwecker"
@@ -80,15 +67,6 @@ class SunriseSchema(BaseModel):
             brightness_end=self.brightness_end,
         )
 
-    @classmethod
-    def from_domain(cls, config: SunriseConfig) -> Self:
-        return cls(
-            scene_name=config.scene_name,
-            duration_minutes=config.duration_minutes,
-            brightness_start=config.brightness_start,
-            brightness_end=config.brightness_end,
-        )
-
 
 class RingtoneSchema(BaseModel):
     audio_file: str
@@ -97,20 +75,12 @@ class RingtoneSchema(BaseModel):
     def to_domain(self) -> RingtoneConfig:
         return RingtoneConfig(audio_file=self.audio_file, volume=self.volume)
 
-    @classmethod
-    def from_domain(cls, config: RingtoneConfig) -> Self:
-        return cls(audio_file=config.audio_file, volume=config.volume)
-
 
 class IntroSchema(BaseModel):
     audio_file: str
 
     def to_domain(self) -> IntroConfig:
         return IntroConfig(audio_file=self.audio_file)
-
-    @classmethod
-    def from_domain(cls, config: IntroConfig) -> Self:
-        return cls(audio_file=config.audio_file)
 
 
 class AlarmCreate(BaseModel):
@@ -132,19 +102,6 @@ class AlarmRead(BaseModel):
     created_at: datetime
     next_occurrence: datetime | None
 
-    @classmethod
-    def from_domain(cls, alarm: Alarm) -> Self:
-        return cls(
-            id=alarm.id,
-            label=alarm.label,
-            schedule=ScheduleSchema.from_domain(alarm.schedule),
-            room_name=alarm.room_name,
-            profile_id=alarm.profile_id,
-            is_enabled=alarm.is_enabled,
-            created_at=alarm.created_at,
-            next_occurrence=alarm.next_occurrence(),
-        )
-
 
 class ProfileCreate(BaseModel):
     name: str
@@ -159,17 +116,6 @@ class ProfileRead(ProfileCreate):
     id: UUID
     is_default: bool
 
-    @classmethod
-    def from_domain(cls, profile: AlarmProfile) -> Self:
-        return cls(
-            id=profile.id,
-            name=profile.name,
-            is_default=profile.is_default,
-            intro=IntroSchema.from_domain(profile.intro_config),
-            sunrise=SunriseSchema.from_domain(profile.sunrise_config),
-            ringtone=RingtoneSchema.from_domain(profile.ringtone_config),
-        )
-
 
 class OccurrenceRead(BaseModel):
     id: UUID
@@ -180,19 +126,6 @@ class OccurrenceRead(BaseModel):
     finished_at: datetime | None
     snooze_count: int
     failure_reason: str | None
-
-    @classmethod
-    def from_domain(cls, occurrence: AlarmOccurrence) -> Self:
-        return cls(
-            id=occurrence.id,
-            alarm_id=occurrence.alarm_id,
-            scheduled_for=occurrence.scheduled_for,
-            state=occurrence.state,
-            triggered_at=occurrence.triggered_at,
-            finished_at=occurrence.finished_at,
-            snooze_count=occurrence.snooze_count,
-            failure_reason=occurrence.failure_reason,
-        )
 
 
 class SnoozeRequest(BaseModel):
