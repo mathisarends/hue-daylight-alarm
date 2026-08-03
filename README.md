@@ -18,14 +18,11 @@ Python 3.13+ · FastAPI · SQLite (aiosqlite) · SQLModel · Alembic · Dishka (
 | Extra          | Installs          | When you need it                 |
 | -------------- | ----------------- | -------------------------------- |
 | `huerise[api]` | FastAPI + Uvicorn | Run the REST API server          |
-| `huerise[mcp]` | FastMCP           | Run the MCP server for AI agents |
 
-Install one or both:
+Install it:
 
 ```bash
 uv sync --extra api          # REST API only
-uv sync --extra mcp          # MCP only
-uv sync --extra api --extra mcp  # both
 ```
 
 ## Prerequisites
@@ -91,10 +88,6 @@ Requires [uv](https://docs.astral.sh/uv/) and Python 3.14+.
 # With REST API
 uv sync --extra api
 uv run python -m huerise.main
-
-# With MCP server (requires fastmcp)
-uv sync --extra mcp
-uv run python run_mcp.py
 ```
 
 Run tests:
