@@ -1,3 +1,10 @@
+"""Wire format for the alarm API.
+
+Nested schemas mirror the domain's value objects instead of flattening them
+into prefixed fields. Schemas own their translation to the domain via
+`to_domain`; translation from the domain lives in `mappers.py`.
+"""
+
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
