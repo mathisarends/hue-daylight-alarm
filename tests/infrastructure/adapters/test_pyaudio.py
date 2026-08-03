@@ -2,8 +2,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from huerise.alarm.application.storage import StorageBackend
-from huerise.alarm.infrastructure.adapters.pyaudio import SoundDeviceAudioPlayer
+from huerise.features.runner.infrastructure.pyaudio import SoundDeviceAudioPlayer
+from huerise.infrastructure.storage import StorageBackend
 
 
 @pytest.mark.parametrize(
@@ -28,7 +28,5 @@ async def test_downloads_audio_from_storage() -> None:
 
     await player.play("wake-up-bowls.mp3", volume=40)
 
-    storage.download_bytes.assert_awaited_once_with(
-        "wake_up_sounds/wake-up-bowls.mp3"
-    )
+    storage.download_bytes.assert_awaited_once_with("wake_up_sounds/wake-up-bowls.mp3")
     player._play_blocking.assert_called_once_with(b"audio data")

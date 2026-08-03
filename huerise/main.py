@@ -1,11 +1,18 @@
-from dishka import make_async_container
+from dishka import Provider, make_async_container
 from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
 
-from huerise.alarm import feature
+from huerise.features import alarm, runner, scheduler
+from huerise.infrastructure.di import DatabaseProvider, StorageProvider
 from huerise.lifespan import lifespan
 
-_container = make_async_container(*(provider() for provider in feature.providers))
+_FEATURES = [alarm.feature, runner.feature, scheduler.feature]
+_INFRASTRUCTURE_PROVIDERS = [DatabaseProvider, StorageProvider]
+
+providers: list[Provider] = [provider() for provider in _INFRASTRUCTURE_PROVIDERS]
+for feature in _FEATURES:
+    providers.extend(provider() for provider in feature.providers)
+_container = make_async_container(*providers)
 
 app = FastAPI(
     title="Huerise Alarm API",
@@ -15,9 +22,11 @@ app = FastAPI(
 )
 
 setup_dishka(_container, app=app)
-for router in feature.routers:
-    app.include_router(router)
-feature.register_exception_handlers(app)
+for feature in _FEATURES:
+    for router in feature.routers:
+        app.include_router(router)
+    if feature.register_exception_handlers is not None:
+        feature.register_exception_handlers(app)
 
 if __name__ == "__main__":
     import uvicorn

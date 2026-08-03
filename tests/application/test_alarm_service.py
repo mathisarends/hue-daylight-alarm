@@ -3,14 +3,15 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from huerise.alarm.application import AlarmService, AudioPlayer
-from huerise.alarm.domain import (
+from huerise.features.alarm.application import AlarmService
+from huerise.features.alarm.domain import (
     AlarmNotFoundError,
     AlarmNotRunningError,
     AlarmStatus,
     AlarmType,
     Weekday,
 )
+from huerise.features.runner.application import AudioPlayer
 from tests.application.conftest import make_alarm, make_repo
 
 
@@ -406,7 +407,9 @@ class TestAlarmServiceSnooze:
     async def test_stops_audio(self) -> None:
         alarm = make_alarm(status=AlarmStatus.RINGING)
         audio = make_audio()
-        alarm_service = make_alarm_service(repo=make_repo(get_return=alarm), audio=audio)
+        alarm_service = make_alarm_service(
+            repo=make_repo(get_return=alarm), audio=audio
+        )
 
         await alarm_service.snooze(alarm.id)
 

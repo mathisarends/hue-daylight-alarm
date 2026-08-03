@@ -6,7 +6,7 @@ from sqlmodel import SQLModel
 
 from alembic import context
 
-from huerise.alarm.infrastructure.persistence.orm import AlarmModel
+from huerise.features.alarm.infrastructure.persistence.orm import AlarmModel
 
 __all__ = [
     "AlarmModel",
