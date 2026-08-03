@@ -190,7 +190,3 @@ class OccurrenceRead(BaseModel):
 
 class SnoozeRequest(BaseModel):
     minutes: int = Field(default=10, ge=1, le=60)
-
-
-class VolumeRequest(BaseModel):
-    volume: int = Field(ge=0, le=100)

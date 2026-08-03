@@ -1,7 +1,12 @@
 from dishka import Provider, Scope, provide
 from hueify import Hueify
 
-from huerise.features.devices.application import AudioPlayer, Lights, SoundCatalog
+from huerise.features.devices.application import (
+    AudioPlayer,
+    Lights,
+    SoundCatalog,
+    SoundService,
+)
 from huerise.features.devices.infrastructure.hue import HueLights
 from huerise.features.devices.infrastructure.settings import HueCredentials
 from huerise.features.devices.infrastructure.sound_device import SoundDeviceAudioPlayer
@@ -28,3 +33,7 @@ class DevicesProvider(Provider):
     @provide
     def audio(self, catalog: SoundCatalog, storage: StorageBackend) -> AudioPlayer:
         return SoundDeviceAudioPlayer(catalog, storage)
+
+    @provide(scope=Scope.REQUEST)
+    def sound_service(self, catalog: SoundCatalog, audio: AudioPlayer) -> SoundService:
+        return SoundService(catalog, audio)

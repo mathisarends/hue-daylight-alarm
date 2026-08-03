@@ -9,7 +9,6 @@ from huerise.features.alarm.presentation.schemas import (
     AlarmRead,
     OccurrenceRead,
     SnoozeRequest,
-    VolumeRequest,
 )
 
 router = APIRouter(prefix="/alarms", tags=["Alarms"], route_class=DishkaRoute)
@@ -98,14 +97,6 @@ async def list_occurrences(
 ) -> list[OccurrenceRead]:
     occurrences = await alarm_service.list_occurrences(alarm_id, limit=limit)
     return [OccurrenceRead.from_domain(occurrence) for occurrence in occurrences]
-
-
-@router.post("/volume", status_code=204, response_model=None, operation_id="setVolume")
-async def set_volume(
-    body: VolumeRequest,
-    alarm_service: FromDishka[AlarmService],
-) -> None:
-    await alarm_service.set_volume(body.volume)
 
 
 @router.delete(

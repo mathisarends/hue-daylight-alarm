@@ -101,10 +101,6 @@ class AlarmService:
         await self._audio.stop()
         return await self._occurrences.save(occurrence)
 
-    async def set_volume(self, volume: int) -> None:
-        logger.info("Setting volume to %d", volume)
-        await self._audio.set_volume(volume)
-
     async def _resolve_profile(self, profile_id: UUID | None) -> AlarmProfile:
         profile = (
             await self._profiles.find_by_id(profile_id)
