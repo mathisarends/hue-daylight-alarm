@@ -147,6 +147,18 @@ type Invoker interface {
 	//
 	// POST /sounds/stop
 	StopPlayback(ctx context.Context) error
+	// StreamEvents invokes streamEvents operation.
+	//
+	// Server-sent events covering every change to alarms and to the run currently in
+	// progress, so a display can stay in sync without polling.
+	// Each frame carries the event id in `id:`, the discriminator in `event:` and the
+	// event itself as JSON in `data:`. Reconnect with `Last-Event-ID` to resume; if
+	// that id has rolled out of the buffer nothing is replayed, so resync over
+	// `GET /alarms` first. A `: keepalive` comment arrives whenever the stream is
+	// idle.
+	//
+	// GET /eventstream
+	StreamEvents(ctx context.Context, params StreamEventsParams) (StreamEventsRes, error)
 }
 
 // Client implements OAS client.
@@ -1916,6 +1928,98 @@ func (c *Client) sendStopPlayback(ctx context.Context) (res *StopPlaybackNoConte
 	defer body.Close()
 
 	result, err := decodeStopPlaybackResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// StreamEvents invokes streamEvents operation.
+//
+// Server-sent events covering every change to alarms and to the run currently in
+// progress, so a display can stay in sync without polling.
+// Each frame carries the event id in `id:`, the discriminator in `event:` and the
+// event itself as JSON in `data:`. Reconnect with `Last-Event-ID` to resume; if
+// that id has rolled out of the buffer nothing is replayed, so resync over
+// `GET /alarms` first. A `: keepalive` comment arrives whenever the stream is
+// idle.
+//
+// GET /eventstream
+func (c *Client) StreamEvents(ctx context.Context, params StreamEventsParams) (StreamEventsRes, error) {
+	res, err := c.sendStreamEvents(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendStreamEvents(ctx context.Context, params StreamEventsParams) (res StreamEventsRes, err error) {
+
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/eventstream"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	h := uri.NewHeaderEncoder(r.Header)
+	{
+		cfg := uri.HeaderParameterEncodingConfig{
+			Name:    "Last-Event-ID",
+			Explode: false,
+		}
+		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.LastEventID.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode header")
+		}
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+
+			switch err := c.securityAccessToken(ctx, StreamEventsOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"AccessToken\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer body.Close()
+
+	result, err := decodeStreamEventsResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

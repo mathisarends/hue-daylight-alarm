@@ -62,3 +62,8 @@ type ListSoundsParams struct {
 type SnoozeAlarmParams struct {
 	AlarmID uuid.UUID
 }
+
+// StreamEventsParams is parameters of streamEvents operation.
+type StreamEventsParams struct {
+	LastEventID OptString `json:",omitempty,omitzero"`
+}

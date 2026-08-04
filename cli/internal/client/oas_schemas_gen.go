@@ -3,6 +3,7 @@
 package client
 
 import (
+	"io"
 	"time"
 
 	"github.com/go-faster/errors"
@@ -314,6 +315,7 @@ func (*HTTPValidationError) previewSoundRes()      {}
 func (*HTTPValidationError) selectAudioOutputRes() {}
 func (*HTTPValidationError) setVolumeRes()         {}
 func (*HTTPValidationError) snoozeAlarmRes()       {}
+func (*HTTPValidationError) streamEventsRes()      {}
 
 // Ref: #/components/schemas/IntroSchema
 type IntroSchema struct {
@@ -1206,6 +1208,22 @@ func (*SoundRead) previewSoundRes() {}
 
 // StopPlaybackNoContent is response for StopPlayback operation.
 type StopPlaybackNoContent struct{}
+
+type StreamEventsOK struct {
+	Data io.Reader
+}
+
+// Read reads data from the Data reader.
+//
+// Kept to satisfy the io.Reader interface.
+func (s StreamEventsOK) Read(p []byte) (n int, err error) {
+	if s.Data == nil {
+		return 0, io.EOF
+	}
+	return s.Data.Read(p)
+}
+
+func (*StreamEventsOK) streamEventsRes() {}
 
 // Ref: #/components/schemas/SunriseSchema
 type SunriseSchema struct {

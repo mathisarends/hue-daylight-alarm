@@ -27,4 +27,5 @@ const (
 	SetVolumeOperation         OperationName = "SetVolume"
 	SnoozeAlarmOperation       OperationName = "SnoozeAlarm"
 	StopPlaybackOperation      OperationName = "StopPlayback"
+	StreamEventsOperation      OperationName = "StreamEvents"
 )

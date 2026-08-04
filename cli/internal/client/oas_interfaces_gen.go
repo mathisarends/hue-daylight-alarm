@@ -64,3 +64,7 @@ type SetVolumeRes interface {
 type SnoozeAlarmRes interface {
 	snoozeAlarmRes()
 }
+
+type StreamEventsRes interface {
+	streamEventsRes()
+}

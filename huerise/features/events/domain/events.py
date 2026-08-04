@@ -34,8 +34,12 @@ class HueriseEvent(Event):
     in-process bus message and the SSE payload -- there is no mapping layer.
     Only `path` is bus bookkeeping and stays off the wire. `parent_id`
     deliberately does not: it tells a client which event caused this one.
+
+    Subclasses narrow `type` to a single `Literal`, which both discriminates
+    the union and names the SSE frame.
     """
 
+    type: EventType
     path: list[str] = Field(default_factory=list, exclude=True)
 
 

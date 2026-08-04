@@ -899,6 +899,109 @@
           }
         ]
       }
+    },
+    "/eventstream": {
+      "get": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Subscribe to the alarm event stream",
+        "description": "Server-sent events covering every change to alarms and to the run currently in\nprogress, so a display can stay in sync without polling.\n\nEach frame carries the event id in `id:`, the discriminator in `event:` and the\nevent itself as JSON in `data:`. Reconnect with `Last-Event-ID` to resume; if\nthat id has rolled out of the buffer nothing is replayed, so resync over\n`GET /alarms` first. A `: keepalive` comment arrives whenever the stream is\nidle.",
+        "operationId": "streamEvents",
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Last-Event-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "Last-Event-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string",
+                  "discriminator": {
+                    "mapping": {
+                      "alarm.created": "#/components/schemas/AlarmCreated",
+                      "alarm.deleted": "#/components/schemas/AlarmDeleted",
+                      "alarm.next_changed": "#/components/schemas/NextAlarmChanged",
+                      "alarm.updated": "#/components/schemas/AlarmUpdated",
+                      "occurrence.dismissed": "#/components/schemas/OccurrenceDismissed",
+                      "occurrence.failed": "#/components/schemas/OccurrenceFailed",
+                      "occurrence.progress": "#/components/schemas/OccurrenceProgress",
+                      "occurrence.ringing": "#/components/schemas/OccurrenceRinging",
+                      "occurrence.scheduled": "#/components/schemas/OccurrenceScheduled",
+                      "occurrence.skipped": "#/components/schemas/OccurrenceSkipped",
+                      "occurrence.snoozed": "#/components/schemas/OccurrenceSnoozed",
+                      "occurrence.started": "#/components/schemas/OccurrenceStarted"
+                    },
+                    "propertyName": "type"
+                  },
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/AlarmCreated"
+                    },
+                    {
+                      "$ref": "#/components/schemas/AlarmUpdated"
+                    },
+                    {
+                      "$ref": "#/components/schemas/AlarmDeleted"
+                    },
+                    {
+                      "$ref": "#/components/schemas/NextAlarmChanged"
+                    },
+                    {
+                      "$ref": "#/components/schemas/OccurrenceScheduled"
+                    },
+                    {
+                      "$ref": "#/components/schemas/OccurrenceStarted"
+                    },
+                    {
+                      "$ref": "#/components/schemas/OccurrenceProgress"
+                    },
+                    {
+                      "$ref": "#/components/schemas/OccurrenceRinging"
+                    },
+                    {
+                      "$ref": "#/components/schemas/OccurrenceSnoozed"
+                    },
+                    {
+                      "$ref": "#/components/schemas/OccurrenceDismissed"
+                    },
+                    {
+                      "$ref": "#/components/schemas/OccurrenceSkipped"
+                    },
+                    {
+                      "$ref": "#/components/schemas/OccurrenceFailed"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -937,6 +1040,86 @@
           "room_name"
         ],
         "title": "AlarmCreate"
+      },
+      "AlarmCreated": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "type": {
+            "type": "string",
+            "const": "alarm.created",
+            "title": "Type",
+            "default": "alarm.created"
+          },
+          "alarm": {
+            "$ref": "#/components/schemas/AlarmSnapshot"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "alarm"
+        ],
+        "title": "AlarmCreated"
+      },
+      "AlarmDeleted": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "type": {
+            "type": "string",
+            "const": "alarm.deleted",
+            "title": "Type",
+            "default": "alarm.deleted"
+          },
+          "alarm_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Alarm Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "alarm_id"
+        ],
+        "title": "AlarmDeleted"
       },
       "AlarmRead": {
         "properties": {
@@ -995,6 +1178,164 @@
           "next_occurrence"
         ],
         "title": "AlarmRead"
+      },
+      "AlarmSnapshot": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "schedule": {
+            "$ref": "#/components/schemas/ScheduleSnapshot"
+          },
+          "room_name": {
+            "type": "string",
+            "title": "Room Name"
+          },
+          "profile_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Profile Id"
+          },
+          "is_enabled": {
+            "type": "boolean",
+            "title": "Is Enabled"
+          },
+          "next_occurrence": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Occurrence"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "schedule",
+          "room_name",
+          "profile_id",
+          "is_enabled",
+          "next_occurrence"
+        ],
+        "title": "AlarmSnapshot",
+        "description": "An alarm rule as of the moment an event fired.\n\nCarries enough to render a row without a follow-up GET, so a display can\nstay in sync from the stream alone."
+      },
+      "AlarmUpdated": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "type": {
+            "type": "string",
+            "const": "alarm.updated",
+            "title": "Type",
+            "default": "alarm.updated"
+          },
+          "alarm": {
+            "$ref": "#/components/schemas/AlarmSnapshot"
+          },
+          "changed": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Changed",
+            "description": "Names of the fields this update touched, e.g. `is_enabled`."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "alarm",
+          "changed"
+        ],
+        "title": "AlarmUpdated"
+      },
+      "AnyHueriseEvent": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/AlarmCreated"
+          },
+          {
+            "$ref": "#/components/schemas/AlarmUpdated"
+          },
+          {
+            "$ref": "#/components/schemas/AlarmDeleted"
+          },
+          {
+            "$ref": "#/components/schemas/NextAlarmChanged"
+          },
+          {
+            "$ref": "#/components/schemas/OccurrenceScheduled"
+          },
+          {
+            "$ref": "#/components/schemas/OccurrenceStarted"
+          },
+          {
+            "$ref": "#/components/schemas/OccurrenceProgress"
+          },
+          {
+            "$ref": "#/components/schemas/OccurrenceRinging"
+          },
+          {
+            "$ref": "#/components/schemas/OccurrenceSnoozed"
+          },
+          {
+            "$ref": "#/components/schemas/OccurrenceDismissed"
+          },
+          {
+            "$ref": "#/components/schemas/OccurrenceSkipped"
+          },
+          {
+            "$ref": "#/components/schemas/OccurrenceFailed"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "alarm.created": "#/components/schemas/AlarmCreated",
+            "alarm.deleted": "#/components/schemas/AlarmDeleted",
+            "alarm.next_changed": "#/components/schemas/NextAlarmChanged",
+            "alarm.updated": "#/components/schemas/AlarmUpdated",
+            "occurrence.dismissed": "#/components/schemas/OccurrenceDismissed",
+            "occurrence.failed": "#/components/schemas/OccurrenceFailed",
+            "occurrence.progress": "#/components/schemas/OccurrenceProgress",
+            "occurrence.ringing": "#/components/schemas/OccurrenceRinging",
+            "occurrence.scheduled": "#/components/schemas/OccurrenceScheduled",
+            "occurrence.skipped": "#/components/schemas/OccurrenceSkipped",
+            "occurrence.snoozed": "#/components/schemas/OccurrenceSnoozed",
+            "occurrence.started": "#/components/schemas/OccurrenceStarted"
+          }
+        }
       },
       "AudioOutput": {
         "type": "string",
@@ -1066,6 +1407,224 @@
           "sound_id"
         ],
         "title": "IntroSchema"
+      },
+      "NextAlarmChanged": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "type": {
+            "type": "string",
+            "const": "alarm.next_changed",
+            "title": "Type",
+            "default": "alarm.next_changed"
+          },
+          "alarm": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AlarmSnapshot"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "None when no enabled alarm remains."
+          },
+          "scheduled_for": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scheduled For"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "alarm",
+          "scheduled_for"
+        ],
+        "title": "NextAlarmChanged",
+        "description": "The alarm that will fire next is now a different one, or fires at a\ndifferent time. Derived -- never emitted by hand."
+      },
+      "OccurrenceDismissed": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "type": {
+            "type": "string",
+            "const": "occurrence.dismissed",
+            "title": "Type",
+            "default": "occurrence.dismissed"
+          },
+          "occurrence": {
+            "$ref": "#/components/schemas/OccurrenceSnapshot"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "occurrence"
+        ],
+        "title": "OccurrenceDismissed"
+      },
+      "OccurrenceFailed": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "type": {
+            "type": "string",
+            "const": "occurrence.failed",
+            "title": "Type",
+            "default": "occurrence.failed"
+          },
+          "occurrence": {
+            "$ref": "#/components/schemas/OccurrenceSnapshot"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "occurrence"
+        ],
+        "title": "OccurrenceFailed"
+      },
+      "OccurrenceProgress": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "type": {
+            "type": "string",
+            "const": "occurrence.progress",
+            "title": "Type",
+            "default": "occurrence.progress"
+          },
+          "occurrence_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Occurrence Id"
+          },
+          "alarm_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Alarm Id"
+          },
+          "brightness": {
+            "type": "integer",
+            "title": "Brightness"
+          },
+          "step": {
+            "type": "integer",
+            "title": "Step"
+          },
+          "total_steps": {
+            "type": "integer",
+            "title": "Total Steps"
+          },
+          "elapsed_seconds": {
+            "type": "integer",
+            "title": "Elapsed Seconds"
+          },
+          "total_seconds": {
+            "type": "integer",
+            "title": "Total Seconds"
+          },
+          "percent": {
+            "type": "number",
+            "title": "Percent",
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "occurrence_id",
+          "alarm_id",
+          "brightness",
+          "step",
+          "total_steps",
+          "elapsed_seconds",
+          "total_seconds",
+          "percent"
+        ],
+        "title": "OccurrenceProgress",
+        "description": "One sunrise step. Fires per brightness change, so it carries no snapshot:\nthe occurrence itself does not move while the sunrise runs."
       },
       "OccurrenceRead": {
         "properties": {
@@ -1139,6 +1698,310 @@
           "failure_reason"
         ],
         "title": "OccurrenceRead"
+      },
+      "OccurrenceRinging": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "type": {
+            "type": "string",
+            "const": "occurrence.ringing",
+            "title": "Type",
+            "default": "occurrence.ringing"
+          },
+          "occurrence_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Occurrence Id"
+          },
+          "alarm_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Alarm Id"
+          },
+          "sound_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Sound Id"
+          },
+          "volume": {
+            "type": "integer",
+            "title": "Volume"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "occurrence_id",
+          "alarm_id",
+          "sound_id",
+          "volume"
+        ],
+        "title": "OccurrenceRinging"
+      },
+      "OccurrenceScheduled": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "type": {
+            "type": "string",
+            "const": "occurrence.scheduled",
+            "title": "Type",
+            "default": "occurrence.scheduled"
+          },
+          "occurrence": {
+            "$ref": "#/components/schemas/OccurrenceSnapshot"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "occurrence"
+        ],
+        "title": "OccurrenceScheduled"
+      },
+      "OccurrenceSkipped": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "type": {
+            "type": "string",
+            "const": "occurrence.skipped",
+            "title": "Type",
+            "default": "occurrence.skipped"
+          },
+          "occurrence": {
+            "$ref": "#/components/schemas/OccurrenceSnapshot"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "occurrence"
+        ],
+        "title": "OccurrenceSkipped"
+      },
+      "OccurrenceSnapshot": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "alarm_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Alarm Id"
+          },
+          "scheduled_for": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Scheduled For"
+          },
+          "state": {
+            "$ref": "#/components/schemas/OccurrenceState"
+          },
+          "triggered_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Triggered At"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "snooze_count": {
+            "type": "integer",
+            "title": "Snooze Count"
+          },
+          "failure_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "alarm_id",
+          "scheduled_for",
+          "state",
+          "triggered_at",
+          "finished_at",
+          "snooze_count",
+          "failure_reason"
+        ],
+        "title": "OccurrenceSnapshot",
+        "description": "One concrete run of an alarm as of the moment an event fired."
+      },
+      "OccurrenceSnoozed": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "type": {
+            "type": "string",
+            "const": "occurrence.snoozed",
+            "title": "Type",
+            "default": "occurrence.snoozed"
+          },
+          "occurrence": {
+            "$ref": "#/components/schemas/OccurrenceSnapshot"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "occurrence"
+        ],
+        "title": "OccurrenceSnoozed"
+      },
+      "OccurrenceStarted": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "type": {
+            "type": "string",
+            "const": "occurrence.started",
+            "title": "Type",
+            "default": "occurrence.started"
+          },
+          "occurrence": {
+            "$ref": "#/components/schemas/OccurrenceSnapshot"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "room_name": {
+            "type": "string",
+            "title": "Room Name"
+          },
+          "sunrise_seconds": {
+            "type": "integer",
+            "title": "Sunrise Seconds"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "occurrence",
+          "label",
+          "room_name",
+          "sunrise_seconds"
+        ],
+        "title": "OccurrenceStarted",
+        "description": "The sunrise has begun. Everything a display needs to open its wake screen."
       },
       "OccurrenceState": {
         "type": "string",
@@ -1304,6 +2167,37 @@
         ],
         "title": "ScheduleSchema",
         "description": "When an alarm fires, as wall-clock time in a named zone."
+      },
+      "ScheduleSnapshot": {
+        "properties": {
+          "hour": {
+            "type": "integer",
+            "title": "Hour"
+          },
+          "minute": {
+            "type": "integer",
+            "title": "Minute"
+          },
+          "timezone": {
+            "type": "string",
+            "title": "Timezone"
+          },
+          "weekdays": {
+            "items": {
+              "$ref": "#/components/schemas/Weekday"
+            },
+            "type": "array",
+            "title": "Weekdays"
+          }
+        },
+        "type": "object",
+        "required": [
+          "hour",
+          "minute",
+          "timezone",
+          "weekdays"
+        ],
+        "title": "ScheduleSnapshot"
       },
       "SnoozeRequest": {
         "properties": {

@@ -9,13 +9,8 @@ from huerise.features.events.domain import HueriseEvent
 
 logger = logging.getLogger(__name__)
 
-MAX_HISTORY = 1000
 # A client further behind than this is cut loose rather than slowing the bus.
 MAX_PENDING_PER_CLIENT = 200
-
-
-def create_event_bus() -> EventBus:
-    return EventBus(name="huerise", max_history=MAX_HISTORY)
 
 
 class _Subscription:
