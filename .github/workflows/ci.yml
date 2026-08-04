@@ -19,6 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
+      - run: sudo apt-get update && sudo apt-get install -y libportaudio2
       - run: uv run --all-extras --group dev pytest tests/
 
   go:
@@ -42,6 +43,8 @@ jobs:
           go-version-file: cli/go.mod
           cache: true
       - run: uv run python scripts/export_openapi.py
+        env:
+          API_ACCESS_TOKEN: schema-export-placeholder
       - run: cp openapi.json cli/openapi.json
       - run: go -C cli generate ./internal/generate
       - run: git diff --exit-code -- openapi.json cli/internal/client
