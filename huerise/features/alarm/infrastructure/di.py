@@ -15,6 +15,7 @@ from huerise.features.alarm.infrastructure.persistence import (
     SQLAlarmUnitOfWorkFactory,
 )
 from huerise.features.devices.application import AudioPlayer
+from huerise.features.events.application import EventPublisher
 
 
 class AlarmProvider(Provider):
@@ -45,12 +46,14 @@ class AlarmProvider(Provider):
         profiles: AlarmProfileRepository,
         occurrences: AlarmOccurrenceRepository,
         audio: AudioPlayer,
+        events: EventPublisher,
     ) -> AlarmService:
         return AlarmService(
             alarms=alarms,
             profiles=profiles,
             occurrences=occurrences,
             audio=audio,
+            events=events,
         )
 
     @provide

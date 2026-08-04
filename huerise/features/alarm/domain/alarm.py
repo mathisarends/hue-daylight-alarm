@@ -2,7 +2,7 @@ from datetime import UTC, datetime
 from uuid import UUID
 
 from huerise.features.alarm.domain.exceptions import AlarmAlreadyInStateError
-from huerise.features.alarm.domain.views import Schedule
+from huerise.features.alarm.domain.views import AlarmField, Schedule
 from huerise.shared.ddd import Aggregate
 
 
@@ -32,27 +32,27 @@ class Alarm(Aggregate):
         schedule: Schedule | None = None,
         room_name: str | None = None,
         profile_id: UUID | None = None,
-    ) -> list[str]:
+    ) -> list[AlarmField]:
         """Apply the fields that were given, naming the ones that really moved.
 
         None means "leave alone" -- none of these fields is nullable, so no
-        separate sentinel is needed. The returned names drive change
+        separate sentinel is needed. The returned fields drive change
         notification, so a value re-sent unchanged must not appear.
         """
-        changed: list[str] = []
+        changed: list[AlarmField] = []
 
         if label is not None and label != self.label:
             self.label = label
-            changed.append("label")
+            changed.append(AlarmField.LABEL)
         if schedule is not None and schedule != self.schedule:
             self.schedule = schedule
-            changed.append("schedule")
+            changed.append(AlarmField.SCHEDULE)
         if room_name is not None and room_name != self.room_name:
             self.room_name = room_name
-            changed.append("room_name")
+            changed.append(AlarmField.ROOM_NAME)
         if profile_id is not None and profile_id != self.profile_id:
             self.profile_id = profile_id
-            changed.append("profile_id")
+            changed.append(AlarmField.PROFILE_ID)
 
         return changed
 

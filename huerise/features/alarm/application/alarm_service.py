@@ -3,6 +3,7 @@ from uuid import UUID
 
 from huerise.features.alarm.domain import (
     Alarm,
+    AlarmField,
     AlarmNotFoundError,
     AlarmOccurrence,
     AlarmOccurrenceRepository,
@@ -15,6 +16,17 @@ from huerise.features.alarm.domain import (
     Schedule,
 )
 from huerise.features.devices.application import AudioPlayer
+from huerise.features.events.application import EventPublisher
+from huerise.features.events.domain import (
+    AlarmCreated,
+    AlarmDeleted,
+    AlarmSnapshot,
+    AlarmUpdated,
+    OccurrenceDismissed,
+    OccurrenceSkipped,
+    OccurrenceSnapshot,
+    OccurrenceSnoozed,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -26,11 +38,13 @@ class AlarmService:
         profiles: AlarmProfileRepository,
         occurrences: AlarmOccurrenceRepository,
         audio: AudioPlayer,
+        events: EventPublisher,
     ) -> None:
         self._alarms = alarms
         self._profiles = profiles
         self._occurrences = occurrences
         self._audio = audio
+        self._events = events
 
     async def find_all(self) -> list[Alarm]:
         return await self._alarms.find_all()
@@ -65,7 +79,9 @@ class AlarmService:
             profile_id=profile.id,
             room_name=room_name,
         )
-        return await self._alarms.save(alarm)
+        alarm = await self._alarms.save(alarm)
+        self._events.publish(AlarmCreated(alarm=AlarmSnapshot.from_domain(alarm)))
+        return alarm
 
     async def update(
         self,
@@ -90,27 +106,47 @@ class AlarmService:
             return alarm
 
         logger.info("Updating alarm %s (%s)", alarm_id, ", ".join(changed))
-        if "schedule" in changed:
+        if AlarmField.SCHEDULE in changed:
             await self._drop_pending_occurrence(alarm_id)
-        return await self._alarms.save(alarm)
+
+        alarm = await self._alarms.save(alarm)
+        self._events.publish(
+            AlarmUpdated(alarm=AlarmSnapshot.from_domain(alarm), changed=changed)
+        )
+        return alarm
 
     async def enable(self, alarm_id: UUID) -> Alarm:
         logger.info("Enabling alarm %s", alarm_id)
         alarm = await self.find_by_id(alarm_id)
         alarm.enable()
-        return await self._alarms.save(alarm)
+
+        alarm = await self._alarms.save(alarm)
+        self._events.publish(
+            AlarmUpdated(
+                alarm=AlarmSnapshot.from_domain(alarm), changed=[AlarmField.IS_ENABLED]
+            )
+        )
+        return alarm
 
     async def disable(self, alarm_id: UUID) -> Alarm:
         logger.info("Disabling alarm %s", alarm_id)
         alarm = await self.find_by_id(alarm_id)
         alarm.disable()
         await self._cancel_active_occurrence(alarm_id)
-        return await self._alarms.save(alarm)
+
+        alarm = await self._alarms.save(alarm)
+        self._events.publish(
+            AlarmUpdated(
+                alarm=AlarmSnapshot.from_domain(alarm), changed=[AlarmField.IS_ENABLED]
+            )
+        )
+        return alarm
 
     async def delete(self, alarm_id: UUID) -> None:
         logger.info("Deleting alarm %s", alarm_id)
         if not await self._alarms.delete_by_id(alarm_id):
             raise AlarmNotFoundError(alarm_id)
+        self._events.publish(AlarmDeleted(alarm_id=alarm_id))
 
     async def list_occurrences(
         self, alarm_id: UUID, limit: int = 20
@@ -123,14 +159,24 @@ class AlarmService:
         occurrence = await self._get_active_or_raise(alarm_id)
         occurrence.snooze(minutes)
         await self._audio.stop()
-        return await self._occurrences.save(occurrence)
+
+        occurrence = await self._occurrences.save(occurrence)
+        self._events.publish(
+            OccurrenceSnoozed(occurrence=OccurrenceSnapshot.from_domain(occurrence))
+        )
+        return occurrence
 
     async def dismiss(self, alarm_id: UUID) -> AlarmOccurrence:
         logger.info("Dismissing alarm %s", alarm_id)
         occurrence = await self._get_active_or_raise(alarm_id)
         occurrence.dismiss()
         await self._audio.stop()
-        return await self._occurrences.save(occurrence)
+
+        occurrence = await self._occurrences.save(occurrence)
+        self._events.publish(
+            OccurrenceDismissed(occurrence=OccurrenceSnapshot.from_domain(occurrence))
+        )
+        return occurrence
 
     async def _resolve_profile(self, profile_id: UUID | None) -> AlarmProfile:
         profile = (
@@ -153,18 +199,29 @@ class AlarmService:
         if occurrence is None or occurrence.state is not OccurrenceState.PENDING:
             return
         occurrence.skip()
-        await self._occurrences.save(occurrence)
+        occurrence = await self._occurrences.save(occurrence)
+        self._events.publish(
+            OccurrenceSkipped(occurrence=OccurrenceSnapshot.from_domain(occurrence))
+        )
 
     async def _cancel_active_occurrence(self, alarm_id: UUID) -> None:
         occurrence = await self._occurrences.find_active_for_alarm(alarm_id)
         if occurrence is None:
             return
+
         if occurrence.is_running:
             occurrence.dismiss()
             await self._audio.stop()
         else:
             occurrence.skip()
-        await self._occurrences.save(occurrence)
+
+        occurrence = await self._occurrences.save(occurrence)
+        snapshot = OccurrenceSnapshot.from_domain(occurrence)
+        self._events.publish(
+            OccurrenceDismissed(occurrence=snapshot)
+            if occurrence.state is OccurrenceState.DISMISSED
+            else OccurrenceSkipped(occurrence=snapshot)
+        )
 
     async def _get_active_or_raise(self, alarm_id: UUID) -> AlarmOccurrence:
         await self.find_by_id(alarm_id)

@@ -19,6 +19,16 @@ class Weekday(IntEnum):
     SUN = 6
 
 
+class AlarmField(StrEnum):
+    """A field of an alarm rule that a change can be reported against."""
+
+    LABEL = "label"
+    SCHEDULE = "schedule"
+    ROOM_NAME = "room_name"
+    PROFILE_ID = "profile_id"
+    IS_ENABLED = "is_enabled"
+
+
 class OccurrenceState(StrEnum):
     PENDING = "pending"
     SUNRISE = "sunrise"

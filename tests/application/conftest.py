@@ -22,6 +22,8 @@ from huerise.features.alarm.domain import (
     Weekday,
 )
 from huerise.features.devices.application import AudioPlayer, Lights
+from huerise.features.events.application import EventPublisher
+from huerise.features.events.domain import HueriseEvent
 from huerise.infrastructure.storage import StorageBackend, StorageFile, UploadResponse
 from huerise.infrastructure.storage.port import DEFAULT_LINK_LIFETIME
 
@@ -242,11 +244,32 @@ def make_lights() -> Lights:
     return lights
 
 
+class RecordingPublisher(EventPublisher):
+    """Keeps what was published, so a test can assert on the stream."""
+
+    def __init__(self) -> None:
+        self.events: list[HueriseEvent] = []
+
+    def publish(self, event: HueriseEvent) -> None:
+        self.events.append(event)
+
+    def of_type[E: HueriseEvent](self, event_type: type[E]) -> list[E]:
+        return [event for event in self.events if isinstance(event, event_type)]
+
+    def only[E: HueriseEvent](self, event_type: type[E]) -> E:
+        published = self.of_type(event_type)
+        assert len(published) == 1, (
+            f"expected exactly one {event_type.__name__}, got {len(published)}"
+        )
+        return published[0]
+
+
 def make_alarm_service(
     alarms: AlarmRepository | None = None,
     profiles: AlarmProfileRepository | None = None,
     occurrences: AlarmOccurrenceRepository | None = None,
     audio: AudioPlayer | None = None,
+    events: EventPublisher | None = None,
 ) -> AlarmService:
     return AlarmService(
         alarms=alarms if alarms is not None else InMemoryAlarmRepository(),
@@ -257,4 +280,5 @@ def make_alarm_service(
         if occurrences is not None
         else InMemoryOccurrenceRepository(),
         audio=audio if audio is not None else make_audio(),
+        events=events if events is not None else RecordingPublisher(),
     )

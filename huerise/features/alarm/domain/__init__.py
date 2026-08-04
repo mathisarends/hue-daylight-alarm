@@ -19,6 +19,7 @@ from .repository import (
 from .unit_of_work import AlarmUnitOfWork, AlarmUnitOfWorkFactory
 from .views import (
     DEFAULT_TIMEZONE,
+    AlarmField,
     IntroConfig,
     OccurrenceState,
     RingtoneConfig,
@@ -31,6 +32,7 @@ __all__ = [
     "DEFAULT_TIMEZONE",
     "Alarm",
     "AlarmAlreadyInStateError",
+    "AlarmField",
     "AlarmNotFoundError",
     "AlarmOccurrence",
     "AlarmOccurrenceRepository",

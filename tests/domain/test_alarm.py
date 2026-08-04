@@ -7,6 +7,7 @@ import pytest
 from huerise.features.alarm.domain import (
     Alarm,
     AlarmAlreadyInStateError,
+    AlarmField,
     Schedule,
     Weekday,
 )
@@ -55,7 +56,7 @@ class TestUpdate:
 
         assert alarm.label == "Weekend"
         assert alarm.schedule == schedule
-        assert changed == ["label", "schedule"]
+        assert changed == [AlarmField.LABEL, AlarmField.SCHEDULE]
 
     def test_leaves_omitted_fields_alone(self) -> None:
         alarm = make_alarm()
@@ -79,7 +80,7 @@ class TestUpdate:
 
         changed = alarm.update(label="Morning", room_name="Guest room")
 
-        assert changed == ["room_name"]
+        assert changed == [AlarmField.ROOM_NAME]
 
 
 class TestNextOccurrence:

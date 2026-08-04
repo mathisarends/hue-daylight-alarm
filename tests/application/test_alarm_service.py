@@ -4,6 +4,7 @@ from uuid import uuid4
 import pytest
 
 from huerise.features.alarm.domain import (
+    AlarmField,
     AlarmNotFoundError,
     AlarmProfileNotFoundError,
     NoActiveOccurrenceError,
@@ -11,10 +12,19 @@ from huerise.features.alarm.domain import (
     Schedule,
     Weekday,
 )
+from huerise.features.events.domain import (
+    AlarmCreated,
+    AlarmDeleted,
+    AlarmUpdated,
+    OccurrenceDismissed,
+    OccurrenceSkipped,
+    OccurrenceSnoozed,
+)
 from tests.application.conftest import (
     InMemoryAlarmRepository,
     InMemoryOccurrenceRepository,
     InMemoryProfileRepository,
+    RecordingPublisher,
     make_alarm,
     make_alarm_service,
     make_audio,
@@ -99,6 +109,146 @@ class TestCreateAlarm:
                 room_name="Bedroom",
                 profile_id=uuid4(),
             )
+
+
+class TestPublishedEvents:
+    async def test_creating_announces_the_new_alarm(self) -> None:
+        events = RecordingPublisher()
+        service = make_alarm_service(events=events)
+
+        alarm = await service.create(
+            label="Work", schedule=Schedule(hour=6, minute=45), room_name="Bedroom"
+        )
+
+        assert events.only(AlarmCreated).alarm.id == alarm.id
+
+    async def test_updating_names_the_fields_that_moved(self) -> None:
+        alarm = make_alarm()
+        events = RecordingPublisher()
+        service = make_alarm_service(
+            alarms=InMemoryAlarmRepository([alarm]), events=events
+        )
+
+        await service.update(alarm.id, label="Weekend")
+
+        assert events.only(AlarmUpdated).changed == [AlarmField.LABEL]
+
+    async def test_an_update_that_changes_nothing_stays_silent(self) -> None:
+        alarm = make_alarm()
+        events = RecordingPublisher()
+        service = make_alarm_service(
+            alarms=InMemoryAlarmRepository([alarm]), events=events
+        )
+
+        await service.update(alarm.id, label=alarm.label)
+
+        assert events.events == []
+
+    async def test_enabling_announces_the_flag_that_moved(self) -> None:
+        alarm = make_alarm(is_enabled=False)
+        events = RecordingPublisher()
+        service = make_alarm_service(
+            alarms=InMemoryAlarmRepository([alarm]), events=events
+        )
+
+        await service.enable(alarm.id)
+
+        assert events.only(AlarmUpdated).changed == [AlarmField.IS_ENABLED]
+
+    async def test_deleting_announces_the_id(self) -> None:
+        alarm = make_alarm()
+        events = RecordingPublisher()
+        service = make_alarm_service(
+            alarms=InMemoryAlarmRepository([alarm]), events=events
+        )
+
+        await service.delete(alarm.id)
+
+        assert events.only(AlarmDeleted).alarm_id == alarm.id
+
+    async def test_a_failed_delete_stays_silent(self) -> None:
+        events = RecordingPublisher()
+        service = make_alarm_service(events=events)
+
+        with pytest.raises(AlarmNotFoundError):
+            await service.delete(uuid4())
+
+        assert events.events == []
+
+    async def test_snoozing_announces_the_new_time(self) -> None:
+        alarm = make_alarm()
+        occurrence = make_occurrence(alarm.id, NOW, OccurrenceState.RINGING)
+        events = RecordingPublisher()
+        service = make_alarm_service(
+            alarms=InMemoryAlarmRepository([alarm]),
+            occurrences=InMemoryOccurrenceRepository([occurrence]),
+            events=events,
+        )
+
+        await service.snooze(alarm.id, minutes=5)
+
+        published = events.only(OccurrenceSnoozed).occurrence
+        assert published.state is OccurrenceState.SNOOZED
+        assert published.snooze_count == 1
+
+    async def test_dismissing_announces_the_finished_run(self) -> None:
+        alarm = make_alarm()
+        occurrence = make_occurrence(alarm.id, NOW, OccurrenceState.RINGING)
+        events = RecordingPublisher()
+        service = make_alarm_service(
+            alarms=InMemoryAlarmRepository([alarm]),
+            occurrences=InMemoryOccurrenceRepository([occurrence]),
+            events=events,
+        )
+
+        await service.dismiss(alarm.id)
+
+        assert events.only(OccurrenceDismissed).occurrence.state is (
+            OccurrenceState.DISMISSED
+        )
+
+    async def test_rescheduling_announces_the_dropped_run(self) -> None:
+        alarm = make_alarm(hour=7, minute=0)
+        occurrence = make_occurrence(alarm.id, NOW)
+        events = RecordingPublisher()
+        service = make_alarm_service(
+            alarms=InMemoryAlarmRepository([alarm]),
+            occurrences=InMemoryOccurrenceRepository([occurrence]),
+            events=events,
+        )
+
+        await service.update(alarm.id, schedule=Schedule(hour=9, minute=0))
+
+        assert events.only(OccurrenceSkipped).occurrence.id == occurrence.id
+        assert events.only(AlarmUpdated).changed == [AlarmField.SCHEDULE]
+
+    async def test_disabling_a_ringing_alarm_announces_a_dismissal(self) -> None:
+        alarm = make_alarm()
+        occurrence = make_occurrence(alarm.id, NOW, OccurrenceState.RINGING)
+        events = RecordingPublisher()
+        service = make_alarm_service(
+            alarms=InMemoryAlarmRepository([alarm]),
+            occurrences=InMemoryOccurrenceRepository([occurrence]),
+            events=events,
+        )
+
+        await service.disable(alarm.id)
+
+        assert events.only(OccurrenceDismissed).occurrence.id == occurrence.id
+
+    async def test_disabling_a_waiting_alarm_announces_a_skip(self) -> None:
+        alarm = make_alarm()
+        occurrence = make_occurrence(alarm.id, NOW)
+        events = RecordingPublisher()
+        service = make_alarm_service(
+            alarms=InMemoryAlarmRepository([alarm]),
+            occurrences=InMemoryOccurrenceRepository([occurrence]),
+            events=events,
+        )
+
+        await service.disable(alarm.id)
+
+        assert events.only(OccurrenceSkipped).occurrence.id == occurrence.id
 
 
 class TestUpdateAlarm:

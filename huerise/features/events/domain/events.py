@@ -6,6 +6,7 @@ from uuid import UUID
 from pydantic import Field, computed_field
 from transitbus import Event
 
+from huerise.features.alarm.domain import AlarmField
 from huerise.features.events.domain.snapshots import AlarmSnapshot, OccurrenceSnapshot
 
 
@@ -51,8 +52,8 @@ class AlarmCreated(HueriseEvent):
 class AlarmUpdated(HueriseEvent):
     type: Literal[EventType.ALARM_UPDATED] = EventType.ALARM_UPDATED
     alarm: AlarmSnapshot
-    changed: list[str] = Field(
-        description="Names of the fields this update touched, e.g. `is_enabled`."
+    changed: list[AlarmField] = Field(
+        description="The fields this update actually moved."
     )
 
 
