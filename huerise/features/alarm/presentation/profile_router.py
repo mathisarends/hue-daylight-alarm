@@ -35,9 +35,9 @@ async def create_profile(
 ) -> ProfileRead:
     profile = await profile_service.create(
         name=body.name,
-        intro_config=body.intro.to_domain(),
-        sunrise_config=body.sunrise.to_domain(),
-        ringtone_config=body.ringtone.to_domain(),
+        intro_settings=body.intro.to_domain(),
+        sunrise_settings=body.sunrise.to_domain(),
+        ringtone_settings=body.ringtone.to_domain(),
     )
     return ProfileRead.from_domain(profile)
 

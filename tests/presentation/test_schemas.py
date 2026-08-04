@@ -4,7 +4,7 @@ from uuid import uuid4
 import pytest
 from pydantic import ValidationError
 
-from huerise.features.alarm.domain import Alarm, Schedule, SunriseConfig, Weekday
+from huerise.features.alarm.domain import Alarm, Schedule, SunriseSettings, Weekday
 from huerise.features.alarm.presentation.alarm_schemas import (
     AlarmRead,
     ScheduleSchema,
@@ -41,9 +41,9 @@ class TestScheduleSchema:
 
 class TestSunriseSchema:
     def test_roundtrips_through_the_domain(self) -> None:
-        config = SunriseConfig(duration=timedelta(minutes=15), brightness_start=5)
+        settings = SunriseSettings(duration=timedelta(minutes=15), brightness_start=5)
 
-        assert SunriseSchema.from_domain(config).to_domain() == config
+        assert SunriseSchema.from_domain(settings).to_domain() == settings
 
 
 class TestAlarmRead:
@@ -78,6 +78,6 @@ class TestProfileRead:
 
         read = ProfileRead.from_domain(profile)
 
-        assert read.intro.sound_id == profile.intro_config.sound_id
-        assert read.ringtone.volume == profile.ringtone_config.volume
+        assert read.intro.sound_id == profile.intro_settings.sound_id
+        assert read.ringtone.volume == profile.ringtone_settings.volume
         assert read.sunrise.duration_minutes == 7

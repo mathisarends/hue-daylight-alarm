@@ -14,11 +14,11 @@ from huerise.features.alarm.domain import (
     AlarmRepository,
     AlarmUnitOfWork,
     AlarmUnitOfWorkFactory,
-    IntroConfig,
+    IntroSettings,
     OccurrenceState,
-    RingtoneConfig,
+    RingtoneSettings,
     Schedule,
-    SunriseConfig,
+    SunriseSettings,
     Weekday,
 )
 from huerise.features.devices.application import AudioPlayer, Lights
@@ -193,9 +193,11 @@ def make_profile(
     return AlarmProfile(
         name=name,
         is_default=is_default,
-        intro_config=IntroConfig(sound_id=UUID("1693baba-146e-5b14-acf2-6f76554f36e9")),
-        sunrise_config=SunriseConfig(duration=sunrise_duration),
-        ringtone_config=RingtoneConfig(
+        intro_settings=IntroSettings(
+            sound_id=UUID("1693baba-146e-5b14-acf2-6f76554f36e9")
+        ),
+        sunrise_settings=SunriseSettings(duration=sunrise_duration),
+        ringtone_settings=RingtoneSettings(
             sound_id=UUID("5c0806e7-7162-5be7-948e-33d349bde4a8")
         ),
     )

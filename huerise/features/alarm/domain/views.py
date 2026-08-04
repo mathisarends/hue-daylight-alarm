@@ -110,12 +110,12 @@ class Schedule:
 
 
 @dataclass(frozen=True)
-class IntroConfig:
+class IntroSettings:
     sound_id: UUID
 
 
 @dataclass(frozen=True)
-class SunriseConfig:
+class SunriseSettings:
     scene_name: str = "Tageslichtwecker"
     duration: timedelta = timedelta(minutes=7)
     brightness_start: int = 1
@@ -133,7 +133,7 @@ class SunriseConfig:
 
 
 @dataclass(frozen=True)
-class RingtoneConfig:
+class RingtoneSettings:
     sound_id: UUID
     volume: int = 80
 
