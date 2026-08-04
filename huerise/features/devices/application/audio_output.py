@@ -16,13 +16,6 @@ class AudioOutputStatus:
 
 
 class SwitchableAudioPlayer(AudioPlayer):
-    """Delegates to whichever output is selected, one at a time.
-
-    The runner and the API share this single player, so a switch reaches every
-    caller at once -- no re-wiring, and an alarm started before the switch
-    keeps running on the device it was started on until it is stopped.
-    """
-
     def __init__(
         self,
         players: Mapping[AudioOutput, AudioPlayer],
