@@ -35,7 +35,10 @@ class AlarmService:
         return await self._alarms.find_all()
 
     async def find_by_id(self, alarm_id: UUID) -> Alarm:
-        return await self._get_or_raise(alarm_id)
+        alarm = await self._alarms.find_by_id(alarm_id)
+        if alarm is None:
+            raise AlarmNotFoundError(alarm_id)
+        return alarm
 
     async def create(
         self,
@@ -65,13 +68,13 @@ class AlarmService:
 
     async def enable(self, alarm_id: UUID) -> Alarm:
         logger.info("Enabling alarm %s", alarm_id)
-        alarm = await self._get_or_raise(alarm_id)
+        alarm = await self.find_by_id(alarm_id)
         alarm.enable()
         return await self._alarms.save(alarm)
 
     async def disable(self, alarm_id: UUID) -> Alarm:
         logger.info("Disabling alarm %s", alarm_id)
-        alarm = await self._get_or_raise(alarm_id)
+        alarm = await self.find_by_id(alarm_id)
         alarm.disable()
         await self._cancel_active_occurrence(alarm_id)
         return await self._alarms.save(alarm)
@@ -84,7 +87,7 @@ class AlarmService:
     async def list_occurrences(
         self, alarm_id: UUID, limit: int = 20
     ) -> list[AlarmOccurrence]:
-        await self._get_or_raise(alarm_id)
+        await self.find_by_id(alarm_id)
         return await self._occurrences.find_for_alarm(alarm_id, limit=limit)
 
     async def snooze(self, alarm_id: UUID, minutes: int = 10) -> AlarmOccurrence:
@@ -122,14 +125,8 @@ class AlarmService:
             occurrence.skip()
         await self._occurrences.save(occurrence)
 
-    async def _get_or_raise(self, alarm_id: UUID) -> Alarm:
-        alarm = await self._alarms.find_by_id(alarm_id)
-        if alarm is None:
-            raise AlarmNotFoundError(alarm_id)
-        return alarm
-
     async def _get_active_or_raise(self, alarm_id: UUID) -> AlarmOccurrence:
-        await self._get_or_raise(alarm_id)
+        await self.find_by_id(alarm_id)
         occurrence = await self._occurrences.find_active_for_alarm(alarm_id)
         if occurrence is None:
             raise NoActiveOccurrenceError(alarm_id)
