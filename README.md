@@ -9,7 +9,7 @@ Sunrise alarm clock powered by Philips Hue. Gradually increases light brightness
 - **One-time & recurring alarms** — schedule single alarms or recurring series on specific weekdays
 - **Alarm lifecycle** — activate, deactivate, cancel, and delete alarms through the API
 - **Sound & scene browsing** — list the available sounds and Hue scenes and preview them before putting them into a profile
-- **Switchable audio output** — play through the local sound device or a Sonos speaker on the network, switched at runtime
+- **Configurable audio output** — install local playback, Sonos playback, or both
 
 ## Tech Stack
 
@@ -135,8 +135,19 @@ click **Authorize** and paste the token to call endpoints from there.
 ### Audio output
 
 Sounds play either through the machine running the API (`local`) or through a
-Sonos speaker on the same network (`sonos`). Both alarms and previews follow
-the selected output, and switching stops whatever is currently playing.
+Sonos speaker on the same network (`sonos`). `AUDIO_BACKENDS` controls which
+optional backends exist:
+
+```dotenv
+AUDIO_BACKENDS=local       # only local playback
+AUDIO_BACKENDS=sonos       # only Sonos playback
+AUDIO_BACKENDS=all         # both, switchable at runtime
+AUDIO_DEFAULT_OUTPUT=local # initial output when both exist
+```
+
+Both alarms and previews follow the active output. Switching stops whatever is
+currently playing. Selecting a backend that was not configured returns a
+readable `503 Audio output unavailable` response.
 
 | Method | Path             | Description                          |
 | ------ | ---------------- | ------------------------------------ |
@@ -150,8 +161,8 @@ curl -X PUT http://localhost:8000/audio-output \
   -d '{"output": "sonos"}'
 ```
 
-The selection lives in memory: a restart falls back to `AUDIO_DEFAULT_OUTPUT`
-(default `local`).
+The selection lives in memory. With both backends configured, a restart falls
+back to `AUDIO_DEFAULT_OUTPUT`; a single backend selects itself.
 
 For local ALSA playback on a Linux Docker host, pass `/dev/snd` through with
 the optional Compose override:
@@ -184,9 +195,9 @@ MINIO_PUBLIC_ENDPOINT_URL=http://192.168.1.5:9000
   under. Sounds are handed over as presigned links, and a link is only valid
   for the host it was signed for, so `localhost` does not work here.
 
-Discovery happens on the first playback, not at startup — running with the
-local output never touches the network. When the speaker cannot be reached,
-the affected request answers `503`.
+The Sonos client is connected during application startup, so invalid speaker
+configuration and discovery failures fail fast. A local-only process neither
+imports `sonosify` nor touches the network.
 
 ## Go CLI
 
@@ -244,17 +255,20 @@ Do not edit files in `cli/internal/client/` by hand.
 
 ## Local Development
 
-Requires [uv](https://docs.astral.sh/uv/) and Python 3.14+.
+Requires [uv](https://docs.astral.sh/uv/) and Python 3.14+. Install only the
+backend you use, or both for runtime switching:
 
 ```bash
-uv sync
+uv sync --extra local
+uv sync --extra sonos
+uv sync --all-extras
 uv run python -m huerise.main
 ```
 
 Run tests:
 
 ```bash
-uv run pytest
+uv run --all-extras pytest
 go -C cli test ./...
 go -C cli vet ./...
 ```

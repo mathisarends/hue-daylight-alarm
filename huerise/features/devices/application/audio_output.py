@@ -29,7 +29,7 @@ class SwitchableAudioPlayer(AudioPlayer):
         active: AudioOutput,
     ) -> None:
         if active not in players:
-            raise AudioOutputUnavailableError(active, "no player is registered for it")
+            raise AudioOutputUnavailableError(active, "no player is configured for it")
         self._players = dict(players)
         self._active = active
 
@@ -44,7 +44,7 @@ class SwitchableAudioPlayer(AudioPlayer):
     async def select(self, output: AudioOutput) -> None:
         """Stop whatever is playing and route further playback to ``output``."""
         if output not in self._players:
-            raise AudioOutputUnavailableError(output, "no player is registered for it")
+            raise AudioOutputUnavailableError(output, "no player is configured for it")
         if output is self._active:
             return
 

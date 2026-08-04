@@ -1,3 +1,4 @@
+import logging
 from collections.abc import AsyncIterator
 
 from dishka import Provider, Scope, alias, provide
@@ -12,16 +13,16 @@ from huerise.features.devices.application import (
     SoundService,
     SwitchableAudioPlayer,
 )
-from huerise.features.devices.domain import AudioOutput
+from huerise.features.devices.domain import AudioOutput, AudioOutputUnavailableError
 from huerise.features.devices.infrastructure.hue import HueLights
 from huerise.features.devices.infrastructure.settings import (
     AudioSettings,
     HueCredentials,
     SonosSettings,
 )
-from huerise.features.devices.infrastructure.sonos import SonosAudioPlayer
-from huerise.features.devices.infrastructure.sound_device import SoundDeviceAudioPlayer
 from huerise.infrastructure.storage import StorageBackend
+
+logger = logging.getLogger(__name__)
 
 
 class DevicesProvider(Provider):
@@ -56,34 +57,56 @@ class DevicesProvider(Provider):
         return SonosSettings()
 
     @provide
-    def local_audio(
-        self, catalog: SoundCatalog, storage: StorageBackend
-    ) -> SoundDeviceAudioPlayer:
-        return SoundDeviceAudioPlayer(catalog, storage)
-
-    @provide
-    async def sonos_audio(
+    async def switchable_audio(
         self,
         catalog: SoundCatalog,
         storage: StorageBackend,
-        settings: SonosSettings,
-    ) -> AsyncIterator[SonosAudioPlayer]:
-        """Owns the speaker connection, so shutdown closes it."""
-        player = SonosAudioPlayer(catalog, storage, settings)
-        yield player
-        await player.close()
-
-    @provide
-    def switchable_audio(
-        self,
-        local: SoundDeviceAudioPlayer,
-        sonos: SonosAudioPlayer,
         settings: AudioSettings,
-    ) -> SwitchableAudioPlayer:
-        return SwitchableAudioPlayer(
-            {AudioOutput.LOCAL: local, AudioOutput.SONOS: sonos},
-            active=settings.default_output,
-        )
+        sonos_settings: SonosSettings,
+    ) -> AsyncIterator[SwitchableAudioPlayer]:
+        """Build only configured adapters and own their app-scoped resources."""
+        players: dict[AudioOutput, AudioPlayer] = {}
+        sonos_client = None
+
+        if AudioOutput.LOCAL in settings.backends:
+            # Optional audio libraries stay out of Sonos-only processes.
+            from huerise.features.devices.infrastructure.sound_device import (
+                SoundDeviceAudioPlayer,
+            )
+
+            players[AudioOutput.LOCAL] = SoundDeviceAudioPlayer(catalog, storage)
+
+        if AudioOutput.SONOS in settings.backends:
+            # sonosify and its UPnP stack stay out of local-only processes.
+            from sonosify import SonosController, SonosifyError
+
+            from huerise.features.devices.infrastructure.sonos import SonosAudioPlayer
+
+            controller = SonosController(
+                discovery_timeout=sonos_settings.discovery_timeout
+            )
+            try:
+                sonos_client = await controller.client(
+                    sonos_settings.speaker_name, ip=sonos_settings.ip_address
+                )
+            except SonosifyError as error:
+                raise AudioOutputUnavailableError(
+                    AudioOutput.SONOS, str(error)
+                ) from error
+            logger.info(
+                "Connected to Sonos speaker %s at %s",
+                await sonos_client.get_room_name(),
+                sonos_client.ip,
+            )
+            players[AudioOutput.SONOS] = SonosAudioPlayer(
+                catalog, storage, sonos_client
+            )
+
+        try:
+            yield SwitchableAudioPlayer(players, active=settings.initial_output)
+        finally:
+            if sonos_client is not None:
+                await sonos_client.close()
 
     audio = alias(source=SwitchableAudioPlayer, provides=AudioPlayer)
 

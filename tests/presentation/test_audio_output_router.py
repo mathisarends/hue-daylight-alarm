@@ -10,7 +10,10 @@ from huerise.features.devices.application import (
     SwitchableAudioPlayer,
 )
 from huerise.features.devices.domain import AudioOutput
-from huerise.features.devices.presentation import audio_output_router
+from huerise.features.devices.presentation import (
+    audio_output_router,
+    register_device_exception_handlers,
+)
 from huerise.presentation import auth
 from tests.application.conftest import make_audio
 
@@ -69,6 +72,30 @@ def test_rejects_an_unknown_output(client: TestClient) -> None:
     response = client.put("/audio-output", headers=AUTH, json={"output": "kitchen"})
 
     assert response.status_code == 422
+
+
+def test_reports_an_unconfigured_output_readably(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(auth._settings, "access_token", SecretStr(TOKEN))
+    player = SwitchableAudioPlayer(
+        {AudioOutput.LOCAL: make_audio()}, active=AudioOutput.LOCAL
+    )
+    app = FastAPI()
+    app.include_router(audio_output_router)
+    register_device_exception_handlers(app)
+    setup_dishka(make_async_container(StubProvider(player)), app=app)
+
+    with TestClient(app) as local_client:
+        response = local_client.put(
+            "/audio-output", headers=AUTH, json={"output": "sonos"}
+        )
+
+    assert response.status_code == 503
+    assert response.json() == {
+        "detail": "Audio output 'sonos' is unavailable: "
+        "no player is configured for it"
+    }
 
 
 def test_requires_the_access_token(client: TestClient) -> None:

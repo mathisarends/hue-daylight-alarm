@@ -41,6 +41,8 @@ services:
       context: .
       dockerfile: Dockerfile
       target: dev
+      args:
+        AUDIO_BACKENDS: ${AUDIO_BACKENDS:-local}
     container_name: daylight-alarm-migrate
     env_file:
       - .env
@@ -52,6 +54,7 @@ services:
     environment:
       - DATABASE_URL=sqlite+aiosqlite:////app/data/daylight.db
       - MINIO_ENDPOINT_URL=http://minio:9000
+      - AUDIO_BACKENDS=${AUDIO_BACKENDS:-local}
     command: ["python", "-m", "alembic", "upgrade", "head"]
 
   daylight-alarm:
@@ -59,6 +62,8 @@ services:
       context: .
       dockerfile: Dockerfile
       target: dev
+      args:
+        AUDIO_BACKENDS: ${AUDIO_BACKENDS:-local}
     container_name: daylight-alarm
     restart: unless-stopped
     env_file:
@@ -73,6 +78,7 @@ services:
     environment:
       - DATABASE_URL=sqlite+aiosqlite:////app/data/daylight.db
       - MINIO_ENDPOINT_URL=http://minio:9000
+      - AUDIO_BACKENDS=${AUDIO_BACKENDS:-local}
     depends_on:
       migrate:
         condition: service_completed_successfully

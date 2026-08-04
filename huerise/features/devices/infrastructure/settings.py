@@ -1,5 +1,7 @@
-from pydantic import Field, SecretStr
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import Annotated
+
+from pydantic import Field, SecretStr, field_validator
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 from huerise.features.devices.domain import AudioOutput
 
@@ -24,8 +26,33 @@ class AudioSettings(BaseSettings):
         extra="ignore",
     )
 
-    default_output: AudioOutput = AudioOutput.LOCAL
-    """Output used until the API switches it -- the switch is not persisted."""
+    backends: Annotated[tuple[AudioOutput, ...], NoDecode] = (AudioOutput.LOCAL,)
+    """Backends constructed by the composition root: local, sonos, or all."""
+
+    default_output: AudioOutput | None = None
+    """Initially active output. A single configured backend selects itself."""
+
+    @field_validator("backends", mode="before")
+    @classmethod
+    def parse_backends(cls, value: object) -> object:
+        if not isinstance(value, str):
+            return value
+        if value.strip().lower() == "all":
+            return (AudioOutput.LOCAL, AudioOutput.SONOS)
+        return (value.strip(),) if value.strip() else ()
+
+    @field_validator("backends")
+    @classmethod
+    def require_backends(
+        cls, value: tuple[AudioOutput, ...]
+    ) -> tuple[AudioOutput, ...]:
+        if not value:
+            raise ValueError("configure at least one audio backend")
+        return tuple(dict.fromkeys(value))
+
+    @property
+    def initial_output(self) -> AudioOutput:
+        return self.default_output or self.backends[0]
 
 
 class SonosSettings(BaseSettings):

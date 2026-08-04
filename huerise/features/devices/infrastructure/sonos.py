@@ -8,7 +8,6 @@ from uuid import UUID
 
 from huerise.features.devices.application import AudioPlayer, SoundCatalog
 from huerise.features.devices.domain import AudioOutput, AudioOutputUnavailableError
-from huerise.features.devices.infrastructure.settings import SonosSettings
 from huerise.infrastructure.storage import StorageBackend
 
 if TYPE_CHECKING:
@@ -26,21 +25,19 @@ class SonosAudioPlayer(AudioPlayer):
     """Plays through a Sonos speaker over UPnP on the local network.
 
     The speaker fetches the audio itself, so the sound is handed over as a
-    presigned storage link rather than as bytes. Discovery is deferred to the
-    first playback: with the local output selected there is no speaker to find.
+    presigned storage link rather than as bytes. The connected client comes
+    from the composition root, so discovery failures stop app startup.
     """
 
     def __init__(
         self,
         catalog: SoundCatalog,
         storage: StorageBackend,
-        settings: SonosSettings,
+        client: SonosClient,
     ) -> None:
         self._catalog = catalog
         self._storage = storage
-        self._settings = settings
-        self._client: SonosClient | None = None
-        self._lock = asyncio.Lock()
+        self._client = client
         self._stopped = asyncio.Event()
 
     async def play(self, sound_id: UUID, volume: int) -> None:
@@ -49,52 +46,21 @@ class SonosAudioPlayer(AudioPlayer):
         self._stopped.clear()
 
         async with _translated_errors():
-            speaker = await self._connect()
-            await speaker.set_volume(volume)
-            logger.info("Playing %s on Sonos speaker %s", sound.name, speaker.ip)
-            await speaker.play_uri(url, title=sound.name)
-            await self._await_end(speaker)
+            await self._client.set_volume(volume)
+            logger.info(
+                "Playing %s on Sonos speaker %s", sound.name, self._client.ip
+            )
+            await self._client.play_uri(url, title=sound.name)
+            await self._await_end(self._client)
 
     async def stop(self) -> None:
         self._stopped.set()
-        if self._client is None:
-            return
         async with _translated_errors():
             await self._client.stop()
 
     async def set_volume(self, volume: int) -> None:
         async with _translated_errors():
-            speaker = await self._connect()
-            await speaker.set_volume(volume)
-
-    async def close(self) -> None:
-        if self._client is None:
-            return
-        await self._client.close()
-        self._client = None
-
-    async def _connect(self) -> SonosClient:
-        """The speaker, discovered once and kept for later playbacks."""
-        async with self._lock:
-            if self._client is not None:
-                return self._client
-
-            # Imported here so the UPnP stack stays out of a run that only
-            # ever plays locally.
-            from sonosify import SonosController
-
-            controller = SonosController(
-                discovery_timeout=self._settings.discovery_timeout
-            )
-            self._client = await controller.client(
-                self._settings.speaker_name, ip=self._settings.ip_address
-            )
-            logger.info(
-                "Connected to Sonos speaker %s at %s",
-                await self._client.get_room_name(),
-                self._client.ip,
-            )
-            return self._client
+            await self._client.set_volume(volume)
 
     async def _await_end(self, speaker: SonosClient) -> None:
         """Return once the speaker stopped, so ``play`` outlasts the sound."""

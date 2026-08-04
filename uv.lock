@@ -517,15 +517,21 @@ dependencies = [
     { name = "dishka" },
     { name = "fastapi" },
     { name = "hueify" },
-    { name = "numpy" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
-    { name = "sonosify" },
-    { name = "sounddevice" },
-    { name = "soundfile" },
     { name = "sqlmodel" },
     { name = "tzdata" },
     { name = "uvicorn", extra = ["standard"] },
+]
+
+[package.optional-dependencies]
+local = [
+    { name = "numpy" },
+    { name = "sounddevice" },
+    { name = "soundfile" },
+]
+sonos = [
+    { name = "sonosify" },
 ]
 
 [package.dev-dependencies]
@@ -544,16 +550,17 @@ requires-dist = [
     { name = "dishka", specifier = ">=1.9.1" },
     { name = "fastapi", specifier = ">=0.124.0" },
     { name = "hueify", specifier = ">=0.6.1" },
-    { name = "numpy", specifier = ">=2.4.4" },
+    { name = "numpy", marker = "extra == 'local'", specifier = ">=2.4.4" },
     { name = "pydantic", specifier = ">=2.12.5" },
     { name = "pydantic-settings", specifier = ">=2.13.1" },
-    { name = "sonosify", specifier = ">=0.3.1" },
-    { name = "sounddevice", specifier = ">=0.5.5" },
-    { name = "soundfile", specifier = ">=0.13.1" },
+    { name = "sonosify", marker = "extra == 'sonos'", specifier = ">=0.3.1" },
+    { name = "sounddevice", marker = "extra == 'local'", specifier = ">=0.5.5" },
+    { name = "soundfile", marker = "extra == 'local'", specifier = ">=0.13.1" },
     { name = "sqlmodel", specifier = ">=0.0.27" },
     { name = "tzdata", specifier = ">=2026.3" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.34.0" },
 ]
+provides-extras = ["local", "sonos"]
 
 [package.metadata.requires-dev]
 dev = [

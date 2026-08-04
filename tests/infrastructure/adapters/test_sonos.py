@@ -27,9 +27,7 @@ def make_player(speaker: MagicMock) -> SonosAudioPlayer:
     storage = MagicMock(spec=StorageBackend)
     storage.public_url = AsyncMock(return_value="http://192.168.1.5:9000/bowls.mp3")
 
-    player = SonosAudioPlayer(catalog, storage, SonosSettings())
-    player._connect = AsyncMock(return_value=speaker)
-    return player
+    return SonosAudioPlayer(catalog, storage, speaker)
 
 
 def make_speaker(states: list[str]) -> MagicMock:
@@ -42,6 +40,8 @@ def make_speaker(states: list[str]) -> MagicMock:
     speaker.get_transport_info = AsyncMock(
         side_effect=[MagicMock(state=state) for state in [*states, "STOPPED"]]
     )
+    speaker.get_room_name = AsyncMock(return_value="Bedroom")
+    speaker.close = AsyncMock()
     return speaker
 
 
@@ -86,7 +86,6 @@ async def test_play_returns_only_once_the_speaker_stopped() -> None:
 async def test_stop_ends_a_running_playback() -> None:
     speaker = make_speaker(["PLAYING"] * 100)
     player = make_player(speaker)
-    player._client = speaker
 
     playing = asyncio.create_task(player.play(SOUND_ID, volume=40))
     await asyncio.sleep(0)
@@ -96,10 +95,10 @@ async def test_stop_ends_a_running_playback() -> None:
     speaker.stop.assert_awaited_once()
 
 
-async def test_stop_without_a_connected_speaker_stays_quiet() -> None:
+async def test_stop_is_forwarded_to_the_injected_speaker() -> None:
     speaker = make_speaker([])
     player = make_player(speaker)
 
     await player.stop()
 
-    speaker.stop.assert_not_awaited()
+    speaker.stop.assert_awaited_once()

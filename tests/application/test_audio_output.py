@@ -56,7 +56,10 @@ class TestSwitchableAudioPlayer:
             {AudioOutput.LOCAL: make_audio()}, active=AudioOutput.LOCAL
         )
 
-        with pytest.raises(AudioOutputUnavailableError):
+        with pytest.raises(
+            AudioOutputUnavailableError,
+            match="Audio output 'sonos' is unavailable: no player is configured",
+        ):
             await player.select(AudioOutput.SONOS)
 
     def test_rejects_starting_on_an_output_without_a_player(self) -> None:
