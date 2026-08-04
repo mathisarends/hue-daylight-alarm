@@ -350,6 +350,14 @@ class TestEnableDisable:
         assert occurrences.items[occurrence.id].state is OccurrenceState.DISMISSED
         audio.stop.assert_awaited_once()
 
+    async def test_disable_with_no_occurrences_is_a_noop(self) -> None:
+        alarm = make_alarm()
+        service = make_alarm_service(alarms=InMemoryAlarmRepository([alarm]))
+
+        result = await service.disable(alarm.id)
+
+        assert result.is_enabled is False
+
     async def test_raises_when_alarm_is_unknown(self) -> None:
         service = make_alarm_service()
 

@@ -82,6 +82,15 @@ class TestUpdate:
 
         assert changed == [AlarmField.ROOM_NAME]
 
+    def test_applies_a_changed_profile_id(self) -> None:
+        alarm = make_alarm()
+        new_profile_id = uuid4()
+
+        changed = alarm.update(profile_id=new_profile_id)
+
+        assert alarm.profile_id == new_profile_id
+        assert changed == [AlarmField.PROFILE_ID]
+
 
 class TestNextOccurrence:
     def test_resolves_the_schedule(self) -> None:
