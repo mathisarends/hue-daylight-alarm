@@ -66,9 +66,7 @@ class HueLightEvents(LightEvents):
         await self._hue.start_events()
 
     async def _on_event(self, event: RoomEvent | SceneEvent) -> None:
-        # The full payload is worth seeing while the shapes of a rename and a
-        # deletion are still being pinned down; it is far too chatty for INFO,
-        # because every scene recall shows up here too.
+        # Too chatty for INFO: every scene recall passes through here as well.
         logger.debug("Raw Hue event: %s", event.model_dump(exclude_none=True))
 
         change = LightChange(

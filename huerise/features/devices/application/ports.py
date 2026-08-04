@@ -38,16 +38,10 @@ class Lights(ABC):
 
 
 class LightEvents(ABC):
-    """Rooms and scenes changing on the bridge, pushed as they happen.
-
-    Keeps the rest of the application from knowing that these arrive over an
-    SSE connection, so that anything holding denormalised Hue names can react
-    without depending on the vendor client.
-    """
+    """Rooms and scenes changing on the bridge, pushed as they happen."""
 
     @abstractmethod
     def subscribe(self, handler: LightChangeHandler) -> None: ...
 
     @abstractmethod
-    async def start(self) -> None:
-        """Open the connection and begin delivering changes to subscribers."""
+    async def start(self) -> None: ...

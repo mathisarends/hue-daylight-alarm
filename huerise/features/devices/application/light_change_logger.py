@@ -7,12 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 class LightChangeLogger:
-    """Reports bridge changes while nothing else acts on them yet.
-
-    This is the seam the profile and alarm sync will hang off: the alarms
-    store a scene name and a room name of their own, and both go stale the
-    moment somebody renames one in the Hue app.
-    """
+    """Reports bridge changes while nothing else acts on them yet."""
 
     def __init__(self, events: LightEvents) -> None:
         self._events = events

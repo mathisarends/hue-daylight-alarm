@@ -10,12 +10,8 @@ class LightResource(StrEnum):
 
 @dataclass(frozen=True, slots=True)
 class LightChange:
-    """A room or scene changed on the bridge.
-
-    The bridge reports only the fields that moved, so ``name`` is set when the
-    resource was renamed and None for every other change -- including a
-    deletion, which arrives as a bare identity.
-    """
+    """The bridge sends only the fields that moved, so ``name`` is set on a
+    rename and None otherwise -- a deletion arrives as a bare identity."""
 
     resource: LightResource
     id: UUID

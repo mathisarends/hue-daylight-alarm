@@ -18,8 +18,7 @@ async def lifespan(app: FastAPI):
     tracker = await app.state.dishka_container.get(NextAlarmTracker)
     await tracker.start()
 
-    # Same here: resolving the logger is what subscribes it. Closing the
-    # container closes Hueify, which stops the event stream with it.
+    # Same here: resolving the logger is what subscribes it.
     await app.state.dishka_container.get(LightChangeLogger)
     await (await app.state.dishka_container.get(LightEvents)).start()
 
