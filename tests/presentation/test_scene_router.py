@@ -7,7 +7,11 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from pydantic import SecretStr
 
-from huerise.features.devices.application import SceneService
+from huerise.features.devices.application import (
+    DEMO_DURATION,
+    SceneService,
+    SunriseDemoRunner,
+)
 from huerise.features.devices.domain import Room, Scene
 from huerise.features.devices.presentation import (
     register_device_exception_handlers,
@@ -44,7 +48,7 @@ def client(monkeypatch: pytest.MonkeyPatch) -> TestClient:
     monkeypatch.setattr(auth._settings, "access_token", SecretStr(TOKEN))
     lights = make_lights()
     lights.list_rooms.return_value = [BEDROOM]
-    service = SceneService(lights)
+    service = SceneService(lights, SunriseDemoRunner(lights))
 
     app = FastAPI()
     app.include_router(scene_router)
@@ -91,6 +95,62 @@ def test_activates_a_scene(client: TestClient) -> None:
         headers=AUTH,
         json={"brightness": 12.5},
     )
+
+    assert response.status_code == 204
+
+
+def test_demos_a_scene_and_describes_the_run(client: TestClient) -> None:
+    response = client.post(
+        f"/rooms/{ROOM_ID}/scenes/{SCENE_ID}/demo",
+        headers=AUTH,
+        json={"duration_seconds": 20, "brightness_start": 10, "brightness_end": 100},
+    )
+
+    assert response.status_code == 202
+    assert response.json() == {
+        "room_id": str(ROOM_ID),
+        "room_name": "Bedroom",
+        "scene_id": str(SCENE_ID),
+        "scene_name": "Relax",
+        "brightness_start": 10,
+        "brightness_end": 100,
+        "steps": 20,
+        "step_interval_seconds": 1.0,
+        "duration_seconds": 20.0,
+    }
+
+
+def test_demoing_without_a_body_uses_the_default_ramp(client: TestClient) -> None:
+    response = client.post(f"/rooms/{ROOM_ID}/scenes/{SCENE_ID}/demo", headers=AUTH)
+
+    assert response.status_code == 202
+    assert response.json()["duration_seconds"] == DEMO_DURATION.total_seconds()
+
+
+def test_demoing_an_unknown_scene_returns_404(client: TestClient) -> None:
+    unknown_id = UUID("33333333-3333-4333-8333-333333333333")
+
+    response = client.post(
+        f"/rooms/{ROOM_ID}/scenes/{unknown_id}/demo", headers=AUTH, json={}
+    )
+
+    assert response.status_code == 404
+
+
+def test_a_ramp_that_does_not_climb_is_rejected(client: TestClient) -> None:
+    response = client.post(
+        f"/rooms/{ROOM_ID}/scenes/{SCENE_ID}/demo",
+        headers=AUTH,
+        json={"brightness_start": 100, "brightness_end": 100},
+    )
+
+    assert response.status_code == 422
+
+
+def test_stops_a_running_demo(client: TestClient) -> None:
+    client.post(f"/rooms/{ROOM_ID}/scenes/{SCENE_ID}/demo", headers=AUTH)
+
+    response = client.delete(f"/rooms/{ROOM_ID}/scenes/{SCENE_ID}/demo", headers=AUTH)
 
     assert response.status_code == 204
 

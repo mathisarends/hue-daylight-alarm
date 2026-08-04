@@ -11,6 +11,7 @@ from huerise.features.devices.application import (
     Lights,
     SceneService,
     SoundService,
+    SunriseDemoRunner,
     SwitchableAudioPlayer,
 )
 from huerise.features.devices.domain import (
@@ -115,9 +116,14 @@ class DevicesProvider(Provider):
 
     audio = alias(source=SwitchableAudioPlayer, provides=AudioPlayer)
 
+    @provide
+    def sunrise_demo(self, lights: Lights) -> SunriseDemoRunner:
+        """App-scoped: a demo keeps running after its request is answered."""
+        return SunriseDemoRunner(lights)
+
     @provide(scope=Scope.REQUEST)
-    def scene_service(self, lights: Lights) -> SceneService:
-        return SceneService(lights)
+    def scene_service(self, lights: Lights, demo: SunriseDemoRunner) -> SceneService:
+        return SceneService(lights, demo)
 
     @provide(scope=Scope.REQUEST)
     def sound_service(

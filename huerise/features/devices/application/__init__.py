@@ -1,14 +1,19 @@
 from .audio_output import AudioOutputService, AudioOutputStatus, SwitchableAudioPlayer
 from .ports import AudioPlayer, Lights
-from .scene_service import SceneService
+from .scene_service import SceneService, SunriseDemo
 from .sound_service import SoundService
+from .sunrise_demo import DEMO_DURATION, DEMO_STEP_INTERVAL, SunriseDemoRunner
 
 __all__ = [
+    "DEMO_DURATION",
+    "DEMO_STEP_INTERVAL",
     "AudioOutputService",
     "AudioOutputStatus",
     "AudioPlayer",
     "Lights",
     "SceneService",
     "SoundService",
+    "SunriseDemo",
+    "SunriseDemoRunner",
     "SwitchableAudioPlayer",
 ]

@@ -7,6 +7,8 @@ from huerise.features.devices.application import SceneService
 from huerise.features.devices.presentation.schemas import (
     RoomRead,
     SceneActivationRequest,
+    SunriseDemoRead,
+    SunriseDemoRequest,
 )
 from huerise.presentation import require_access_token
 
@@ -50,3 +52,41 @@ async def activate_scene(
         scene_id,
         brightness=body.brightness if body is not None else None,
     )
+
+
+@scene_router.post(
+    "/{room_id}/scenes/{scene_id}/demo",
+    response_model=SunriseDemoRead,
+    status_code=202,
+    operation_id="demo_scene",
+)
+async def demo_scene(
+    room_id: UUID,
+    scene_id: UUID,
+    scene_service: FromDishka[SceneService],
+    body: SunriseDemoRequest | None = None,
+) -> SunriseDemoRead:
+    """Fast-forward a whole sunrise on this scene, lights only.
+
+    Returns as soon as the climb is under way, describing the run so a client
+    can follow along. The scene does not have to belong to a saved alarm.
+    """
+    demo = await scene_service.start_demo(
+        room_id, scene_id, (body or SunriseDemoRequest()).to_ramp()
+    )
+    return SunriseDemoRead.from_domain(demo)
+
+
+@scene_router.delete(
+    "/{room_id}/scenes/{scene_id}/demo",
+    status_code=204,
+    response_model=None,
+    operation_id="stop_scene_demo",
+)
+async def stop_scene_demo(
+    room_id: UUID,
+    scene_id: UUID,
+    scene_service: FromDishka[SceneService],
+) -> None:
+    """Cut the running demo short. Only one runs at a time, so this ends it."""
+    await scene_service.stop_demo()
