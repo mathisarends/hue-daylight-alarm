@@ -26,6 +26,7 @@ type commandTree struct {
 	Sounds      soundsCommand      `cmd:"" help:"Browse and preview sounds."`
 	AudioOutput audioOutputCommand `cmd:"" name:"audio-output" help:"Switch where audio is played."`
 	Profiles    profilesCommand    `cmd:"" help:"Manage alarm profiles."`
+	Alarms      alarmsCommand      `cmd:"" help:"Manage sunrise alarms."`
 	Version     versionCommand     `cmd:"" help:"Print version information."`
 }
 
