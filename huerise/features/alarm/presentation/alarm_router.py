@@ -14,7 +14,7 @@ from huerise.presentation import require_access_token
 
 alarm_router = APIRouter(
     prefix="/alarms",
-    tags=["Alarms"],
+    tags=["alarms"],
     route_class=DishkaRoute,
     dependencies=[Depends(require_access_token)],
 )

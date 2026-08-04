@@ -12,7 +12,7 @@ from huerise.presentation import require_access_token
 
 profile_router = APIRouter(
     prefix="/alarm-profiles",
-    tags=["Alarm Profiles"],
+    tags=["alarm-profiles"],
     route_class=DishkaRoute,
     dependencies=[Depends(require_access_token)],
 )

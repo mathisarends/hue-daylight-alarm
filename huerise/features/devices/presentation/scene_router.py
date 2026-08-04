@@ -7,7 +7,7 @@ from huerise.presentation import require_access_token
 
 scene_router = APIRouter(
     prefix="/rooms",
-    tags=["Rooms & Scenes"],
+    tags=["scenes"],
     route_class=DishkaRoute,
     dependencies=[Depends(require_access_token)],
 )

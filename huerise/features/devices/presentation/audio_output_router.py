@@ -10,7 +10,7 @@ from huerise.presentation import require_access_token
 
 audio_output_router = APIRouter(
     prefix="/audio-output",
-    tags=["Audio Output"],
+    tags=["audio-output"],
     route_class=DishkaRoute,
     dependencies=[Depends(require_access_token)],
 )

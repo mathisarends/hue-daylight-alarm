@@ -12,7 +12,7 @@ from huerise.features.events.presentation.sse import frames
 from huerise.presentation import require_access_token
 
 event_stream_router = APIRouter(
-    tags=["Events"],
+    tags=["events"],
     route_class=DishkaRoute,
     dependencies=[Depends(require_access_token)],
 )

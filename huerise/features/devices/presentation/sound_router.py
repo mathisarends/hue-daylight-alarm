@@ -12,7 +12,7 @@ from huerise.presentation import require_access_token
 
 sound_router = APIRouter(
     prefix="/sounds",
-    tags=["Sounds"],
+    tags=["sounds"],
     route_class=DishkaRoute,
     dependencies=[Depends(require_access_token)],
 )
