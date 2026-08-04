@@ -223,7 +223,7 @@ func (command alarmsOccurrencesCommand) Run(runtime *Runtime) error {
 
 func (command alarmsDeleteCommand) Run(runtime *Runtime) error {
 	if !command.Yes {
-		if err := confirmDelete(runtime, command.AlarmID); err != nil {
+		if err := confirmDelete(runtime, "alarm", command.AlarmID); err != nil {
 			return err
 		}
 	}
@@ -353,11 +353,11 @@ func occurrenceRow(occurrence client.OccurrenceRead) []string {
 	}
 }
 
-func confirmDelete(runtime *Runtime, alarmID uuid.UUID) error {
+func confirmDelete(runtime *Runtime, resource string, id uuid.UUID) error {
 	if runtime.root.NoInput || !isTerminal(runtime.stdin) {
-		return &commandError{Code: "input_required", Message: "deleting an alarm requires confirmation", Hint: "Pass --yes to skip confirmation.", ExitCode: 2}
+		return &commandError{Code: "input_required", Message: "deleting a " + resource + " requires confirmation", Hint: "Pass --yes to skip confirmation.", ExitCode: 2}
 	}
-	_, _ = fmt.Fprintf(runtime.stderr, "Delete alarm %s? [y/N] ", alarmID)
+	_, _ = fmt.Fprintf(runtime.stderr, "Delete %s %s? [y/N] ", resource, id)
 	answer, err := bufio.NewReader(runtime.stdin).ReadString('\n')
 	if err != nil {
 		return fmt.Errorf("read confirmation: %w", err)

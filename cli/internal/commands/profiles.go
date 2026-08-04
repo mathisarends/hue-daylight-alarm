@@ -11,6 +11,7 @@ import (
 type profilesCommand struct {
 	List   profilesListCommand   `cmd:"" help:"List every alarm profile."`
 	Create profilesCreateCommand `cmd:"" help:"Create a new alarm profile."`
+	Delete profilesDeleteCommand `cmd:"" help:"Delete an alarm profile."`
 }
 
 type profilesListCommand struct{}
@@ -24,6 +25,11 @@ type profilesCreateCommand struct {
 	DurationMinutes int       `default:"7" help:"Sunrise duration (0-120 minutes)."`
 	BrightnessStart int       `default:"1" help:"Starting brightness (1-99)."`
 	BrightnessEnd   int       `default:"100" help:"Ending brightness (2-100)."`
+}
+
+type profilesDeleteCommand struct {
+	ProfileID uuid.UUID `arg:"" name:"profile-id"`
+	Yes       bool      `short:"y" help:"Skip confirmation."`
 }
 
 func (profilesListCommand) Run(runtime *Runtime) error {
@@ -97,6 +103,33 @@ func (command profilesCreateCommand) validate() error {
 		return &commandError{Code: "usage", Message: "starting brightness must be less than ending brightness", ExitCode: 2}
 	}
 	return nil
+}
+
+func (command profilesDeleteCommand) Run(runtime *Runtime) error {
+	if !command.Yes {
+		if err := confirmDelete(runtime, "profile", command.ProfileID); err != nil {
+			return err
+		}
+	}
+	apiClient, err := runtime.client()
+	if err != nil {
+		return err
+	}
+	response, err := apiClient.DeleteProfile(runtime.ctx, client.DeleteProfileParams{ProfileID: command.ProfileID})
+	if err != nil {
+		return err
+	}
+	switch result := response.(type) {
+	case *client.DeleteProfileNoContent:
+		return runtime.output(map[string]any{"deleted": true, "id": command.ProfileID.String()}, func() error {
+			_, err := fmt.Fprintf(runtime.stdout, "Deleted profile %s.\n", command.ProfileID)
+			return err
+		})
+	case *client.HTTPValidationError:
+		return validationError(result)
+	default:
+		return fmt.Errorf("unexpected delete profile response %T", response)
+	}
 }
 
 func writeProfile(runtime *Runtime, profile *client.ProfileRead) error {

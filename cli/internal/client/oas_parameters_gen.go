@@ -17,6 +17,11 @@ type DeleteAlarmParams struct {
 	AlarmID uuid.UUID
 }
 
+// DeleteProfileParams is parameters of deleteProfile operation.
+type DeleteProfileParams struct {
+	ProfileID uuid.UUID
+}
+
 // DisableAlarmParams is parameters of disableAlarm operation.
 type DisableAlarmParams struct {
 	AlarmID uuid.UUID

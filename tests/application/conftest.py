@@ -105,6 +105,9 @@ class InMemoryProfileRepository(AlarmProfileRepository):
         self.items[domain.id] = domain
         return domain
 
+    async def delete_by_id(self, id: UUID) -> bool:
+        return self.items.pop(id, None) is not None
+
 
 class InMemoryOccurrenceRepository(AlarmOccurrenceRepository):
     def __init__(self, occurrences: list[AlarmOccurrence] | None = None) -> None:

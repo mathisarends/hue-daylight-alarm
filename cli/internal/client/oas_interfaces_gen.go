@@ -17,6 +17,10 @@ type DeleteAlarmRes interface {
 	deleteAlarmRes()
 }
 
+type DeleteProfileRes interface {
+	deleteProfileRes()
+}
+
 type DisableAlarmRes interface {
 	disableAlarmRes()
 }

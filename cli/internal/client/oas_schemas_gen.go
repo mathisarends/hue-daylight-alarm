@@ -278,6 +278,11 @@ type DeleteAlarmNoContent struct{}
 
 func (*DeleteAlarmNoContent) deleteAlarmRes() {}
 
+// DeleteProfileNoContent is response for DeleteProfile operation.
+type DeleteProfileNoContent struct{}
+
+func (*DeleteProfileNoContent) deleteProfileRes() {}
+
 // Ref: #/components/schemas/HTTPValidationError
 type HTTPValidationError struct {
 	Detail []ValidationError `json:"detail"`
@@ -297,6 +302,7 @@ func (*HTTPValidationError) activateSceneRes()     {}
 func (*HTTPValidationError) createAlarmRes()       {}
 func (*HTTPValidationError) createProfileRes()     {}
 func (*HTTPValidationError) deleteAlarmRes()       {}
+func (*HTTPValidationError) deleteProfileRes()     {}
 func (*HTTPValidationError) disableAlarmRes()      {}
 func (*HTTPValidationError) dismissAlarmRes()      {}
 func (*HTTPValidationError) enableAlarmRes()       {}
@@ -311,7 +317,7 @@ func (*HTTPValidationError) snoozeAlarmRes()       {}
 
 // Ref: #/components/schemas/IntroSchema
 type IntroSchema struct {
-	// Id of a sound from GET /sounds, e.g. 'wake_up/bowls'.
+	// UUID of a sound returned by GET /sounds, e.g. '5c0806e7-7162-5be7-948e-33d349bde4a8'.
 	SoundID uuid.UUID `json:"sound_id"`
 }
 
@@ -965,7 +971,7 @@ func (*ProfileRead) createProfileRes() {}
 
 // Ref: #/components/schemas/RingtoneSchema
 type RingtoneSchema struct {
-	// Id of a sound from GET /sounds, e.g. 'wake_up/bowls'.
+	// UUID of a sound returned by GET /sounds, e.g. '5c0806e7-7162-5be7-948e-33d349bde4a8'.
 	SoundID uuid.UUID `json:"sound_id"`
 	Volume  OptInt    `json:"volume"`
 }

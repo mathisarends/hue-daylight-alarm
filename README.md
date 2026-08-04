@@ -113,6 +113,7 @@ click **Authorize** and paste the token to call endpoints from there.
 | ------ | ----------------- | ------------------------ |
 | GET    | `/alarm-profiles` | List all alarm profiles  |
 | POST   | `/alarm-profiles` | Create an alarm profile  |
+| DELETE | `/alarm-profiles/{profile_id}` | Delete an alarm profile |
 
 ### Rooms and scenes
 
@@ -151,6 +152,17 @@ curl -X PUT http://localhost:8000/audio-output \
 
 The selection lives in memory: a restart falls back to `AUDIO_DEFAULT_OUTPUT`
 (default `local`).
+
+For local ALSA playback on a Linux Docker host, pass `/dev/snd` through with
+the optional Compose override:
+
+```bash
+docker compose -f compose.yml -f compose.audio.yml up --build
+```
+
+The regular `docker compose up --build` remains portable and is also the right
+choice when using Sonos. Docker Desktop on Windows and macOS cannot pass host
+audio through the Linux `/dev/snd` mapping.
 
 #### Sonos setup
 

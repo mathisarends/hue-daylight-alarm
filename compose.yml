@@ -12,6 +12,11 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-huerise-dev-secret}
     volumes:
       - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
 
   minio-init:
     image: minio/mc:latest
@@ -22,7 +27,8 @@ services:
     volumes:
       - ./assets:/assets:ro
     depends_on:
-      - minio
+      minio:
+        condition: service_healthy
     entrypoint: >
       /bin/sh -c '
       until mc alias set local http://minio:9000 "$${MINIO_ROOT_USER}" "$${MINIO_ROOT_PASSWORD}"; do sleep 1; done;

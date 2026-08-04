@@ -11,7 +11,10 @@ from huerise.features.alarm.domain import (
     SunriseConfig,
 )
 
-_SOUND_ID_DESCRIPTION = "Id of a sound from GET /sounds, e.g. 'wake_up/bowls'."
+_SOUND_ID_DESCRIPTION = (
+    "UUID of a sound returned by GET /sounds, "
+    "e.g. '5c0806e7-7162-5be7-948e-33d349bde4a8'."
+)
 
 
 class SunriseSchema(BaseModel):

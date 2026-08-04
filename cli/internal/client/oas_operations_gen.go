@@ -10,6 +10,7 @@ const (
 	CreateAlarmOperation       OperationName = "CreateAlarm"
 	CreateProfileOperation     OperationName = "CreateProfile"
 	DeleteAlarmOperation       OperationName = "DeleteAlarm"
+	DeleteProfileOperation     OperationName = "DeleteProfile"
 	DisableAlarmOperation      OperationName = "DisableAlarm"
 	DismissAlarmOperation      OperationName = "DismissAlarm"
 	EnableAlarmOperation       OperationName = "EnableAlarm"

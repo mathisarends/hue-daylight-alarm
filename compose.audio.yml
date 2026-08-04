@@ -1,0 +1,6 @@
+# Optional local ALSA playback for Linux Docker hosts. Use together with the
+# base file: docker compose -f compose.yml -f compose.audio.yml up --build
+services:
+  daylight-alarm:
+    devices:
+      - /dev/snd:/dev/snd

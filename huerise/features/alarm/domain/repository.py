@@ -37,6 +37,9 @@ class AlarmProfileRepository(ABC):
     @abstractmethod
     async def save(self, domain: AlarmProfile) -> AlarmProfile: ...
 
+    @abstractmethod
+    async def delete_by_id(self, id: UUID) -> bool: ...
+
 
 class AlarmOccurrenceRepository(ABC):
     @abstractmethod

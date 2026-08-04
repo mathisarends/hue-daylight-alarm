@@ -22,6 +22,7 @@ var operationRolesAccessToken = map[string][]string{
 	CreateAlarmOperation:       []string{},
 	CreateProfileOperation:     []string{},
 	DeleteAlarmOperation:       []string{},
+	DeleteProfileOperation:     []string{},
 	DisableAlarmOperation:      []string{},
 	DismissAlarmOperation:      []string{},
 	EnableAlarmOperation:       []string{},

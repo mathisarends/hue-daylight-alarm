@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
 from fastapi import APIRouter, Depends
 
@@ -38,3 +40,16 @@ async def create_profile(
         ringtone_config=body.ringtone.to_domain(),
     )
     return ProfileRead.from_domain(profile)
+
+
+@profile_router.delete(
+    "/{profile_id}",
+    status_code=204,
+    response_model=None,
+    operation_id="deleteProfile",
+)
+async def delete_profile(
+    profile_id: UUID,
+    profile_service: FromDishka[AlarmProfileService],
+) -> None:
+    await profile_service.delete(profile_id)

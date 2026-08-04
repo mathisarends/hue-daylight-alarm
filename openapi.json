@@ -505,6 +505,47 @@
         ]
       }
     },
+    "/alarm-profiles/{profile_id}": {
+      "delete": {
+        "tags": [
+          "Alarm Profiles"
+        ],
+        "summary": "Delete Profile",
+        "operationId": "deleteProfile",
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/sounds": {
       "get": {
         "tags": [
@@ -1017,7 +1058,7 @@
             "type": "string",
             "format": "uuid",
             "title": "Sound Id",
-            "description": "Id of a sound from GET /sounds, e.g. 'wake_up/bowls'."
+            "description": "UUID of a sound returned by GET /sounds, e.g. '5c0806e7-7162-5be7-948e-33d349bde4a8'."
           }
         },
         "type": "object",
@@ -1190,7 +1231,7 @@
             "type": "string",
             "format": "uuid",
             "title": "Sound Id",
-            "description": "Id of a sound from GET /sounds, e.g. 'wake_up/bowls'."
+            "description": "UUID of a sound returned by GET /sounds, e.g. '5c0806e7-7162-5be7-948e-33d349bde4a8'."
           },
           "volume": {
             "type": "integer",

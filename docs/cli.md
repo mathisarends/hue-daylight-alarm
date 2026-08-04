@@ -19,7 +19,8 @@ huerise
 │   └── delete
 ├── profiles
 │   ├── list
-│   └── create
+│   ├── create
+│   └── delete
 ├── rooms
 │   ├── list
 │   ├── get
@@ -48,7 +49,7 @@ defaults.
   every object in a list.
 - Unknown fields fail before emitting data and list the available names.
 
-For unattended calls, pass `--no-input`. Alarm deletion additionally requires
+For unattended calls, pass `--no-input`. Alarm and profile deletion require
 `--yes`; this keeps agents and scripts from blocking on or bypassing a prompt by
 accident.
 

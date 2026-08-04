@@ -70,3 +70,22 @@ func TestProfilesCreateValidatesBrightness(t *testing.T) {
 		t.Fatalf("exit = %d, stdout = %q, stderr = %q", exitCode, stdout, stderr)
 	}
 }
+
+func TestProfilesDeleteWithYes(t *testing.T) {
+	t.Parallel()
+	const profileID = "8b2748e3-1234-4567-890a-123456789abc"
+	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		if request.Method != http.MethodDelete || request.URL.Path != "/alarm-profiles/"+profileID {
+			t.Errorf("request = %s %s", request.Method, request.URL.Path)
+		}
+		writer.WriteHeader(http.StatusNoContent)
+	}))
+	defer server.Close()
+
+	stdout, stderr, exitCode := runTestCLI(t, server.URL,
+		"profiles", "delete", profileID, "--yes", "--json", "--compact",
+	)
+	if exitCode != 0 || !strings.Contains(stdout, `"deleted":true`) {
+		t.Fatalf("exit = %d, stdout = %q, stderr = %q", exitCode, stdout, stderr)
+	}
+}

@@ -41,3 +41,8 @@ class AlarmProfileService:
             ringtone_config=ringtone_config,
         )
         return await self._profiles.save(profile)
+
+    async def delete(self, profile_id: UUID) -> None:
+        logger.info("Deleting alarm profile %s", profile_id)
+        if not await self._profiles.delete_by_id(profile_id):
+            raise AlarmProfileNotFoundError(profile_id)
