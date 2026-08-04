@@ -34,11 +34,20 @@ dev = [
     "pre-commit>=4.5.0",
     "pytest>=9.0.2",
     "pytest-asyncio>=1.3.0",
+    "pytest-cov>=7.1.0",
     "ruff>=0.15.9",
 ]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+
+[tool.coverage.run]
+omit = [
+    "huerise/app.py",
+    "huerise/main.py",
+    "huerise/lifespan.py",
+    "huerise/infrastructure/di/*",
+]
 
 [tool.ruff]
 line-length = 88
