@@ -1,14 +1,14 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import pytest
 
 from huerise.features.alarm.domain import (
     AlarmNotFoundError,
-    Schedule,
     AlarmProfileNotFoundError,
     NoActiveOccurrenceError,
     OccurrenceState,
+    Schedule,
     Weekday,
 )
 from tests.application.conftest import (
@@ -22,7 +22,27 @@ from tests.application.conftest import (
     make_profile,
 )
 
-NOW = datetime(2026, 8, 3, 5, 0, tzinfo=timezone.utc)
+NOW = datetime(2026, 8, 3, 5, 0, tzinfo=UTC)
+
+
+class TestFindAlarm:
+    async def test_returns_all_alarms(self) -> None:
+        alarm = make_alarm()
+        service = make_alarm_service(alarms=InMemoryAlarmRepository([alarm]))
+
+        assert await service.find_all() == [alarm]
+
+    async def test_returns_alarm_by_id(self) -> None:
+        alarm = make_alarm()
+        service = make_alarm_service(alarms=InMemoryAlarmRepository([alarm]))
+
+        assert await service.find_by_id(alarm.id) == alarm
+
+    async def test_raises_for_an_unknown_id(self) -> None:
+        service = make_alarm_service()
+
+        with pytest.raises(AlarmNotFoundError):
+            await service.find_by_id(uuid4())
 
 
 class TestCreateAlarm:
@@ -30,7 +50,7 @@ class TestCreateAlarm:
         profile = make_profile()
         service = make_alarm_service(profiles=InMemoryProfileRepository([profile]))
 
-        alarm = await service.create_alarm(
+        alarm = await service.create(
             label="Work", schedule=Schedule(hour=6, minute=45), room_name="Bedroom"
         )
 
@@ -39,7 +59,7 @@ class TestCreateAlarm:
     async def test_stores_weekdays_and_timezone(self) -> None:
         service = make_alarm_service()
 
-        alarm = await service.create_alarm(
+        alarm = await service.create(
             label="Work",
             schedule=Schedule(
                 hour=6, minute=45, weekdays=frozenset({Weekday.MON, Weekday.FRI})
@@ -53,7 +73,7 @@ class TestCreateAlarm:
     async def test_without_weekdays_the_alarm_is_one_time(self) -> None:
         service = make_alarm_service()
 
-        alarm = await service.create_alarm(
+        alarm = await service.create(
             label="Nap", schedule=Schedule(hour=14, minute=0), room_name="Bedroom"
         )
 
@@ -63,7 +83,7 @@ class TestCreateAlarm:
         service = make_alarm_service(profiles=InMemoryProfileRepository([]))
 
         with pytest.raises(AlarmProfileNotFoundError):
-            await service.create_alarm(
+            await service.create(
                 label="Work",
                 schedule=Schedule(hour=6, minute=45),
                 room_name="Bedroom",
@@ -73,7 +93,7 @@ class TestCreateAlarm:
         service = make_alarm_service()
 
         with pytest.raises(AlarmProfileNotFoundError):
-            await service.create_alarm(
+            await service.create(
                 label="Work",
                 schedule=Schedule(hour=6, minute=45),
                 room_name="Bedroom",

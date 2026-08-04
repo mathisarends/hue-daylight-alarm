@@ -31,13 +31,13 @@ class AlarmService:
         self._occurrences = occurrences
         self._audio = audio
 
-    async def list_alarms(self) -> list[Alarm]:
+    async def find_all(self) -> list[Alarm]:
         return await self._alarms.find_all()
 
-    async def get_alarm(self, alarm_id: UUID) -> Alarm:
+    async def find_by_id(self, alarm_id: UUID) -> Alarm:
         return await self._get_or_raise(alarm_id)
 
-    async def create_alarm(
+    async def create(
         self,
         label: str,
         schedule: Schedule,

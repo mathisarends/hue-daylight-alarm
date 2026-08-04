@@ -22,7 +22,7 @@ alarm_router = APIRouter(
 
 @alarm_router.get("", response_model=list[AlarmRead], operation_id="listAlarms")
 async def list_alarms(alarm_service: FromDishka[AlarmService]) -> list[AlarmRead]:
-    alarms = await alarm_service.list_alarms()
+    alarms = await alarm_service.find_all()
     return [AlarmRead.from_domain(alarm) for alarm in alarms]
 
 
@@ -33,7 +33,7 @@ async def create_alarm(
     body: AlarmCreate,
     alarm_service: FromDishka[AlarmService],
 ) -> AlarmRead:
-    alarm = await alarm_service.create_alarm(
+    alarm = await alarm_service.create(
         label=body.label,
         schedule=body.schedule.to_domain(),
         room_name=body.room_name,
@@ -47,7 +47,7 @@ async def get_alarm(
     alarm_id: UUID,
     alarm_service: FromDishka[AlarmService],
 ) -> AlarmRead:
-    alarm = await alarm_service.get_alarm(alarm_id)
+    alarm = await alarm_service.find_by_id(alarm_id)
     return AlarmRead.from_domain(alarm)
 
 
