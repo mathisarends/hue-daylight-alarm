@@ -7,6 +7,12 @@ from huerise.features.alarm.domain import (
     AlarmUnitOfWork,
     AlarmUnitOfWorkFactory,
 )
+from huerise.features.events.application import EventPublisher
+from huerise.features.events.domain import (
+    OccurrenceScheduled,
+    OccurrenceSkipped,
+    OccurrenceSnapshot,
+)
 from huerise.features.runner.application.runner_port import AlarmRunner
 
 logger = logging.getLogger(__name__)
@@ -27,12 +33,14 @@ class AlarmScheduler:
         self,
         unit_of_work_factory: AlarmUnitOfWorkFactory,
         runner: AlarmRunner,
+        events: EventPublisher,
         tick_interval: timedelta = TICK_INTERVAL,
         lookahead: timedelta = LOOKAHEAD,
         grace_period: timedelta = GRACE_PERIOD,
     ) -> None:
         self._unit_of_work_factory = unit_of_work_factory
         self._runner = runner
+        self._events = events
         self._tick_interval = tick_interval
         self._lookahead = lookahead
         self._grace_period = grace_period
@@ -70,6 +78,11 @@ class AlarmScheduler:
                     logger.info(
                         "Scheduled '%s' for %s", alarm.label, scheduled_for.isoformat()
                     )
+                    self._events.publish(
+                        OccurrenceScheduled(
+                            occurrence=OccurrenceSnapshot.from_domain(created)
+                        )
+                    )
 
     async def _claim_due(self, now: datetime) -> list[AlarmOccurrence]:
         """Move due occurrences into SUNRISE so a later tick cannot re-fire them."""
@@ -85,6 +98,11 @@ class AlarmScheduler:
                     )
                     occurrence.skip(now)
                     await uow.occurrences.save(occurrence)
+                    self._events.publish(
+                        OccurrenceSkipped(
+                            occurrence=OccurrenceSnapshot.from_domain(occurrence)
+                        )
+                    )
                     continue
 
                 occurrence.start_sunrise(now)

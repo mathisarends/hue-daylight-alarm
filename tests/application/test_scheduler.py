@@ -3,6 +3,7 @@ from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock
 
 from huerise.features.alarm.domain import OccurrenceState, Weekday
+from huerise.features.events.domain import OccurrenceScheduled, OccurrenceSkipped
 from huerise.features.runner.application.runner_port import AlarmRunner
 from huerise.features.scheduler.application import AlarmScheduler
 from tests.application.conftest import (
@@ -11,6 +12,7 @@ from tests.application.conftest import (
     InMemoryAlarmRepository,
     InMemoryOccurrenceRepository,
     InMemoryProfileRepository,
+    RecordingPublisher,
     make_alarm,
     make_occurrence,
     make_profile,
@@ -31,6 +33,7 @@ def make_scheduler(
     alarms: InMemoryAlarmRepository | None = None,
     occurrences: InMemoryOccurrenceRepository | None = None,
     runner: AlarmRunner | None = None,
+    events: RecordingPublisher | None = None,
 ) -> tuple[
     AlarmScheduler, InMemoryOccurrenceRepository, AlarmRunner, InMemoryAlarmRepository
 ]:
@@ -45,7 +48,9 @@ def make_scheduler(
         occurrences=occurrences,
     )
     scheduler = AlarmScheduler(
-        unit_of_work_factory=FakeUnitOfWorkFactory(unit_of_work), runner=runner
+        unit_of_work_factory=FakeUnitOfWorkFactory(unit_of_work),
+        runner=runner,
+        events=events if events is not None else RecordingPublisher(),
     )
     return scheduler, occurrences, runner, alarms
 
@@ -174,3 +179,44 @@ class TestDispatch:
         await scheduler.tick(NOW)
 
         assert alarms.items[alarm.id].is_enabled is True
+
+
+class TestPublishedEvents:
+    async def test_announces_a_newly_materialised_run(self) -> None:
+        alarm = make_alarm(hour=7, minute=0)
+        events = RecordingPublisher()
+        scheduler, _, _, _ = make_scheduler(
+            alarms=InMemoryAlarmRepository([alarm]), events=events
+        )
+
+        await scheduler.tick(NOW)
+
+        scheduled = events.only(OccurrenceScheduled).occurrence
+        assert scheduled.alarm_id == alarm.id
+        assert scheduled.scheduled_for == SEVEN_BERLIN
+
+    async def test_a_repeat_tick_announces_nothing_new(self) -> None:
+        alarm = make_alarm(hour=7, minute=0)
+        events = RecordingPublisher()
+        scheduler, _, _, _ = make_scheduler(
+            alarms=InMemoryAlarmRepository([alarm]), events=events
+        )
+
+        await scheduler.tick(NOW)
+        await scheduler.tick(NOW)
+
+        assert len(events.of_type(OccurrenceScheduled)) == 1
+
+    async def test_announces_a_run_dropped_for_being_overdue(self) -> None:
+        alarm = make_alarm(hour=7, minute=0)
+        overdue = make_occurrence(alarm.id, NOW - timedelta(hours=1))
+        events = RecordingPublisher()
+        scheduler, _, _, _ = make_scheduler(
+            alarms=InMemoryAlarmRepository([alarm]),
+            occurrences=InMemoryOccurrenceRepository([overdue]),
+            events=events,
+        )
+
+        await scheduler.tick(NOW)
+
+        assert events.only(OccurrenceSkipped).occurrence.id == overdue.id

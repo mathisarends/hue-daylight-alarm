@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 
 from transitbus import EventBus
 
+from huerise.features.events.application.publisher import EventPublisher
 from huerise.features.events.domain import HueriseEvent
 
 logger = logging.getLogger(__name__)
@@ -60,7 +61,7 @@ class _Subscription:
             yield event
 
 
-class EventStreamHub:
+class EventStreamHub(EventPublisher):
     """Fans bus events out to every attached client.
 
     The bus owns ordering and the replay buffer; the hub only tracks who is

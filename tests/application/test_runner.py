@@ -2,6 +2,13 @@ from datetime import UTC, datetime, timedelta
 from unittest.mock import patch
 
 from huerise.features.alarm.domain import OccurrenceState, SunriseConfig
+from huerise.features.events.domain import (
+    OccurrenceDismissed,
+    OccurrenceFailed,
+    OccurrenceProgress,
+    OccurrenceRinging,
+    OccurrenceStarted,
+)
 from huerise.features.runner.application import AlarmRunner
 from huerise.features.runner.application.sunrise import sunrise_steps
 from tests.application.conftest import (
@@ -10,6 +17,7 @@ from tests.application.conftest import (
     InMemoryAlarmRepository,
     InMemoryOccurrenceRepository,
     InMemoryProfileRepository,
+    RecordingPublisher,
     make_alarm,
     make_audio,
     make_lights,
@@ -21,7 +29,10 @@ NOW = datetime(2026, 8, 3, 5, 0, tzinfo=UTC)
 STEP = timedelta(seconds=6)
 
 
-def make_runner(sunrise_duration: timedelta = timedelta(minutes=1)):
+def make_runner(
+    sunrise_duration: timedelta = timedelta(minutes=1),
+    events: RecordingPublisher | None = None,
+):
     profile = make_profile(sunrise_duration=sunrise_duration)
     alarm = make_alarm(profile_id=profile.id)
     occurrence = make_occurrence(alarm.id, NOW, OccurrenceState.SUNRISE)
@@ -37,6 +48,7 @@ def make_runner(sunrise_duration: timedelta = timedelta(minutes=1)):
         lights=lights,
         audio=audio,
         unit_of_work_factory=FakeUnitOfWorkFactory(unit_of_work),
+        events=events if events is not None else RecordingPublisher(),
         step_interval=STEP,
     )
     return runner, occurrence, occurrences, lights, audio, alarm, profile
@@ -53,16 +65,26 @@ class TestSunriseSteps:
             duration=timedelta(minutes=1), brightness_start=10, brightness_end=100
         )
 
-        steps = list(sunrise_steps(config, STEP))
+        brightness = [step.brightness for step in sunrise_steps(config, STEP)]
 
-        assert steps[0] == 10
-        assert steps[-1] == 100
-        assert steps == sorted(steps)
+        assert brightness[0] == 10
+        assert brightness[-1] == 100
+        assert brightness == sorted(brightness)
 
     def test_always_yields_at_least_one_step(self) -> None:
         config = SunriseConfig(duration=timedelta(0))
 
-        assert list(sunrise_steps(config, STEP)) == [1]
+        assert [step.brightness for step in sunrise_steps(config, STEP)] == [1]
+
+    def test_each_step_knows_its_place_in_the_whole_sunrise(self) -> None:
+        config = SunriseConfig(duration=timedelta(minutes=1))
+
+        steps = list(sunrise_steps(config, STEP))
+
+        assert [step.index for step in steps] == list(range(10))
+        assert {step.total for step in steps} == {10}
+        assert steps[3].elapsed_seconds == 18
+        assert steps[3].total_seconds == 60
 
 
 class TestRun:
@@ -115,3 +137,78 @@ class TestRun:
         stored = occurrences.items[occurrence.id]
         assert stored.state is OccurrenceState.FAILED
         assert "bridge unreachable" in (stored.failure_reason or "")
+
+
+class TestPublishedEvents:
+    async def test_announces_the_sunrise_before_it_starts(self) -> None:
+        events = RecordingPublisher()
+        runner, occurrence, _, _, _, alarm, profile = make_runner(events=events)
+
+        with patch("asyncio.sleep"):
+            await runner.run(occurrence)
+
+        started = events.only(OccurrenceStarted)
+        assert started.label == alarm.label
+        assert started.room_name == alarm.room_name
+        assert started.sunrise_seconds == profile.sunrise_config.duration.seconds
+
+    async def test_reports_progress_once_per_brightness_step(self) -> None:
+        events = RecordingPublisher()
+        runner, occurrence, _, _, _, _, profile = make_runner(events=events)
+
+        with patch("asyncio.sleep"):
+            await runner.run(occurrence)
+
+        progress = events.of_type(OccurrenceProgress)
+        assert [event.brightness for event in progress] == [
+            step.brightness for step in sunrise_steps(profile.sunrise_config, STEP)
+        ]
+        assert progress[-1].percent == 100.0
+
+    async def test_progress_stops_when_the_sunrise_is_interrupted(self) -> None:
+        events = RecordingPublisher()
+        runner, occurrence, occurrences, lights, _, _, _ = make_runner(events=events)
+
+        async def dismiss_after_first_step(*args, **kwargs) -> None:
+            stored = occurrences.items[occurrence.id]
+            if stored.state is OccurrenceState.SUNRISE:
+                stored.dismiss(NOW)
+
+        lights.set_brightness.side_effect = dismiss_after_first_step
+
+        with patch("asyncio.sleep"):
+            await runner.run(occurrence)
+
+        assert len(events.of_type(OccurrenceProgress)) == 1
+        assert events.of_type(OccurrenceRinging) == []
+
+    async def test_announces_the_ringtone_it_is_about_to_play(self) -> None:
+        events = RecordingPublisher()
+        runner, occurrence, _, _, _, _, profile = make_runner(events=events)
+
+        with patch("asyncio.sleep"):
+            await runner.run(occurrence)
+
+        ringing = events.only(OccurrenceRinging)
+        assert ringing.sound_id == profile.ringtone_config.sound_id
+        assert ringing.volume == profile.ringtone_config.volume
+
+    async def test_announces_the_finished_run(self) -> None:
+        events = RecordingPublisher()
+        runner, occurrence, _, _, _, _, _ = make_runner(events=events)
+
+        with patch("asyncio.sleep"):
+            await runner.run(occurrence)
+
+        assert events.only(OccurrenceDismissed).occurrence.id == occurrence.id
+
+    async def test_announces_a_failure_with_its_reason(self) -> None:
+        events = RecordingPublisher()
+        runner, occurrence, _, lights, _, _, _ = make_runner(events=events)
+        lights.activate_scene.side_effect = RuntimeError("bridge unreachable")
+
+        with patch("asyncio.sleep"):
+            await runner.run(occurrence)
+
+        failed = events.only(OccurrenceFailed).occurrence
+        assert "bridge unreachable" in (failed.failure_reason or "")

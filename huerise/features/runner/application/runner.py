@@ -11,6 +11,15 @@ from huerise.features.alarm.domain import (
     OccurrenceState,
 )
 from huerise.features.devices.application import AudioPlayer, Lights
+from huerise.features.events.application import EventPublisher
+from huerise.features.events.domain import (
+    OccurrenceDismissed,
+    OccurrenceFailed,
+    OccurrenceProgress,
+    OccurrenceRinging,
+    OccurrenceSnapshot,
+    OccurrenceStarted,
+)
 from huerise.features.runner.application.runner_port import (
     AlarmRunner as AlarmRunnerPort,
 )
@@ -33,11 +42,13 @@ class AlarmRunner(AlarmRunnerPort):
         lights: Lights,
         audio: AudioPlayer,
         unit_of_work_factory: AlarmUnitOfWorkFactory,
+        events: EventPublisher,
         step_interval: timedelta = STEP_INTERVAL,
     ) -> None:
         self._lights = lights
         self._audio = audio
         self._unit_of_work_factory = unit_of_work_factory
+        self._events = events
         self._step_interval = step_interval
         self._intro_tasks: set[asyncio.Task[None]] = set()
 
@@ -52,7 +63,7 @@ class AlarmRunner(AlarmRunnerPort):
             await self._run_sunrise(occurrence, alarm, profile)
             if not await self._start_ringing(occurrence.id):
                 return
-            await self._run_ringtone(profile)
+            await self._run_ringtone(occurrence, alarm, profile)
             await self._finish(occurrence.id)
         except Exception as error:
             logger.exception("Occurrence %s failed during execution", occurrence.id)
@@ -63,6 +74,14 @@ class AlarmRunner(AlarmRunnerPort):
     ) -> None:
         sunrise = profile.sunrise_config
 
+        self._events.publish(
+            OccurrenceStarted(
+                occurrence=OccurrenceSnapshot.from_domain(occurrence),
+                label=alarm.label,
+                room_name=alarm.room_name,
+                sunrise_seconds=round(sunrise.duration.total_seconds()),
+            )
+        )
         intro_task = asyncio.create_task(
             self._audio.play(profile.intro_config.sound_id, volume=INTRO_VOLUME)
         )
@@ -70,11 +89,22 @@ class AlarmRunner(AlarmRunnerPort):
         intro_task.add_done_callback(self._intro_finished)
         await self._lights.activate_scene(alarm.room_name, sunrise.scene_name)
 
-        for brightness in sunrise_steps(sunrise, self._step_interval):
+        for step in sunrise_steps(sunrise, self._step_interval):
             if not await self._still_in_state(occurrence.id, OccurrenceState.SUNRISE):
                 logger.info("Sunrise for %s interrupted", occurrence.id)
                 return
-            await self._lights.set_brightness(alarm.room_name, brightness)
+            await self._lights.set_brightness(alarm.room_name, step.brightness)
+            self._events.publish(
+                OccurrenceProgress(
+                    occurrence_id=occurrence.id,
+                    alarm_id=alarm.id,
+                    brightness=step.brightness,
+                    step=step.index,
+                    total_steps=step.total,
+                    elapsed_seconds=step.elapsed_seconds,
+                    total_seconds=step.total_seconds,
+                )
+            )
             await asyncio.sleep(self._step_interval.total_seconds())
 
     def _intro_finished(self, task: asyncio.Task[None]) -> None:
@@ -86,8 +116,19 @@ class AlarmRunner(AlarmRunnerPort):
         except Exception:
             logger.exception("Intro playback failed")
 
-    async def _run_ringtone(self, profile: AlarmProfile) -> None:
+    async def _run_ringtone(
+        self, occurrence: AlarmOccurrence, alarm: Alarm, profile: AlarmProfile
+    ) -> None:
         ringtone = profile.ringtone_config
+
+        self._events.publish(
+            OccurrenceRinging(
+                occurrence_id=occurrence.id,
+                alarm_id=alarm.id,
+                sound_id=ringtone.sound_id,
+                volume=ringtone.volume,
+            )
+        )
         await self._audio.stop()
         await self._audio.play(ringtone.sound_id, ringtone.volume)
 
@@ -126,6 +167,10 @@ class AlarmRunner(AlarmRunnerPort):
             occurrence.dismiss()
             await uow.occurrences.save(occurrence)
 
+        self._events.publish(
+            OccurrenceDismissed(occurrence=OccurrenceSnapshot.from_domain(occurrence))
+        )
+
     async def _mark_failed(self, occurrence_id: UUID, reason: str) -> None:
         async with self._unit_of_work_factory.create() as uow:
             occurrence = await uow.occurrences.find_by_id(occurrence_id)
@@ -133,3 +178,7 @@ class AlarmRunner(AlarmRunnerPort):
                 return
             occurrence.fail(reason)
             await uow.occurrences.save(occurrence)
+
+        self._events.publish(
+            OccurrenceFailed(occurrence=OccurrenceSnapshot.from_domain(occurrence))
+        )
