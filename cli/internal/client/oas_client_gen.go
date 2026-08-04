@@ -25,8 +25,8 @@ type Invoker interface {
 	//
 	// Preview a scene the way an alarm would start it.
 	//
-	// POST /rooms/{room_name}/scenes/{scene_name}/activate
-	ActivateScene(ctx context.Context, params ActivateSceneParams) (ActivateSceneRes, error)
+	// POST /rooms/{room_id}/scenes/{scene_id}/activate
+	ActivateScene(ctx context.Context, request OptNilSceneActivationRequest, params ActivateSceneParams) (ActivateSceneRes, error)
 	// CreateAlarm invokes create_alarm operation.
 	//
 	// Create Alarm.
@@ -51,6 +51,14 @@ type Invoker interface {
 	//
 	// DELETE /alarm-profiles/{profile_id}
 	DeleteProfile(ctx context.Context, params DeleteProfileParams) (DeleteProfileRes, error)
+	// DemoScene invokes demo_scene operation.
+	//
+	// Fast-forward a whole sunrise on this scene, lights only.
+	// Returns as soon as the climb is under way, describing the run so a client
+	// can follow along. The scene does not have to belong to a saved alarm.
+	//
+	// POST /rooms/{room_id}/scenes/{scene_id}/demo
+	DemoScene(ctx context.Context, request OptNilSunriseDemoRequest, params DemoSceneParams) (DemoSceneRes, error)
 	// DisableAlarm invokes disableAlarm operation.
 	//
 	// Disable Alarm.
@@ -85,7 +93,7 @@ type Invoker interface {
 	//
 	// Get Room.
 	//
-	// GET /rooms/{room_name}
+	// GET /rooms/{room_id}
 	GetRoom(ctx context.Context, params GetRoomParams) (GetRoomRes, error)
 	// ListAlarms invokes listAlarms operation.
 	//
@@ -147,6 +155,12 @@ type Invoker interface {
 	//
 	// POST /sounds/stop
 	StopPlayback(ctx context.Context) error
+	// StopSceneDemo invokes stop_scene_demo operation.
+	//
+	// Cut the running demo short. Only one runs at a time, so this ends it.
+	//
+	// DELETE /rooms/{room_id}/scenes/{scene_id}/demo
+	StopSceneDemo(ctx context.Context, params StopSceneDemoParams) (StopSceneDemoRes, error)
 	// StreamEvents invokes streamEvents operation.
 	//
 	// Server-sent events covering every change to alarms and to the run currently in
@@ -212,26 +226,26 @@ func (c *Client) requestURL(ctx context.Context) *url.URL {
 //
 // Preview a scene the way an alarm would start it.
 //
-// POST /rooms/{room_name}/scenes/{scene_name}/activate
-func (c *Client) ActivateScene(ctx context.Context, params ActivateSceneParams) (ActivateSceneRes, error) {
-	res, err := c.sendActivateScene(ctx, params)
+// POST /rooms/{room_id}/scenes/{scene_id}/activate
+func (c *Client) ActivateScene(ctx context.Context, request OptNilSceneActivationRequest, params ActivateSceneParams) (ActivateSceneRes, error) {
+	res, err := c.sendActivateScene(ctx, request, params)
 	return res, err
 }
 
-func (c *Client) sendActivateScene(ctx context.Context, params ActivateSceneParams) (res ActivateSceneRes, err error) {
+func (c *Client) sendActivateScene(ctx context.Context, request OptNilSceneActivationRequest, params ActivateSceneParams) (res ActivateSceneRes, err error) {
 
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [5]string
 	pathParts[0] = "/rooms/"
 	{
-		// Encode "room_name" parameter.
+		// Encode "room_id" parameter.
 		e := uri.NewPathEncoder(uri.PathEncoderConfig{
-			Param:   "room_name",
+			Param:   "room_id",
 			Style:   uri.PathStyleSimple,
 			Explode: false,
 		})
 		if err := func() error {
-			return e.EncodeValue(conv.StringToString(params.RoomName))
+			return e.EncodeValue(conv.UUIDToString(params.RoomID))
 		}(); err != nil {
 			return res, errors.Wrap(err, "encode path")
 		}
@@ -243,14 +257,14 @@ func (c *Client) sendActivateScene(ctx context.Context, params ActivateScenePara
 	}
 	pathParts[2] = "/scenes/"
 	{
-		// Encode "scene_name" parameter.
+		// Encode "scene_id" parameter.
 		e := uri.NewPathEncoder(uri.PathEncoderConfig{
-			Param:   "scene_name",
+			Param:   "scene_id",
 			Style:   uri.PathStyleSimple,
 			Explode: false,
 		})
 		if err := func() error {
-			return e.EncodeValue(conv.StringToString(params.SceneName))
+			return e.EncodeValue(conv.UUIDToString(params.SceneID))
 		}(); err != nil {
 			return res, errors.Wrap(err, "encode path")
 		}
@@ -266,6 +280,9 @@ func (c *Client) sendActivateScene(ctx context.Context, params ActivateScenePara
 	r, err := ht.NewRequest(ctx, "POST", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodeActivateSceneRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
 	}
 
 	{
@@ -631,6 +648,119 @@ func (c *Client) sendDeleteProfile(ctx context.Context, params DeleteProfilePara
 	defer body.Close()
 
 	result, err := decodeDeleteProfileResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// DemoScene invokes demo_scene operation.
+//
+// Fast-forward a whole sunrise on this scene, lights only.
+// Returns as soon as the climb is under way, describing the run so a client
+// can follow along. The scene does not have to belong to a saved alarm.
+//
+// POST /rooms/{room_id}/scenes/{scene_id}/demo
+func (c *Client) DemoScene(ctx context.Context, request OptNilSunriseDemoRequest, params DemoSceneParams) (DemoSceneRes, error) {
+	res, err := c.sendDemoScene(ctx, request, params)
+	return res, err
+}
+
+func (c *Client) sendDemoScene(ctx context.Context, request OptNilSunriseDemoRequest, params DemoSceneParams) (res DemoSceneRes, err error) {
+
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [5]string
+	pathParts[0] = "/rooms/"
+	{
+		// Encode "room_id" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "room_id",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			return e.EncodeValue(conv.UUIDToString(params.RoomID))
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	pathParts[2] = "/scenes/"
+	{
+		// Encode "scene_id" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "scene_id",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			return e.EncodeValue(conv.UUIDToString(params.SceneID))
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[3] = encoded
+	}
+	pathParts[4] = "/demo"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	r, err := ht.NewRequest(ctx, "POST", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodeDemoSceneRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+
+			switch err := c.securityAccessToken(ctx, DemoSceneOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"AccessToken\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer body.Close()
+
+	result, err := decodeDemoSceneResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -1067,7 +1197,7 @@ func (c *Client) sendGetAudioOutput(ctx context.Context) (res *AudioOutputRead, 
 //
 // Get Room.
 //
-// GET /rooms/{room_name}
+// GET /rooms/{room_id}
 func (c *Client) GetRoom(ctx context.Context, params GetRoomParams) (GetRoomRes, error) {
 	res, err := c.sendGetRoom(ctx, params)
 	return res, err
@@ -1079,14 +1209,14 @@ func (c *Client) sendGetRoom(ctx context.Context, params GetRoomParams) (res Get
 	var pathParts [2]string
 	pathParts[0] = "/rooms/"
 	{
-		// Encode "room_name" parameter.
+		// Encode "room_id" parameter.
 		e := uri.NewPathEncoder(uri.PathEncoderConfig{
-			Param:   "room_name",
+			Param:   "room_id",
 			Style:   uri.PathStyleSimple,
 			Explode: false,
 		})
 		if err := func() error {
-			return e.EncodeValue(conv.StringToString(params.RoomName))
+			return e.EncodeValue(conv.UUIDToString(params.RoomID))
 		}(); err != nil {
 			return res, errors.Wrap(err, "encode path")
 		}
@@ -1934,6 +2064,114 @@ func (c *Client) sendStopPlayback(ctx context.Context) (res *StopPlaybackNoConte
 	defer body.Close()
 
 	result, err := decodeStopPlaybackResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// StopSceneDemo invokes stop_scene_demo operation.
+//
+// Cut the running demo short. Only one runs at a time, so this ends it.
+//
+// DELETE /rooms/{room_id}/scenes/{scene_id}/demo
+func (c *Client) StopSceneDemo(ctx context.Context, params StopSceneDemoParams) (StopSceneDemoRes, error) {
+	res, err := c.sendStopSceneDemo(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendStopSceneDemo(ctx context.Context, params StopSceneDemoParams) (res StopSceneDemoRes, err error) {
+
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [5]string
+	pathParts[0] = "/rooms/"
+	{
+		// Encode "room_id" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "room_id",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			return e.EncodeValue(conv.UUIDToString(params.RoomID))
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	pathParts[2] = "/scenes/"
+	{
+		// Encode "scene_id" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "scene_id",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			return e.EncodeValue(conv.UUIDToString(params.SceneID))
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[3] = encoded
+	}
+	pathParts[4] = "/demo"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	r, err := ht.NewRequest(ctx, "DELETE", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+
+			switch err := c.securityAccessToken(ctx, StopSceneDemoOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"AccessToken\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer body.Close()
+
+	result, err := decodeStopSceneDemoResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

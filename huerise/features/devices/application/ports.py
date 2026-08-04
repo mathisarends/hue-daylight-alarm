@@ -1,7 +1,10 @@
 from abc import ABC, abstractmethod
+from collections.abc import Awaitable, Callable
 from uuid import UUID
 
-from huerise.features.devices.domain import Room
+from huerise.features.devices.domain import LightChange, Room
+
+type LightChangeHandler = Callable[[LightChange], Awaitable[None]]
 
 
 class AudioPlayer(ABC):
@@ -32,3 +35,19 @@ class Lights(ABC):
 
     @abstractmethod
     async def set_brightness(self, room_id: UUID, brightness: float) -> None: ...
+
+
+class LightEvents(ABC):
+    """Rooms and scenes changing on the bridge, pushed as they happen.
+
+    Keeps the rest of the application from knowing that these arrive over an
+    SSE connection, so that anything holding denormalised Hue names can react
+    without depending on the vendor client.
+    """
+
+    @abstractmethod
+    def subscribe(self, handler: LightChangeHandler) -> None: ...
+
+    @abstractmethod
+    async def start(self) -> None:
+        """Open the connection and begin delivering changes to subscribers."""

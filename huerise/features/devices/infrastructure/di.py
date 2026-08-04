@@ -8,6 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from huerise.features.devices.application import (
     AudioOutputService,
     AudioPlayer,
+    LightChangeLogger,
+    LightEvents,
     Lights,
     SceneService,
     SoundService,
@@ -19,7 +21,7 @@ from huerise.features.devices.domain import (
     AudioOutputUnavailableError,
     SoundRepository,
 )
-from huerise.features.devices.infrastructure.hue import HueLights
+from huerise.features.devices.infrastructure.hue import HueLightEvents, HueLights
 from huerise.features.devices.infrastructure.persistence import SQLSoundRepository
 from huerise.features.devices.infrastructure.settings import (
     AudioSettings,
@@ -49,6 +51,14 @@ class DevicesProvider(Provider):
     @provide
     def lights(self, hue: Hueify) -> Lights:
         return HueLights(hue)
+
+    @provide
+    def light_events(self, hue: Hueify) -> LightEvents:
+        return HueLightEvents(hue)
+
+    @provide
+    def light_change_logger(self, events: LightEvents) -> LightChangeLogger:
+        return LightChangeLogger(events)
 
     @provide
     def sound_repository(

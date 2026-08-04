@@ -35,11 +35,23 @@ func (s *SoundPreviewRequest) setDefaults() {
 }
 
 // setDefaults set default value of fields.
-func (s *SunriseSchema) setDefaults() {
+func (s *SunriseDemoRequest) setDefaults() {
 	{
-		val := string("Tageslichtwecker")
-		s.SceneName.SetTo(val)
+		val := float64(20)
+		s.DurationSeconds.SetTo(val)
 	}
+	{
+		val := int(1)
+		s.BrightnessStart.SetTo(val)
+	}
+	{
+		val := int(100)
+		s.BrightnessEnd.SetTo(val)
+	}
+}
+
+// setDefaults set default value of fields.
+func (s *SunriseSchema) setDefaults() {
 	{
 		val := int(7)
 		s.DurationMinutes.SetTo(val)

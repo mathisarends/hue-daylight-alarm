@@ -44,6 +44,7 @@ func (*ActivateSceneNoContent) activateSceneRes() {}
 type AlarmCreate struct {
 	Label    string         `json:"label"`
 	Schedule ScheduleSchema `json:"schedule"`
+	RoomID   uuid.UUID      `json:"room_id"`
 	RoomName string         `json:"room_name"`
 	// Defaults to the default profile.
 	ProfileID OptNilUUID `json:"profile_id"`
@@ -57,6 +58,11 @@ func (s *AlarmCreate) GetLabel() string {
 // GetSchedule returns the value of Schedule.
 func (s *AlarmCreate) GetSchedule() ScheduleSchema {
 	return s.Schedule
+}
+
+// GetRoomID returns the value of RoomID.
+func (s *AlarmCreate) GetRoomID() uuid.UUID {
+	return s.RoomID
 }
 
 // GetRoomName returns the value of RoomName.
@@ -79,6 +85,11 @@ func (s *AlarmCreate) SetSchedule(val ScheduleSchema) {
 	s.Schedule = val
 }
 
+// SetRoomID sets the value of RoomID.
+func (s *AlarmCreate) SetRoomID(val uuid.UUID) {
+	s.RoomID = val
+}
+
 // SetRoomName sets the value of RoomName.
 func (s *AlarmCreate) SetRoomName(val string) {
 	s.RoomName = val
@@ -94,6 +105,7 @@ type AlarmRead struct {
 	ID             uuid.UUID      `json:"id"`
 	Label          string         `json:"label"`
 	Schedule       ScheduleSchema `json:"schedule"`
+	RoomID         uuid.UUID      `json:"room_id"`
 	RoomName       string         `json:"room_name"`
 	ProfileID      uuid.UUID      `json:"profile_id"`
 	IsEnabled      bool           `json:"is_enabled"`
@@ -114,6 +126,11 @@ func (s *AlarmRead) GetLabel() string {
 // GetSchedule returns the value of Schedule.
 func (s *AlarmRead) GetSchedule() ScheduleSchema {
 	return s.Schedule
+}
+
+// GetRoomID returns the value of RoomID.
+func (s *AlarmRead) GetRoomID() uuid.UUID {
+	return s.RoomID
 }
 
 // GetRoomName returns the value of RoomName.
@@ -156,6 +173,11 @@ func (s *AlarmRead) SetSchedule(val ScheduleSchema) {
 	s.Schedule = val
 }
 
+// SetRoomID sets the value of RoomID.
+func (s *AlarmRead) SetRoomID(val uuid.UUID) {
+	s.RoomID = val
+}
+
 // SetRoomName sets the value of RoomName.
 func (s *AlarmRead) SetRoomName(val string) {
 	s.RoomName = val
@@ -192,6 +214,7 @@ func (*AlarmRead) updateAlarmRes()  {}
 type AlarmUpdate struct {
 	Label     OptNilString         `json:"label"`
 	Schedule  OptNilScheduleSchema `json:"schedule"`
+	RoomID    OptNilUUID           `json:"room_id"`
 	RoomName  OptNilString         `json:"room_name"`
 	ProfileID OptNilUUID           `json:"profile_id"`
 }
@@ -204,6 +227,11 @@ func (s *AlarmUpdate) GetLabel() OptNilString {
 // GetSchedule returns the value of Schedule.
 func (s *AlarmUpdate) GetSchedule() OptNilScheduleSchema {
 	return s.Schedule
+}
+
+// GetRoomID returns the value of RoomID.
+func (s *AlarmUpdate) GetRoomID() OptNilUUID {
+	return s.RoomID
 }
 
 // GetRoomName returns the value of RoomName.
@@ -224,6 +252,11 @@ func (s *AlarmUpdate) SetLabel(val OptNilString) {
 // SetSchedule sets the value of Schedule.
 func (s *AlarmUpdate) SetSchedule(val OptNilScheduleSchema) {
 	s.Schedule = val
+}
+
+// SetRoomID sets the value of RoomID.
+func (s *AlarmUpdate) SetRoomID(val OptNilUUID) {
+	s.RoomID = val
 }
 
 // SetRoomName sets the value of RoomName.
@@ -354,6 +387,7 @@ func (*HTTPValidationError) createAlarmRes()       {}
 func (*HTTPValidationError) createProfileRes()     {}
 func (*HTTPValidationError) deleteAlarmRes()       {}
 func (*HTTPValidationError) deleteProfileRes()     {}
+func (*HTTPValidationError) demoSceneRes()         {}
 func (*HTTPValidationError) disableAlarmRes()      {}
 func (*HTTPValidationError) dismissAlarmRes()      {}
 func (*HTTPValidationError) enableAlarmRes()       {}
@@ -365,6 +399,7 @@ func (*HTTPValidationError) previewSoundRes()      {}
 func (*HTTPValidationError) selectAudioOutputRes() {}
 func (*HTTPValidationError) setVolumeRes()         {}
 func (*HTTPValidationError) snoozeAlarmRes()       {}
+func (*HTTPValidationError) stopSceneDemoRes()     {}
 func (*HTTPValidationError) streamEventsRes()      {}
 func (*HTTPValidationError) updateAlarmRes()       {}
 
@@ -654,6 +689,52 @@ func (s *OccurrenceState) UnmarshalText(data []byte) error {
 	}
 }
 
+// NewOptFloat64 returns new OptFloat64 with value set to v.
+func NewOptFloat64(v float64) OptFloat64 {
+	return OptFloat64{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptFloat64 is optional float64.
+type OptFloat64 struct {
+	Value float64
+	Set   bool
+}
+
+// IsSet returns true if OptFloat64 was set.
+func (o OptFloat64) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptFloat64) Reset() {
+	var v float64
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptFloat64) SetTo(v float64) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptFloat64) Get() (v float64, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptFloat64) Or(d float64) float64 {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptInt returns new OptInt with value set to v.
 func NewOptInt(v int) OptInt {
 	return OptInt{
@@ -694,6 +775,132 @@ func (o OptInt) Get() (v int, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptInt) Or(d int) int {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptNilFloat64 returns new OptNilFloat64 with value set to v.
+func NewOptNilFloat64(v float64) OptNilFloat64 {
+	return OptNilFloat64{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptNilFloat64 is optional nullable float64.
+type OptNilFloat64 struct {
+	Value float64
+	Set   bool
+	Null  bool
+}
+
+// IsSet returns true if OptNilFloat64 was set.
+func (o OptNilFloat64) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptNilFloat64) Reset() {
+	var v float64
+	o.Value = v
+	o.Set = false
+	o.Null = false
+}
+
+// SetTo sets value to v.
+func (o *OptNilFloat64) SetTo(v float64) {
+	o.Set = true
+	o.Null = false
+	o.Value = v
+}
+
+// IsNull returns true if value is Null.
+func (o OptNilFloat64) IsNull() bool { return o.Null }
+
+// SetToNull sets value to null.
+func (o *OptNilFloat64) SetToNull() {
+	o.Set = true
+	o.Null = true
+	var v float64
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptNilFloat64) Get() (v float64, ok bool) {
+	if o.Null {
+		return v, false
+	}
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptNilFloat64) Or(d float64) float64 {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptNilSceneActivationRequest returns new OptNilSceneActivationRequest with value set to v.
+func NewOptNilSceneActivationRequest(v SceneActivationRequest) OptNilSceneActivationRequest {
+	return OptNilSceneActivationRequest{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptNilSceneActivationRequest is optional nullable SceneActivationRequest.
+type OptNilSceneActivationRequest struct {
+	Value SceneActivationRequest
+	Set   bool
+	Null  bool
+}
+
+// IsSet returns true if OptNilSceneActivationRequest was set.
+func (o OptNilSceneActivationRequest) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptNilSceneActivationRequest) Reset() {
+	var v SceneActivationRequest
+	o.Value = v
+	o.Set = false
+	o.Null = false
+}
+
+// SetTo sets value to v.
+func (o *OptNilSceneActivationRequest) SetTo(v SceneActivationRequest) {
+	o.Set = true
+	o.Null = false
+	o.Value = v
+}
+
+// IsNull returns true if value is Null.
+func (o OptNilSceneActivationRequest) IsNull() bool { return o.Null }
+
+// SetToNull sets value to null.
+func (o *OptNilSceneActivationRequest) SetToNull() {
+	o.Set = true
+	o.Null = true
+	var v SceneActivationRequest
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptNilSceneActivationRequest) Get() (v SceneActivationRequest, ok bool) {
+	if o.Null {
+		return v, false
+	}
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptNilSceneActivationRequest) Or(d SceneActivationRequest) SceneActivationRequest {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -820,6 +1027,69 @@ func (o OptNilString) Get() (v string, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptNilString) Or(d string) string {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptNilSunriseDemoRequest returns new OptNilSunriseDemoRequest with value set to v.
+func NewOptNilSunriseDemoRequest(v SunriseDemoRequest) OptNilSunriseDemoRequest {
+	return OptNilSunriseDemoRequest{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptNilSunriseDemoRequest is optional nullable SunriseDemoRequest.
+type OptNilSunriseDemoRequest struct {
+	Value SunriseDemoRequest
+	Set   bool
+	Null  bool
+}
+
+// IsSet returns true if OptNilSunriseDemoRequest was set.
+func (o OptNilSunriseDemoRequest) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptNilSunriseDemoRequest) Reset() {
+	var v SunriseDemoRequest
+	o.Value = v
+	o.Set = false
+	o.Null = false
+}
+
+// SetTo sets value to v.
+func (o *OptNilSunriseDemoRequest) SetTo(v SunriseDemoRequest) {
+	o.Set = true
+	o.Null = false
+	o.Value = v
+}
+
+// IsNull returns true if value is Null.
+func (o OptNilSunriseDemoRequest) IsNull() bool { return o.Null }
+
+// SetToNull sets value to null.
+func (o *OptNilSunriseDemoRequest) SetToNull() {
+	o.Set = true
+	o.Null = true
+	var v SunriseDemoRequest
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptNilSunriseDemoRequest) Get() (v SunriseDemoRequest, ok bool) {
+	if o.Null {
+		return v, false
+	}
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptNilSunriseDemoRequest) Or(d SunriseDemoRequest) SunriseDemoRequest {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -981,58 +1251,12 @@ func (o OptString) Or(d string) string {
 	return d
 }
 
-// NewOptSunriseSchema returns new OptSunriseSchema with value set to v.
-func NewOptSunriseSchema(v SunriseSchema) OptSunriseSchema {
-	return OptSunriseSchema{
-		Value: v,
-		Set:   true,
-	}
-}
-
-// OptSunriseSchema is optional SunriseSchema.
-type OptSunriseSchema struct {
-	Value SunriseSchema
-	Set   bool
-}
-
-// IsSet returns true if OptSunriseSchema was set.
-func (o OptSunriseSchema) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptSunriseSchema) Reset() {
-	var v SunriseSchema
-	o.Value = v
-	o.Set = false
-}
-
-// SetTo sets value to v.
-func (o *OptSunriseSchema) SetTo(v SunriseSchema) {
-	o.Set = true
-	o.Value = v
-}
-
-// Get returns value and boolean that denotes whether value was set.
-func (o OptSunriseSchema) Get() (v SunriseSchema, ok bool) {
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o OptSunriseSchema) Or(d SunriseSchema) SunriseSchema {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
-
 // Ref: #/components/schemas/ProfileCreate
 type ProfileCreate struct {
-	Name     string           `json:"name"`
-	Intro    IntroSchema      `json:"intro"`
-	Ringtone RingtoneSchema   `json:"ringtone"`
-	Sunrise  OptSunriseSchema `json:"sunrise"`
+	Name     string         `json:"name"`
+	Intro    IntroSchema    `json:"intro"`
+	Ringtone RingtoneSchema `json:"ringtone"`
+	Sunrise  SunriseSchema  `json:"sunrise"`
 }
 
 // GetName returns the value of Name.
@@ -1051,7 +1275,7 @@ func (s *ProfileCreate) GetRingtone() RingtoneSchema {
 }
 
 // GetSunrise returns the value of Sunrise.
-func (s *ProfileCreate) GetSunrise() OptSunriseSchema {
+func (s *ProfileCreate) GetSunrise() SunriseSchema {
 	return s.Sunrise
 }
 
@@ -1071,19 +1295,19 @@ func (s *ProfileCreate) SetRingtone(val RingtoneSchema) {
 }
 
 // SetSunrise sets the value of Sunrise.
-func (s *ProfileCreate) SetSunrise(val OptSunriseSchema) {
+func (s *ProfileCreate) SetSunrise(val SunriseSchema) {
 	s.Sunrise = val
 }
 
 // Everything a profile is created with, plus what the server owns.
 // Ref: #/components/schemas/ProfileRead
 type ProfileRead struct {
-	Name      string           `json:"name"`
-	Intro     IntroSchema      `json:"intro"`
-	Ringtone  RingtoneSchema   `json:"ringtone"`
-	Sunrise   OptSunriseSchema `json:"sunrise"`
-	ID        uuid.UUID        `json:"id"`
-	IsDefault bool             `json:"is_default"`
+	Name      string         `json:"name"`
+	Intro     IntroSchema    `json:"intro"`
+	Ringtone  RingtoneSchema `json:"ringtone"`
+	Sunrise   SunriseSchema  `json:"sunrise"`
+	ID        uuid.UUID      `json:"id"`
+	IsDefault bool           `json:"is_default"`
 }
 
 // GetName returns the value of Name.
@@ -1102,7 +1326,7 @@ func (s *ProfileRead) GetRingtone() RingtoneSchema {
 }
 
 // GetSunrise returns the value of Sunrise.
-func (s *ProfileRead) GetSunrise() OptSunriseSchema {
+func (s *ProfileRead) GetSunrise() SunriseSchema {
 	return s.Sunrise
 }
 
@@ -1132,7 +1356,7 @@ func (s *ProfileRead) SetRingtone(val RingtoneSchema) {
 }
 
 // SetSunrise sets the value of Sunrise.
-func (s *ProfileRead) SetSunrise(val OptSunriseSchema) {
+func (s *ProfileRead) SetSunrise(val SunriseSchema) {
 	s.Sunrise = val
 }
 
@@ -1177,8 +1401,14 @@ func (s *RingtoneSchema) SetVolume(val OptInt) {
 
 // Ref: #/components/schemas/RoomRead
 type RoomRead struct {
-	Name       string   `json:"name"`
-	SceneNames []string `json:"scene_names"`
+	ID     uuid.UUID   `json:"id"`
+	Name   string      `json:"name"`
+	Scenes []SceneRead `json:"scenes"`
+}
+
+// GetID returns the value of ID.
+func (s *RoomRead) GetID() uuid.UUID {
+	return s.ID
 }
 
 // GetName returns the value of Name.
@@ -1186,9 +1416,14 @@ func (s *RoomRead) GetName() string {
 	return s.Name
 }
 
-// GetSceneNames returns the value of SceneNames.
-func (s *RoomRead) GetSceneNames() []string {
-	return s.SceneNames
+// GetScenes returns the value of Scenes.
+func (s *RoomRead) GetScenes() []SceneRead {
+	return s.Scenes
+}
+
+// SetID sets the value of ID.
+func (s *RoomRead) SetID(val uuid.UUID) {
+	s.ID = val
 }
 
 // SetName sets the value of Name.
@@ -1196,12 +1431,53 @@ func (s *RoomRead) SetName(val string) {
 	s.Name = val
 }
 
-// SetSceneNames sets the value of SceneNames.
-func (s *RoomRead) SetSceneNames(val []string) {
-	s.SceneNames = val
+// SetScenes sets the value of Scenes.
+func (s *RoomRead) SetScenes(val []SceneRead) {
+	s.Scenes = val
 }
 
 func (*RoomRead) getRoomRes() {}
+
+// Ref: #/components/schemas/SceneActivationRequest
+type SceneActivationRequest struct {
+	Brightness OptNilFloat64 `json:"brightness"`
+}
+
+// GetBrightness returns the value of Brightness.
+func (s *SceneActivationRequest) GetBrightness() OptNilFloat64 {
+	return s.Brightness
+}
+
+// SetBrightness sets the value of Brightness.
+func (s *SceneActivationRequest) SetBrightness(val OptNilFloat64) {
+	s.Brightness = val
+}
+
+// Ref: #/components/schemas/SceneRead
+type SceneRead struct {
+	ID   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
+}
+
+// GetID returns the value of ID.
+func (s *SceneRead) GetID() uuid.UUID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *SceneRead) GetName() string {
+	return s.Name
+}
+
+// SetID sets the value of ID.
+func (s *SceneRead) SetID(val uuid.UUID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *SceneRead) SetName(val string) {
+	s.Name = val
+}
 
 // When an alarm fires, as wall-clock time in a named zone.
 // Ref: #/components/schemas/ScheduleSchema
@@ -1397,6 +1673,11 @@ func (*SoundRead) previewSoundRes() {}
 // StopPlaybackNoContent is response for StopPlayback operation.
 type StopPlaybackNoContent struct{}
 
+// StopSceneDemoNoContent is response for StopSceneDemo operation.
+type StopSceneDemoNoContent struct{}
+
+func (*StopSceneDemoNoContent) stopSceneDemoRes() {}
+
 type StreamEventsOK struct {
 	Data io.Reader
 }
@@ -1413,17 +1694,170 @@ func (s StreamEventsOK) Read(p []byte) (n int, err error) {
 
 func (*StreamEventsOK) streamEventsRes() {}
 
-// Ref: #/components/schemas/SunriseSchema
-type SunriseSchema struct {
-	// Name of a Hue scene from GET /rooms/{room_name}.
-	SceneName       OptString `json:"scene_name"`
-	DurationMinutes OptInt    `json:"duration_minutes"`
-	BrightnessStart OptInt    `json:"brightness_start"`
-	BrightnessEnd   OptInt    `json:"brightness_end"`
+// The demo now running, in enough detail for a client to mirror it.
+// Ref: #/components/schemas/SunriseDemoRead
+type SunriseDemoRead struct {
+	RoomID          uuid.UUID `json:"room_id"`
+	RoomName        string    `json:"room_name"`
+	SceneID         uuid.UUID `json:"scene_id"`
+	SceneName       string    `json:"scene_name"`
+	BrightnessStart int       `json:"brightness_start"`
+	BrightnessEnd   int       `json:"brightness_end"`
+	// Brightness changes this demo will send.
+	Steps               int     `json:"steps"`
+	StepIntervalSeconds float64 `json:"step_interval_seconds"`
+	DurationSeconds     float64 `json:"duration_seconds"`
+}
+
+// GetRoomID returns the value of RoomID.
+func (s *SunriseDemoRead) GetRoomID() uuid.UUID {
+	return s.RoomID
+}
+
+// GetRoomName returns the value of RoomName.
+func (s *SunriseDemoRead) GetRoomName() string {
+	return s.RoomName
+}
+
+// GetSceneID returns the value of SceneID.
+func (s *SunriseDemoRead) GetSceneID() uuid.UUID {
+	return s.SceneID
 }
 
 // GetSceneName returns the value of SceneName.
-func (s *SunriseSchema) GetSceneName() OptString {
+func (s *SunriseDemoRead) GetSceneName() string {
+	return s.SceneName
+}
+
+// GetBrightnessStart returns the value of BrightnessStart.
+func (s *SunriseDemoRead) GetBrightnessStart() int {
+	return s.BrightnessStart
+}
+
+// GetBrightnessEnd returns the value of BrightnessEnd.
+func (s *SunriseDemoRead) GetBrightnessEnd() int {
+	return s.BrightnessEnd
+}
+
+// GetSteps returns the value of Steps.
+func (s *SunriseDemoRead) GetSteps() int {
+	return s.Steps
+}
+
+// GetStepIntervalSeconds returns the value of StepIntervalSeconds.
+func (s *SunriseDemoRead) GetStepIntervalSeconds() float64 {
+	return s.StepIntervalSeconds
+}
+
+// GetDurationSeconds returns the value of DurationSeconds.
+func (s *SunriseDemoRead) GetDurationSeconds() float64 {
+	return s.DurationSeconds
+}
+
+// SetRoomID sets the value of RoomID.
+func (s *SunriseDemoRead) SetRoomID(val uuid.UUID) {
+	s.RoomID = val
+}
+
+// SetRoomName sets the value of RoomName.
+func (s *SunriseDemoRead) SetRoomName(val string) {
+	s.RoomName = val
+}
+
+// SetSceneID sets the value of SceneID.
+func (s *SunriseDemoRead) SetSceneID(val uuid.UUID) {
+	s.SceneID = val
+}
+
+// SetSceneName sets the value of SceneName.
+func (s *SunriseDemoRead) SetSceneName(val string) {
+	s.SceneName = val
+}
+
+// SetBrightnessStart sets the value of BrightnessStart.
+func (s *SunriseDemoRead) SetBrightnessStart(val int) {
+	s.BrightnessStart = val
+}
+
+// SetBrightnessEnd sets the value of BrightnessEnd.
+func (s *SunriseDemoRead) SetBrightnessEnd(val int) {
+	s.BrightnessEnd = val
+}
+
+// SetSteps sets the value of Steps.
+func (s *SunriseDemoRead) SetSteps(val int) {
+	s.Steps = val
+}
+
+// SetStepIntervalSeconds sets the value of StepIntervalSeconds.
+func (s *SunriseDemoRead) SetStepIntervalSeconds(val float64) {
+	s.StepIntervalSeconds = val
+}
+
+// SetDurationSeconds sets the value of DurationSeconds.
+func (s *SunriseDemoRead) SetDurationSeconds(val float64) {
+	s.DurationSeconds = val
+}
+
+func (*SunriseDemoRead) demoSceneRes() {}
+
+// The sunrise to replay, compressed into a handful of seconds.
+// Ref: #/components/schemas/SunriseDemoRequest
+type SunriseDemoRequest struct {
+	// How long the whole climb should take.
+	DurationSeconds OptFloat64 `json:"duration_seconds"`
+	BrightnessStart OptInt     `json:"brightness_start"`
+	BrightnessEnd   OptInt     `json:"brightness_end"`
+}
+
+// GetDurationSeconds returns the value of DurationSeconds.
+func (s *SunriseDemoRequest) GetDurationSeconds() OptFloat64 {
+	return s.DurationSeconds
+}
+
+// GetBrightnessStart returns the value of BrightnessStart.
+func (s *SunriseDemoRequest) GetBrightnessStart() OptInt {
+	return s.BrightnessStart
+}
+
+// GetBrightnessEnd returns the value of BrightnessEnd.
+func (s *SunriseDemoRequest) GetBrightnessEnd() OptInt {
+	return s.BrightnessEnd
+}
+
+// SetDurationSeconds sets the value of DurationSeconds.
+func (s *SunriseDemoRequest) SetDurationSeconds(val OptFloat64) {
+	s.DurationSeconds = val
+}
+
+// SetBrightnessStart sets the value of BrightnessStart.
+func (s *SunriseDemoRequest) SetBrightnessStart(val OptInt) {
+	s.BrightnessStart = val
+}
+
+// SetBrightnessEnd sets the value of BrightnessEnd.
+func (s *SunriseDemoRequest) SetBrightnessEnd(val OptInt) {
+	s.BrightnessEnd = val
+}
+
+// Ref: #/components/schemas/SunriseSchema
+type SunriseSchema struct {
+	// Stable Hue scene UUID returned by GET /rooms.
+	SceneID uuid.UUID `json:"scene_id"`
+	// Display metadata for the selected Hue scene.
+	SceneName       string `json:"scene_name"`
+	DurationMinutes OptInt `json:"duration_minutes"`
+	BrightnessStart OptInt `json:"brightness_start"`
+	BrightnessEnd   OptInt `json:"brightness_end"`
+}
+
+// GetSceneID returns the value of SceneID.
+func (s *SunriseSchema) GetSceneID() uuid.UUID {
+	return s.SceneID
+}
+
+// GetSceneName returns the value of SceneName.
+func (s *SunriseSchema) GetSceneName() string {
 	return s.SceneName
 }
 
@@ -1442,8 +1876,13 @@ func (s *SunriseSchema) GetBrightnessEnd() OptInt {
 	return s.BrightnessEnd
 }
 
+// SetSceneID sets the value of SceneID.
+func (s *SunriseSchema) SetSceneID(val uuid.UUID) {
+	s.SceneID = val
+}
+
 // SetSceneName sets the value of SceneName.
-func (s *SunriseSchema) SetSceneName(val OptString) {
+func (s *SunriseSchema) SetSceneName(val string) {
 	s.SceneName = val
 }
 

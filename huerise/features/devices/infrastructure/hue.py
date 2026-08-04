@@ -1,10 +1,19 @@
+import logging
+from typing import ClassVar
 from uuid import UUID
 
 from hueify import Hueify
+from hueify.models import ResourceType, RoomEvent, SceneEvent
 from hueify.models import Scene as HueScene
 
-from huerise.features.devices.application import Lights
-from huerise.features.devices.domain import Room, Scene
+from huerise.features.devices.application import (
+    LightChangeHandler,
+    LightEvents,
+    Lights,
+)
+from huerise.features.devices.domain import LightChange, LightResource, Room, Scene
+
+logger = logging.getLogger(__name__)
 
 
 class HueLights(Lights):
@@ -36,6 +45,39 @@ class HueLights(Lights):
 
     async def set_brightness(self, room_id: UUID, brightness: float) -> None:
         await self._hue.rooms.set_brightness(room_id, brightness)
+
+
+class HueLightEvents(LightEvents):
+    _RESOURCES: ClassVar[dict[ResourceType, LightResource]] = {
+        ResourceType.ROOM: LightResource.ROOM,
+        ResourceType.SCENE: LightResource.SCENE,
+    }
+
+    def __init__(self, hue: Hueify) -> None:
+        self._hue = hue
+        self._handlers: list[LightChangeHandler] = []
+
+    def subscribe(self, handler: LightChangeHandler) -> None:
+        self._handlers.append(handler)
+
+    async def start(self) -> None:
+        for resource_type in self._RESOURCES:
+            self._hue.on(resource_type, self._on_event)
+        await self._hue.start_events()
+
+    async def _on_event(self, event: RoomEvent | SceneEvent) -> None:
+        # The full payload is worth seeing while the shapes of a rename and a
+        # deletion are still being pinned down; it is far too chatty for INFO,
+        # because every scene recall shows up here too.
+        logger.debug("Raw Hue event: %s", event.model_dump(exclude_none=True))
+
+        change = LightChange(
+            resource=self._RESOURCES[event.type],
+            id=event.id,
+            name=event.metadata.name if event.metadata else None,
+        )
+        for handler in self._handlers:
+            await handler(change)
 
 
 def _scene_brightness(scene: HueScene) -> float | None:

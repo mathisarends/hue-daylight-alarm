@@ -1,20 +1,12 @@
 import asyncio
 import contextlib
-import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from hueify import Hueify
-from hueify.models import ResourceType, SceneEvent
 
+from huerise.features.devices.application import LightChangeLogger, LightEvents
 from huerise.features.events.application import NextAlarmTracker
 from huerise.features.scheduler.application import AlarmScheduler
-
-logger = logging.getLogger(__name__)
-
-
-async def _log_scene_event(event: SceneEvent) -> None:
-    logger.info("Hue scene event: %s", event.model_dump(exclude_none=True))
 
 
 @asynccontextmanager
@@ -26,10 +18,10 @@ async def lifespan(app: FastAPI):
     tracker = await app.state.dishka_container.get(NextAlarmTracker)
     await tracker.start()
 
-    # Closing the container closes Hueify, which stops the stream with it.
-    hue = await app.state.dishka_container.get(Hueify)
-    hue.on(ResourceType.SCENE, _log_scene_event)
-    await hue.start_events()
+    # Same here: resolving the logger is what subscribes it. Closing the
+    # container closes Hueify, which stops the event stream with it.
+    await app.state.dishka_container.get(LightChangeLogger)
+    await (await app.state.dishka_container.get(LightEvents)).start()
 
     task = asyncio.create_task(scheduler.run())
     try:

@@ -788,7 +788,7 @@
         ]
       }
     },
-    "/rooms/{room_name}": {
+    "/rooms/{room_id}": {
       "get": {
         "tags": [
           "scenes"
@@ -802,12 +802,13 @@
         ],
         "parameters": [
           {
-            "name": "room_name",
+            "name": "room_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Room Name"
+              "format": "uuid",
+              "title": "Room Id"
             }
           }
         ],
@@ -835,7 +836,7 @@
         }
       }
     },
-    "/rooms/{room_name}/scenes/{scene_name}/activate": {
+    "/rooms/{room_id}/scenes/{scene_id}/activate": {
       "post": {
         "tags": [
           "scenes"
@@ -850,21 +851,166 @@
         ],
         "parameters": [
           {
-            "name": "room_name",
+            "name": "room_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Room Name"
+              "format": "uuid",
+              "title": "Room Id"
             }
           },
           {
-            "name": "scene_name",
+            "name": "scene_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Scene Name"
+              "format": "uuid",
+              "title": "Scene Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/SceneActivationRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rooms/{room_id}/scenes/{scene_id}/demo": {
+      "post": {
+        "tags": [
+          "scenes"
+        ],
+        "summary": "Demo Scene",
+        "description": "Fast-forward a whole sunrise on this scene, lights only.\n\nReturns as soon as the climb is under way, describing the run so a client\ncan follow along. The scene does not have to belong to a saved alarm.",
+        "operationId": "demo_scene",
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "room_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Room Id"
+            }
+          },
+          {
+            "name": "scene_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Scene Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/SunriseDemoRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SunriseDemoRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "scenes"
+        ],
+        "summary": "Stop Scene Demo",
+        "description": "Cut the running demo short. Only one runs at a time, so this ends it.",
+        "operationId": "stop_scene_demo",
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "room_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Room Id"
+            }
+          },
+          {
+            "name": "scene_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Scene Id"
             }
           }
         ],
@@ -1071,6 +1217,11 @@
           "schedule": {
             "$ref": "#/components/schemas/ScheduleSchema"
           },
+          "room_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Room Id"
+          },
           "room_name": {
             "type": "string",
             "title": "Room Name"
@@ -1093,6 +1244,7 @@
         "required": [
           "label",
           "schedule",
+          "room_id",
           "room_name"
         ],
         "title": "AlarmCreate"
@@ -1182,7 +1334,7 @@
         "enum": [
           "label",
           "schedule",
-          "room_name",
+          "room",
           "profile_id",
           "is_enabled"
         ],
@@ -1202,6 +1354,11 @@
           },
           "schedule": {
             "$ref": "#/components/schemas/ScheduleSchema"
+          },
+          "room_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Room Id"
           },
           "room_name": {
             "type": "string",
@@ -1239,6 +1396,7 @@
           "id",
           "label",
           "schedule",
+          "room_id",
           "room_name",
           "profile_id",
           "is_enabled",
@@ -1322,6 +1480,18 @@
                 "type": "null"
               }
             ]
+          },
+          "room_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Room Id"
           },
           "room_name": {
             "anyOf": [
@@ -2148,20 +2318,15 @@
             "$ref": "#/components/schemas/RingtoneSchema"
           },
           "sunrise": {
-            "$ref": "#/components/schemas/SunriseSchema",
-            "default": {
-              "scene_name": "Tageslichtwecker",
-              "duration_minutes": 7,
-              "brightness_start": 1,
-              "brightness_end": 100
-            }
+            "$ref": "#/components/schemas/SunriseSchema"
           }
         },
         "type": "object",
         "required": [
           "name",
           "intro",
-          "ringtone"
+          "ringtone",
+          "sunrise"
         ],
         "title": "ProfileCreate"
       },
@@ -2178,13 +2343,7 @@
             "$ref": "#/components/schemas/RingtoneSchema"
           },
           "sunrise": {
-            "$ref": "#/components/schemas/SunriseSchema",
-            "default": {
-              "scene_name": "Tageslichtwecker",
-              "duration_minutes": 7,
-              "brightness_start": 1,
-              "brightness_end": 100
-            }
+            "$ref": "#/components/schemas/SunriseSchema"
           },
           "id": {
             "type": "string",
@@ -2201,6 +2360,7 @@
           "name",
           "intro",
           "ringtone",
+          "sunrise",
           "id",
           "is_default"
         ],
@@ -2231,24 +2391,68 @@
       },
       "RoomRead": {
         "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
           "name": {
             "type": "string",
             "title": "Name"
           },
-          "scene_names": {
+          "scenes": {
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/SceneRead"
             },
             "type": "array",
-            "title": "Scene Names"
+            "title": "Scenes"
           }
         },
         "type": "object",
         "required": [
+          "id",
           "name",
-          "scene_names"
+          "scenes"
         ],
         "title": "RoomRead"
+      },
+      "SceneActivationRequest": {
+        "properties": {
+          "brightness": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 100.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brightness"
+          }
+        },
+        "type": "object",
+        "title": "SceneActivationRequest"
+      },
+      "SceneRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "SceneRead"
       },
       "ScheduleSchema": {
         "properties": {
@@ -2391,13 +2595,105 @@
         "title": "SoundRead",
         "description": "A sound as an alarm profile refers to it."
       },
+      "SunriseDemoRead": {
+        "properties": {
+          "room_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Room Id"
+          },
+          "room_name": {
+            "type": "string",
+            "title": "Room Name"
+          },
+          "scene_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Scene Id"
+          },
+          "scene_name": {
+            "type": "string",
+            "title": "Scene Name"
+          },
+          "brightness_start": {
+            "type": "integer",
+            "title": "Brightness Start"
+          },
+          "brightness_end": {
+            "type": "integer",
+            "title": "Brightness End"
+          },
+          "steps": {
+            "type": "integer",
+            "title": "Steps",
+            "description": "Brightness changes this demo will send."
+          },
+          "step_interval_seconds": {
+            "type": "number",
+            "title": "Step Interval Seconds"
+          },
+          "duration_seconds": {
+            "type": "number",
+            "title": "Duration Seconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "room_id",
+          "room_name",
+          "scene_id",
+          "scene_name",
+          "brightness_start",
+          "brightness_end",
+          "steps",
+          "step_interval_seconds",
+          "duration_seconds"
+        ],
+        "title": "SunriseDemoRead",
+        "description": "The demo now running, in enough detail for a client to mirror it."
+      },
+      "SunriseDemoRequest": {
+        "properties": {
+          "duration_seconds": {
+            "type": "number",
+            "maximum": 300.0,
+            "exclusiveMinimum": true,
+            "title": "Duration Seconds",
+            "description": "How long the whole climb should take.",
+            "default": 20.0,
+            "minimum": 0.0
+          },
+          "brightness_start": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Brightness Start",
+            "default": 1
+          },
+          "brightness_end": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Brightness End",
+            "default": 100
+          }
+        },
+        "type": "object",
+        "title": "SunriseDemoRequest",
+        "description": "The sunrise to replay, compressed into a handful of seconds."
+      },
       "SunriseSchema": {
         "properties": {
+          "scene_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Scene Id",
+            "description": "Stable Hue scene UUID returned by GET /rooms."
+          },
           "scene_name": {
             "type": "string",
             "title": "Scene Name",
-            "description": "Name of a Hue scene from GET /rooms/{room_name}.",
-            "default": "Tageslichtwecker"
+            "description": "Display metadata for the selected Hue scene."
           },
           "duration_minutes": {
             "type": "integer",
@@ -2422,6 +2718,10 @@
           }
         },
         "type": "object",
+        "required": [
+          "scene_id",
+          "scene_name"
+        ],
         "title": "SunriseSchema"
       },
       "ValidationError": {

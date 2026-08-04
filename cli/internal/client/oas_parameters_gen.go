@@ -8,8 +8,8 @@ import (
 
 // ActivateSceneParams is parameters of activate_scene operation.
 type ActivateSceneParams struct {
-	RoomName  string
-	SceneName string
+	RoomID  uuid.UUID
+	SceneID uuid.UUID
 }
 
 // DeleteAlarmParams is parameters of deleteAlarm operation.
@@ -20,6 +20,12 @@ type DeleteAlarmParams struct {
 // DeleteProfileParams is parameters of deleteProfile operation.
 type DeleteProfileParams struct {
 	ProfileID uuid.UUID
+}
+
+// DemoSceneParams is parameters of demo_scene operation.
+type DemoSceneParams struct {
+	RoomID  uuid.UUID
+	SceneID uuid.UUID
 }
 
 // DisableAlarmParams is parameters of disableAlarm operation.
@@ -44,7 +50,7 @@ type GetAlarmParams struct {
 
 // GetRoomParams is parameters of get_room operation.
 type GetRoomParams struct {
-	RoomName string
+	RoomID uuid.UUID
 }
 
 // ListOccurrencesParams is parameters of listOccurrences operation.
@@ -61,6 +67,12 @@ type ListSoundsParams struct {
 // SnoozeAlarmParams is parameters of snoozeAlarm operation.
 type SnoozeAlarmParams struct {
 	AlarmID uuid.UUID
+}
+
+// StopSceneDemoParams is parameters of stop_scene_demo operation.
+type StopSceneDemoParams struct {
+	RoomID  uuid.UUID
+	SceneID uuid.UUID
 }
 
 // StreamEventsParams is parameters of streamEvents operation.

@@ -11,6 +11,7 @@ const (
 	CreateProfileOperation     OperationName = "CreateProfile"
 	DeleteAlarmOperation       OperationName = "DeleteAlarm"
 	DeleteProfileOperation     OperationName = "DeleteProfile"
+	DemoSceneOperation         OperationName = "DemoScene"
 	DisableAlarmOperation      OperationName = "DisableAlarm"
 	DismissAlarmOperation      OperationName = "DismissAlarm"
 	EnableAlarmOperation       OperationName = "EnableAlarm"
@@ -27,6 +28,7 @@ const (
 	SetVolumeOperation         OperationName = "SetVolume"
 	SnoozeAlarmOperation       OperationName = "SnoozeAlarm"
 	StopPlaybackOperation      OperationName = "StopPlayback"
+	StopSceneDemoOperation     OperationName = "StopSceneDemo"
 	StreamEventsOperation      OperationName = "StreamEvents"
 	UpdateAlarmOperation       OperationName = "UpdateAlarm"
 )

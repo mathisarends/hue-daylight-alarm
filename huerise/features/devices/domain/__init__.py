@@ -6,6 +6,7 @@ from .exceptions import (
     SceneNotFoundError,
     SoundNotFoundError,
 )
+from .light_change import LightChange, LightResource
 from .room import Room, Scene
 from .sound import Sound, SoundCategory
 from .sound_repository import SoundRepository
@@ -16,6 +17,8 @@ __all__ = [
     "AudioOutput",
     "AudioOutputUnavailableError",
     "DeviceError",
+    "LightChange",
+    "LightResource",
     "Room",
     "RoomNotFoundError",
     "Scene",

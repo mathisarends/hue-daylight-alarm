@@ -23,6 +23,7 @@ var operationRolesAccessToken = map[string][]string{
 	CreateProfileOperation:     []string{},
 	DeleteAlarmOperation:       []string{},
 	DeleteProfileOperation:     []string{},
+	DemoSceneOperation:         []string{},
 	DisableAlarmOperation:      []string{},
 	DismissAlarmOperation:      []string{},
 	EnableAlarmOperation:       []string{},
@@ -39,6 +40,7 @@ var operationRolesAccessToken = map[string][]string{
 	SetVolumeOperation:         []string{},
 	SnoozeAlarmOperation:       []string{},
 	StopPlaybackOperation:      []string{},
+	StopSceneDemoOperation:     []string{},
 	StreamEventsOperation:      []string{},
 	UpdateAlarmOperation:       []string{},
 }

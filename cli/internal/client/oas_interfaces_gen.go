@@ -21,6 +21,10 @@ type DeleteProfileRes interface {
 	deleteProfileRes()
 }
 
+type DemoSceneRes interface {
+	demoSceneRes()
+}
+
 type DisableAlarmRes interface {
 	disableAlarmRes()
 }
@@ -63,6 +67,10 @@ type SetVolumeRes interface {
 
 type SnoozeAlarmRes interface {
 	snoozeAlarmRes()
+}
+
+type StopSceneDemoRes interface {
+	stopSceneDemoRes()
 }
 
 type StreamEventsRes interface {
