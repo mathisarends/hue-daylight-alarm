@@ -1,7 +1,9 @@
+from uuid import UUID
+
 from hueify import Hueify
 
 from huerise.features.devices.application import Lights
-from huerise.features.devices.domain import Room
+from huerise.features.devices.domain import Room, Scene
 
 
 class HueLights(Lights):
@@ -9,14 +11,23 @@ class HueLights(Lights):
         self._hue = hue
 
     async def list_rooms(self) -> list[Room]:
-        rooms = self._hue.rooms
+        rooms = (await self._hue.rooms.list()).data
         return [
-            Room(name=name, scene_names=tuple(rooms.scene_names(name)))
-            for name in rooms.names
+            Room(
+                id=room.id,
+                name=room.name,
+                scenes=tuple(
+                    Scene(id=scene.id, name=scene.name)
+                    for scene in await self._hue.rooms.scenes(room.id)
+                ),
+            )
+            for room in rooms
         ]
 
-    async def activate_scene(self, room_name: str, scene_name: str) -> None:
-        await self._hue.rooms.activate_scene(room_name, scene_name)
+    async def activate_scene(
+        self, scene_id: UUID, *, brightness: float | None = None
+    ) -> None:
+        await self._hue.scenes.activate(scene_id, brightness=brightness)
 
-    async def set_brightness(self, room_name: str, brightness: int) -> None:
-        await self._hue.rooms.set_brightness(room_name, brightness)
+    async def set_brightness(self, room_id: UUID, brightness: float) -> None:
+        await self._hue.rooms.set_brightness(room_id, brightness)

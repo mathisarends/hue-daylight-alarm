@@ -55,6 +55,7 @@ class AlarmProfileModel(DatabaseEntity, table=True):
 
     intro_sound_id: UUID
 
+    sunrise_scene_id: UUID
     sunrise_scene_name: str
     sunrise_duration_minutes: int
     sunrise_brightness_start: int
@@ -80,6 +81,7 @@ class AlarmModel(DatabaseEntity, table=True):
     recurrence_mask: int = Field(default=0)  # one bit per weekday, 0 = one-time
 
     profile_id: UUID = Field(foreign_key="alarm_profiles.id", index=True)
+    room_id: UUID
     room_name: str
 
     created_at: datetime = Field(sa_column=Column(UtcDateTime, nullable=False))

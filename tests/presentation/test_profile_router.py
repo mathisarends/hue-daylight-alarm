@@ -13,7 +13,7 @@ from huerise.features.alarm.presentation import (
     register_alarm_exception_handlers,
 )
 from huerise.presentation import auth
-from tests.application.conftest import InMemoryProfileRepository, make_profile
+from tests.application.conftest import SCENE_ID, InMemoryProfileRepository, make_profile
 
 TOKEN = "test-access-token"
 AUTH = {"Authorization": f"Bearer {TOKEN}"}
@@ -59,6 +59,10 @@ def test_creates_a_profile(client: TestClient) -> None:
         "name": "Weekend",
         "intro": {"sound_id": str(uuid4())},
         "ringtone": {"sound_id": str(uuid4())},
+        "sunrise": {
+            "scene_id": str(SCENE_ID),
+            "scene_name": "Tageslichtwecker",
+        },
     }
 
     response = client.post("/alarm-profiles", headers=AUTH, json=body)

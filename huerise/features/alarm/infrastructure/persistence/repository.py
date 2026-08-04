@@ -51,6 +51,7 @@ class SQLAlarmProfileRepository(
             is_default=orm.is_default,
             intro_config=IntroConfig(sound_id=orm.intro_sound_id),
             sunrise_config=SunriseConfig(
+                scene_id=orm.sunrise_scene_id,
                 scene_name=orm.sunrise_scene_name,
                 duration=timedelta(minutes=orm.sunrise_duration_minutes),
                 brightness_start=orm.sunrise_brightness_start,
@@ -68,6 +69,7 @@ class SQLAlarmProfileRepository(
             name=domain.name,
             is_default=domain.is_default,
             intro_sound_id=domain.intro_config.sound_id,
+            sunrise_scene_id=domain.sunrise_config.scene_id,
             sunrise_scene_name=domain.sunrise_config.scene_name,
             sunrise_duration_minutes=domain.sunrise_config.duration_minutes,
             sunrise_brightness_start=domain.sunrise_config.brightness_start,
@@ -96,6 +98,7 @@ class SQLAlarmRepository(Repository[AlarmModel, Alarm], AlarmRepository):
                 recurrence_mask=orm.recurrence_mask,
             ),
             profile_id=orm.profile_id,
+            room_id=orm.room_id,
             room_name=orm.room_name,
             created_at=orm.created_at,
         )
@@ -110,6 +113,7 @@ class SQLAlarmRepository(Repository[AlarmModel, Alarm], AlarmRepository):
             timezone=domain.schedule.tz_name,
             recurrence_mask=domain.schedule.recurrence_mask,
             profile_id=domain.profile_id,
+            room_id=domain.room_id,
             room_name=domain.room_name,
             created_at=domain.created_at,
         )

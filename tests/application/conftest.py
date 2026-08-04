@@ -27,6 +27,8 @@ from huerise.features.events.application import EventPublisher
 from huerise.features.events.domain import HueriseEvent
 
 BERLIN = ZoneInfo("Europe/Berlin")
+ROOM_ID = UUID("11111111-1111-4111-8111-111111111111")
+SCENE_ID = UUID("22222222-2222-4222-8222-222222222222")
 
 
 def make_sounds() -> list[Sound]:
@@ -197,7 +199,11 @@ def make_profile(
         name=name,
         is_default=is_default,
         intro_config=IntroConfig(sound_id=UUID("1693baba-146e-5b14-acf2-6f76554f36e9")),
-        sunrise_config=SunriseConfig(duration=sunrise_duration),
+        sunrise_config=SunriseConfig(
+            scene_id=SCENE_ID,
+            scene_name="Tageslichtwecker",
+            duration=sunrise_duration,
+        ),
         ringtone_config=RingtoneConfig(
             sound_id=UUID("5c0806e7-7162-5be7-948e-33d349bde4a8")
         ),
@@ -216,6 +222,7 @@ def make_alarm(
         label="Morning",
         schedule=Schedule(hour=hour, minute=minute, tz=tz, weekdays=weekdays),
         profile_id=profile_id or uuid4(),
+        room_id=ROOM_ID,
         room_name="Bedroom",
         is_enabled=is_enabled,
     )

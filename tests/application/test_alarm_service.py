@@ -21,6 +21,7 @@ from huerise.features.events.domain import (
     OccurrenceSnoozed,
 )
 from tests.application.conftest import (
+    ROOM_ID,
     InMemoryAlarmRepository,
     InMemoryOccurrenceRepository,
     InMemoryProfileRepository,
@@ -61,7 +62,10 @@ class TestCreateAlarm:
         service = make_alarm_service(profiles=InMemoryProfileRepository([profile]))
 
         alarm = await service.create(
-            label="Work", schedule=Schedule(hour=6, minute=45), room_name="Bedroom"
+            label="Work",
+            schedule=Schedule(hour=6, minute=45),
+            room_id=ROOM_ID,
+            room_name="Bedroom",
         )
 
         assert alarm.profile_id == profile.id
@@ -74,6 +78,7 @@ class TestCreateAlarm:
             schedule=Schedule(
                 hour=6, minute=45, weekdays=frozenset({Weekday.MON, Weekday.FRI})
             ),
+            room_id=ROOM_ID,
             room_name="Bedroom",
         )
 
@@ -84,7 +89,10 @@ class TestCreateAlarm:
         service = make_alarm_service()
 
         alarm = await service.create(
-            label="Nap", schedule=Schedule(hour=14, minute=0), room_name="Bedroom"
+            label="Nap",
+            schedule=Schedule(hour=14, minute=0),
+            room_id=ROOM_ID,
+            room_name="Bedroom",
         )
 
         assert alarm.schedule.is_recurring is False
@@ -96,6 +104,7 @@ class TestCreateAlarm:
             await service.create(
                 label="Work",
                 schedule=Schedule(hour=6, minute=45),
+                room_id=ROOM_ID,
                 room_name="Bedroom",
             )
 
@@ -106,6 +115,7 @@ class TestCreateAlarm:
             await service.create(
                 label="Work",
                 schedule=Schedule(hour=6, minute=45),
+                room_id=ROOM_ID,
                 room_name="Bedroom",
                 profile_id=uuid4(),
             )
@@ -117,7 +127,10 @@ class TestPublishedEvents:
         service = make_alarm_service(events=events)
 
         alarm = await service.create(
-            label="Work", schedule=Schedule(hour=6, minute=45), room_name="Bedroom"
+            label="Work",
+            schedule=Schedule(hour=6, minute=45),
+            room_id=ROOM_ID,
+            room_name="Bedroom",
         )
 
         assert events.only(AlarmCreated).alarm.id == alarm.id

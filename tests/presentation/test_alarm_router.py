@@ -16,6 +16,7 @@ from huerise.features.alarm.presentation import (
 )
 from huerise.presentation import auth
 from tests.application.conftest import (
+    ROOM_ID,
     InMemoryAlarmRepository,
     InMemoryOccurrenceRepository,
     make_alarm,
@@ -54,6 +55,7 @@ def _create_alarm(client: TestClient, **overrides) -> dict:
     body = {
         "label": "Morning",
         "schedule": {"hour": 7, "minute": 0},
+        "room_id": str(ROOM_ID),
         "room_name": "Bedroom",
         **overrides,
     }

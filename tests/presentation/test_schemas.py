@@ -13,7 +13,7 @@ from huerise.features.alarm.presentation.profile_schemas import (
     ProfileRead,
     SunriseSchema,
 )
-from tests.application.conftest import make_profile
+from tests.application.conftest import ROOM_ID, SCENE_ID, make_profile
 
 
 class TestScheduleSchema:
@@ -41,7 +41,12 @@ class TestScheduleSchema:
 
 class TestSunriseSchema:
     def test_roundtrips_through_the_domain(self) -> None:
-        config = SunriseConfig(duration=timedelta(minutes=15), brightness_start=5)
+        config = SunriseConfig(
+            scene_id=SCENE_ID,
+            scene_name="Sunrise",
+            duration=timedelta(minutes=15),
+            brightness_start=5,
+        )
 
         assert SunriseSchema.from_domain(config).to_domain() == config
 
@@ -52,6 +57,7 @@ class TestAlarmRead:
             label="Work",
             schedule=Schedule(hour=6, minute=45, weekdays=frozenset({Weekday.MON})),
             profile_id=uuid4(),
+            room_id=ROOM_ID,
             room_name="Bedroom",
         )
 
@@ -65,6 +71,7 @@ class TestAlarmRead:
             label="Work",
             schedule=Schedule(hour=6, minute=45),
             profile_id=uuid4(),
+            room_id=ROOM_ID,
             room_name="Bedroom",
             is_enabled=False,
         )

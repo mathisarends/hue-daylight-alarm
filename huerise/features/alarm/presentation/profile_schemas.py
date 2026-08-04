@@ -18,9 +18,9 @@ _SOUND_ID_DESCRIPTION = (
 
 
 class SunriseSchema(BaseModel):
+    scene_id: UUID = Field(description="Stable Hue scene UUID returned by GET /rooms.")
     scene_name: str = Field(
-        default="Tageslichtwecker",
-        description="Name of a Hue scene from GET /rooms/{room_name}.",
+        description="Display metadata for the selected Hue scene.",
     )
     duration_minutes: int = Field(default=7, ge=0, le=120)
     brightness_start: int = Field(default=1, ge=1, le=99)
@@ -28,6 +28,7 @@ class SunriseSchema(BaseModel):
 
     def to_domain(self) -> SunriseConfig:
         return SunriseConfig(
+            scene_id=self.scene_id,
             scene_name=self.scene_name,
             duration=timedelta(minutes=self.duration_minutes),
             brightness_start=self.brightness_start,
@@ -37,6 +38,7 @@ class SunriseSchema(BaseModel):
     @classmethod
     def from_domain(cls, config: SunriseConfig) -> Self:
         return cls(
+            scene_id=config.scene_id,
             scene_name=config.scene_name,
             duration_minutes=config.duration_minutes,
             brightness_start=config.brightness_start,
@@ -71,7 +73,7 @@ class ProfileCreate(BaseModel):
     name: str
     intro: IntroSchema
     ringtone: RingtoneSchema
-    sunrise: SunriseSchema = SunriseSchema()
+    sunrise: SunriseSchema
 
 
 class ProfileRead(ProfileCreate):

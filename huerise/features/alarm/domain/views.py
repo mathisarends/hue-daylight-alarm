@@ -24,7 +24,7 @@ class AlarmField(StrEnum):
 
     LABEL = "label"
     SCHEDULE = "schedule"
-    ROOM_NAME = "room_name"
+    ROOM = "room"
     PROFILE_ID = "profile_id"
     IS_ENABLED = "is_enabled"
 
@@ -126,7 +126,8 @@ class IntroConfig:
 
 @dataclass(frozen=True)
 class SunriseConfig:
-    scene_name: str = "Tageslichtwecker"
+    scene_id: UUID
+    scene_name: str
     duration: timedelta = timedelta(minutes=7)
     brightness_start: int = 1
     brightness_end: int = 100

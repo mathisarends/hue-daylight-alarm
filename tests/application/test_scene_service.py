@@ -1,14 +1,22 @@
+from uuid import uuid4
+
 import pytest
 
 from huerise.features.devices.application import SceneService
 from huerise.features.devices.domain import (
     Room,
     RoomNotFoundError,
+    Scene,
     SceneNotFoundError,
 )
-from tests.application.conftest import make_lights
+from tests.application.conftest import ROOM_ID, SCENE_ID, make_lights
 
-BEDROOM = Room(name="Bedroom", scene_names=("Tageslichtwecker", "Relax"))
+RELAX_ID = SCENE_ID
+BEDROOM = Room(
+    id=ROOM_ID,
+    name="Bedroom",
+    scenes=(Scene(id=RELAX_ID, name="Relax"),),
+)
 
 
 def make_scene_service() -> tuple[SceneService, object]:
@@ -26,15 +34,15 @@ class TestSceneService:
     async def test_activates_a_scene_of_the_room(self) -> None:
         service, lights = make_scene_service()
 
-        await service.activate_scene("Bedroom", "Relax")
+        await service.activate_scene(ROOM_ID, RELAX_ID, brightness=12.5)
 
-        lights.activate_scene.assert_awaited_once_with("Bedroom", "Relax")
+        lights.activate_scene.assert_awaited_once_with(RELAX_ID, brightness=12.5)
 
     async def test_rejects_an_unknown_room(self) -> None:
         service, lights = make_scene_service()
 
         with pytest.raises(RoomNotFoundError):
-            await service.activate_scene("Kitchen", "Relax")
+            await service.activate_scene(uuid4(), RELAX_ID)
 
         lights.activate_scene.assert_not_awaited()
 
@@ -42,6 +50,6 @@ class TestSceneService:
         service, lights = make_scene_service()
 
         with pytest.raises(SceneNotFoundError):
-            await service.activate_scene("Bedroom", "Party")
+            await service.activate_scene(ROOM_ID, uuid4())
 
         lights.activate_scene.assert_not_awaited()

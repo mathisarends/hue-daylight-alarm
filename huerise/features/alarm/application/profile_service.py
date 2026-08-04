@@ -31,13 +31,13 @@ class AlarmProfileService:
         name: str,
         intro_config: IntroConfig,
         ringtone_config: RingtoneConfig,
-        sunrise_config: SunriseConfig | None = None,
+        sunrise_config: SunriseConfig,
     ) -> AlarmProfile:
         logger.info("Creating alarm profile '%s'", name)
         profile = AlarmProfile(
             name=name,
             intro_config=intro_config,
-            sunrise_config=sunrise_config or SunriseConfig(),
+            sunrise_config=sunrise_config,
             ringtone_config=ringtone_config,
         )
         return await self._profiles.save(profile)

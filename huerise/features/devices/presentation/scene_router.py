@@ -1,8 +1,13 @@
+from uuid import UUID
+
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
 from fastapi import APIRouter, Depends
 
 from huerise.features.devices.application import SceneService
-from huerise.features.devices.presentation.schemas import RoomRead
+from huerise.features.devices.presentation.schemas import (
+    RoomRead,
+    SceneActivationRequest,
+)
 from huerise.presentation import require_access_token
 
 scene_router = APIRouter(
@@ -19,24 +24,29 @@ async def list_rooms(scene_service: FromDishka[SceneService]) -> list[RoomRead]:
     return [RoomRead.from_domain(room) for room in rooms]
 
 
-@scene_router.get("/{room_name}", response_model=RoomRead, operation_id="get_room")
+@scene_router.get("/{room_id}", response_model=RoomRead, operation_id="get_room")
 async def get_room(
-    room_name: str,
+    room_id: UUID,
     scene_service: FromDishka[SceneService],
 ) -> RoomRead:
-    return RoomRead.from_domain(await scene_service.get_room(room_name))
+    return RoomRead.from_domain(await scene_service.get_room(room_id))
 
 
 @scene_router.post(
-    "/{room_name}/scenes/{scene_name}/activate",
+    "/{room_id}/scenes/{scene_id}/activate",
     status_code=204,
     response_model=None,
     operation_id="activate_scene",
 )
 async def activate_scene(
-    room_name: str,
-    scene_name: str,
+    room_id: UUID,
+    scene_id: UUID,
     scene_service: FromDishka[SceneService],
+    body: SceneActivationRequest | None = None,
 ) -> None:
     """Preview a scene the way an alarm would start it."""
-    await scene_service.activate_scene(room_name, scene_name)
+    await scene_service.activate_scene(
+        room_id,
+        scene_id,
+        brightness=body.brightness if body is not None else None,
+    )

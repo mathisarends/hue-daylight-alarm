@@ -21,6 +21,7 @@ def make_alarm(is_enabled: bool = True, weekdays: frozenset[Weekday] = frozenset
         label="Morning",
         schedule=Schedule(hour=7, minute=0, tz=BERLIN, weekdays=weekdays),
         profile_id=uuid4(),
+        room_id=uuid4(),
         room_name="Bedroom",
         is_enabled=is_enabled,
     )
@@ -80,7 +81,7 @@ class TestUpdate:
 
         changed = alarm.update(label="Morning", room_name="Guest room")
 
-        assert changed == [AlarmField.ROOM_NAME]
+        assert changed == [AlarmField.ROOM]
 
     def test_applies_a_changed_profile_id(self) -> None:
         alarm = make_alarm()

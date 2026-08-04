@@ -6,7 +6,7 @@ from .exceptions import (
     SceneNotFoundError,
     SoundNotFoundError,
 )
-from .room import Room
+from .room import Room, Scene
 from .sound import Sound, SoundCategory
 from .sound_repository import SoundRepository
 
@@ -16,6 +16,7 @@ __all__ = [
     "DeviceError",
     "Room",
     "RoomNotFoundError",
+    "Scene",
     "SceneNotFoundError",
     "Sound",
     "SoundCategory",

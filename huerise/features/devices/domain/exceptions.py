@@ -13,13 +13,13 @@ class SoundNotFoundError(DeviceError):
 
 
 class RoomNotFoundError(DeviceError):
-    def __init__(self, room_name: str) -> None:
-        super().__init__(f"Room '{room_name}' not found")
+    def __init__(self, room_id: str) -> None:
+        super().__init__(f"Room '{room_id}' not found")
 
 
 class SceneNotFoundError(DeviceError):
-    def __init__(self, room_name: str, scene_name: str) -> None:
-        super().__init__(f"Room '{room_name}' has no scene '{scene_name}'")
+    def __init__(self, room_id: str, scene_id: str) -> None:
+        super().__init__(f"Room '{room_id}' has no scene '{scene_id}'")
 
 
 class AudioOutputUnavailableError(DeviceError):

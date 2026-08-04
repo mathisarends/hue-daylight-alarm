@@ -9,10 +9,14 @@ from huerise.features.alarm.domain import (
     RingtoneConfig,
     SunriseConfig,
 )
-from tests.application.conftest import InMemoryProfileRepository, make_profile
+from tests.application.conftest import (
+    SCENE_ID,
+    InMemoryProfileRepository,
+    make_profile,
+)
 
 
-async def test_create_profile_defaults_the_sunrise_config() -> None:
+async def test_create_profile_stores_the_scene_reference() -> None:
     profiles = InMemoryProfileRepository()
     service = AlarmProfileService(profiles)
 
@@ -20,16 +24,19 @@ async def test_create_profile_defaults_the_sunrise_config() -> None:
         name="Weekday",
         intro_config=IntroConfig(sound_id=uuid4()),
         ringtone_config=RingtoneConfig(sound_id=uuid4()),
+        sunrise_config=SunriseConfig(scene_id=SCENE_ID, scene_name="Tageslichtwecker"),
     )
 
     assert profile.name == "Weekday"
-    assert profile.sunrise_config == SunriseConfig()
+    assert profile.sunrise_config.scene_id == SCENE_ID
     assert await profiles.find_by_id(profile.id) == profile
 
 
 async def test_create_profile_keeps_a_given_sunrise_config() -> None:
     service = AlarmProfileService(InMemoryProfileRepository())
-    sunrise = SunriseConfig(brightness_start=10)
+    sunrise = SunriseConfig(
+        scene_id=SCENE_ID, scene_name="Tageslichtwecker", brightness_start=10
+    )
 
     profile = await service.create(
         name="Weekday",

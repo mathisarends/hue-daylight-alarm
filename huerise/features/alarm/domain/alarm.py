@@ -14,6 +14,7 @@ class Alarm(Aggregate):
         label: str,
         schedule: Schedule,
         profile_id: UUID,
+        room_id: UUID,
         room_name: str,
         is_enabled: bool = True,
         id: UUID | None = None,
@@ -23,6 +24,7 @@ class Alarm(Aggregate):
         self.label = label
         self.schedule = schedule
         self.profile_id = profile_id
+        self.room_id = room_id
         self.room_name = room_name
         self.is_enabled = is_enabled
 
@@ -30,6 +32,7 @@ class Alarm(Aggregate):
         self,
         label: str | None = None,
         schedule: Schedule | None = None,
+        room_id: UUID | None = None,
         room_name: str | None = None,
         profile_id: UUID | None = None,
     ) -> list[AlarmField]:
@@ -47,9 +50,13 @@ class Alarm(Aggregate):
         if schedule is not None and schedule != self.schedule:
             self.schedule = schedule
             changed.append(AlarmField.SCHEDULE)
+        if room_id is not None and room_id != self.room_id:
+            self.room_id = room_id
+            changed.append(AlarmField.ROOM)
         if room_name is not None and room_name != self.room_name:
             self.room_name = room_name
-            changed.append(AlarmField.ROOM_NAME)
+            if AlarmField.ROOM not in changed:
+                changed.append(AlarmField.ROOM)
         if profile_id is not None and profile_id != self.profile_id:
             self.profile_id = profile_id
             changed.append(AlarmField.PROFILE_ID)

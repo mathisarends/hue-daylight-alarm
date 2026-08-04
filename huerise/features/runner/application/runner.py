@@ -87,13 +87,15 @@ class AlarmRunner(AlarmRunnerPort):
         )
         self._intro_tasks.add(intro_task)
         intro_task.add_done_callback(self._intro_finished)
-        await self._lights.activate_scene(alarm.room_name, sunrise.scene_name)
+        await self._lights.activate_scene(
+            sunrise.scene_id, brightness=sunrise.brightness_start
+        )
 
         for step in sunrise_steps(sunrise, self._step_interval):
             if not await self._still_in_state(occurrence.id, OccurrenceState.SUNRISE):
                 logger.info("Sunrise for %s interrupted", occurrence.id)
                 return
-            await self._lights.set_brightness(alarm.room_name, step.brightness)
+            await self._lights.set_brightness(alarm.room_id, step.brightness)
             self._events.publish(
                 OccurrenceProgress(
                     occurrence_id=occurrence.id,

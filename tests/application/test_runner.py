@@ -12,6 +12,7 @@ from huerise.features.events.domain import (
 from huerise.features.runner.application import AlarmRunner
 from huerise.features.runner.application.sunrise import sunrise_steps
 from tests.application.conftest import (
+    SCENE_ID,
     FakeUnitOfWork,
     FakeUnitOfWorkFactory,
     InMemoryAlarmRepository,
@@ -56,13 +57,19 @@ def make_runner(
 
 class TestSunriseSteps:
     def test_derives_step_count_from_duration(self) -> None:
-        config = SunriseConfig(duration=timedelta(minutes=1))
+        config = SunriseConfig(
+            scene_id=SCENE_ID, scene_name="Sunrise", duration=timedelta(minutes=1)
+        )
 
         assert len(list(sunrise_steps(config, STEP))) == 10
 
     def test_walks_from_start_to_end_brightness(self) -> None:
         config = SunriseConfig(
-            duration=timedelta(minutes=1), brightness_start=10, brightness_end=100
+            scene_id=SCENE_ID,
+            scene_name="Sunrise",
+            duration=timedelta(minutes=1),
+            brightness_start=10,
+            brightness_end=100,
         )
 
         brightness = [step.brightness for step in sunrise_steps(config, STEP)]
@@ -72,12 +79,16 @@ class TestSunriseSteps:
         assert brightness == sorted(brightness)
 
     def test_always_yields_at_least_one_step(self) -> None:
-        config = SunriseConfig(duration=timedelta(0))
+        config = SunriseConfig(
+            scene_id=SCENE_ID, scene_name="Sunrise", duration=timedelta(0)
+        )
 
         assert [step.brightness for step in sunrise_steps(config, STEP)] == [1]
 
     def test_each_step_knows_its_place_in_the_whole_sunrise(self) -> None:
-        config = SunriseConfig(duration=timedelta(minutes=1))
+        config = SunriseConfig(
+            scene_id=SCENE_ID, scene_name="Sunrise", duration=timedelta(minutes=1)
+        )
 
         steps = list(sunrise_steps(config, STEP))
 
@@ -89,13 +100,14 @@ class TestSunriseSteps:
 
 class TestRun:
     async def test_runs_the_full_sequence(self) -> None:
-        runner, occurrence, occurrences, lights, audio, alarm, profile = make_runner()
+        runner, occurrence, occurrences, lights, audio, _, profile = make_runner()
 
         with patch("asyncio.sleep"):
             await runner.run(occurrence)
 
         lights.activate_scene.assert_awaited_once_with(
-            alarm.room_name, profile.sunrise_config.scene_name
+            profile.sunrise_config.scene_id,
+            brightness=profile.sunrise_config.brightness_start,
         )
         audio.play.assert_any_await(
             profile.ringtone_config.sound_id, profile.ringtone_config.volume

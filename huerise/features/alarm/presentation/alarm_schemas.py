@@ -58,6 +58,7 @@ class ScheduleSchema(BaseModel):
 class AlarmCreate(BaseModel):
     label: str
     schedule: ScheduleSchema
+    room_id: UUID
     room_name: str
     profile_id: UUID | None = Field(
         default=None, description="Defaults to the default profile."
@@ -69,6 +70,7 @@ class AlarmUpdate(BaseModel):
 
     label: str | None = None
     schedule: ScheduleSchema | None = None
+    room_id: UUID | None = None
     room_name: str | None = None
     profile_id: UUID | None = None
 
@@ -77,6 +79,7 @@ class AlarmRead(BaseModel):
     id: UUID
     label: str
     schedule: ScheduleSchema
+    room_id: UUID
     room_name: str
     profile_id: UUID
     is_enabled: bool
@@ -89,6 +92,7 @@ class AlarmRead(BaseModel):
             id=alarm.id,
             label=alarm.label,
             schedule=ScheduleSchema.from_domain(alarm.schedule),
+            room_id=alarm.room_id,
             room_name=alarm.room_name,
             profile_id=alarm.profile_id,
             is_enabled=alarm.is_enabled,

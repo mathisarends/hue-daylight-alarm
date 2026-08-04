@@ -51,10 +51,24 @@ class AudioOutputRequest(BaseModel):
     output: AudioOutput = Field(description="The output to play on from now on.")
 
 
-class RoomRead(BaseModel):
+class SceneRead(BaseModel):
+    id: UUID
     name: str
-    scene_names: list[str]
+
+
+class RoomRead(BaseModel):
+    id: UUID
+    name: str
+    scenes: list[SceneRead]
 
     @classmethod
     def from_domain(cls, room: Room) -> Self:
-        return cls(name=room.name, scene_names=list(room.scene_names))
+        return cls(
+            id=room.id,
+            name=room.name,
+            scenes=[SceneRead(id=scene.id, name=scene.name) for scene in room.scenes],
+        )
+
+
+class SceneActivationRequest(BaseModel):
+    brightness: float | None = Field(default=None, ge=0, le=100)

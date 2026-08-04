@@ -37,6 +37,7 @@ async def create_alarm(
     alarm = await alarm_service.create(
         label=body.label,
         schedule=body.schedule.to_domain(),
+        room_id=body.room_id,
         room_name=body.room_name,
         profile_id=body.profile_id,
     )
@@ -62,6 +63,7 @@ async def update_alarm(
         alarm_id,
         label=body.label,
         schedule=body.schedule.to_domain() if body.schedule is not None else None,
+        room_id=body.room_id,
         room_name=body.room_name,
         profile_id=body.profile_id,
     )

@@ -1,9 +1,11 @@
 from datetime import timedelta
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 
 from huerise.features.alarm.domain import RingtoneConfig, SunriseConfig
+
+SCENE_ID = UUID("22222222-2222-4222-8222-222222222222")
 
 
 class TestSunriseConfigValidation:
@@ -16,12 +18,19 @@ class TestSunriseConfigValidation:
     ) -> None:
         with pytest.raises(ValueError, match="Invalid brightness range"):
             SunriseConfig(
-                brightness_start=brightness_start, brightness_end=brightness_end
+                scene_id=SCENE_ID,
+                scene_name="Sunrise",
+                brightness_start=brightness_start,
+                brightness_end=brightness_end,
             )
 
     def test_rejects_a_negative_duration(self) -> None:
         with pytest.raises(ValueError, match="duration must not be negative"):
-            SunriseConfig(duration=timedelta(minutes=-1))
+            SunriseConfig(
+                scene_id=SCENE_ID,
+                scene_name="Sunrise",
+                duration=timedelta(minutes=-1),
+            )
 
 
 class TestRingtoneConfigValidation:

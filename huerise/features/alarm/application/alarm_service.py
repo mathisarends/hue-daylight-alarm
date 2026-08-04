@@ -59,6 +59,7 @@ class AlarmService:
         self,
         label: str,
         schedule: Schedule,
+        room_id: UUID,
         room_name: str,
         profile_id: UUID | None = None,
     ) -> Alarm:
@@ -77,6 +78,7 @@ class AlarmService:
             label=label,
             schedule=schedule,
             profile_id=profile.id,
+            room_id=room_id,
             room_name=room_name,
         )
         alarm = await self._alarms.save(alarm)
@@ -88,6 +90,7 @@ class AlarmService:
         alarm_id: UUID,
         label: str | None = None,
         schedule: Schedule | None = None,
+        room_id: UUID | None = None,
         room_name: str | None = None,
         profile_id: UUID | None = None,
     ) -> Alarm:
@@ -99,6 +102,7 @@ class AlarmService:
         changed = alarm.update(
             label=label,
             schedule=schedule,
+            room_id=room_id,
             room_name=room_name,
             profile_id=profile_id,
         )

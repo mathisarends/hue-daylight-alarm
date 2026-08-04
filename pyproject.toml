@@ -5,7 +5,7 @@ description = "Philips Hue sunrise alarm system"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
-    "hueify>=0.6.1",
+    "hueify>=0.7.0",
     "dishka>=1.9.1",
     "pydantic-settings>=2.13.1",
     "sqlmodel>=0.0.27",

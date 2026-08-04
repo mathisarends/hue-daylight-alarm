@@ -1,4 +1,5 @@
 import logging
+from uuid import UUID
 
 from huerise.features.devices.application.ports import Lights
 from huerise.features.devices.domain import (
@@ -19,20 +20,27 @@ class SceneService:
     async def list_rooms(self) -> list[Room]:
         return await self._lights.list_rooms()
 
-    async def get_room(self, room_name: str) -> Room:
+    async def get_room(self, room_id: UUID) -> Room:
         room = next(
-            (r for r in await self._lights.list_rooms() if r.name == room_name),
+            (r for r in await self._lights.list_rooms() if r.id == room_id),
             None,
         )
         if room is None:
-            raise RoomNotFoundError(room_name)
+            raise RoomNotFoundError(str(room_id))
         return room
 
-    async def activate_scene(self, room_name: str, scene_name: str) -> None:
+    async def activate_scene(
+        self,
+        room_id: UUID,
+        scene_id: UUID,
+        *,
+        brightness: float | None = None,
+    ) -> None:
         """Preview a scene the way an alarm would start it."""
-        room = await self.get_room(room_name)
-        if scene_name not in room.scene_names:
-            raise SceneNotFoundError(room_name, scene_name)
+        room = await self.get_room(room_id)
+        scene = next((scene for scene in room.scenes if scene.id == scene_id), None)
+        if scene is None:
+            raise SceneNotFoundError(str(room_id), str(scene_id))
 
-        logger.info("Activating scene '%s' in room '%s'", scene_name, room_name)
-        await self._lights.activate_scene(room_name, scene_name)
+        logger.info("Activating scene '%s' in room '%s'", scene.name, room.name)
+        await self._lights.activate_scene(scene.id, brightness=brightness)
