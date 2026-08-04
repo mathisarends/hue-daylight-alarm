@@ -92,7 +92,8 @@ async def dismiss_alarm(
     alarm_id: UUID,
     alarm_service: FromDishka[AlarmService],
 ) -> OccurrenceRead:
-    return OccurrenceRead.from_domain(await alarm_service.dismiss(alarm_id))
+    occurrence = await alarm_service.dismiss(alarm_id)
+    return OccurrenceRead.from_domain(occurrence)
 
 
 @alarm_router.get(
