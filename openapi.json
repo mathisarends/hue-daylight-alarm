@@ -1,0 +1,1437 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Huerise Alarm API",
+    "description": "API for managing sunrise alarms with Philips Hue. Every endpoint requires an `Authorization: Bearer <token>` header.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/alarms": {
+      "get": {
+        "tags": [
+          "Alarms"
+        ],
+        "summary": "List Alarms",
+        "operationId": "listAlarms",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AlarmRead"
+                  },
+                  "type": "array",
+                  "title": "Response Listalarms"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Alarms"
+        ],
+        "summary": "Create Alarm",
+        "operationId": "create_alarm",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlarmCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlarmRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
+    },
+    "/alarms/{alarm_id}": {
+      "get": {
+        "tags": [
+          "Alarms"
+        ],
+        "summary": "Get Alarm",
+        "operationId": "getAlarm",
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "alarm_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Alarm Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlarmRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Alarms"
+        ],
+        "summary": "Delete Alarm",
+        "operationId": "deleteAlarm",
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "alarm_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Alarm Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/alarms/{alarm_id}/enable": {
+      "post": {
+        "tags": [
+          "Alarms"
+        ],
+        "summary": "Enable Alarm",
+        "operationId": "enableAlarm",
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "alarm_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Alarm Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlarmRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/alarms/{alarm_id}/disable": {
+      "post": {
+        "tags": [
+          "Alarms"
+        ],
+        "summary": "Disable Alarm",
+        "operationId": "disableAlarm",
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "alarm_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Alarm Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlarmRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/alarms/{alarm_id}/snooze": {
+      "post": {
+        "tags": [
+          "Alarms"
+        ],
+        "summary": "Snooze Alarm",
+        "operationId": "snoozeAlarm",
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "alarm_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Alarm Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SnoozeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OccurrenceRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/alarms/{alarm_id}/dismiss": {
+      "post": {
+        "tags": [
+          "Alarms"
+        ],
+        "summary": "Dismiss Alarm",
+        "operationId": "dismissAlarm",
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "alarm_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Alarm Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OccurrenceRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/alarms/{alarm_id}/occurrences": {
+      "get": {
+        "tags": [
+          "Alarms"
+        ],
+        "summary": "List Occurrences",
+        "operationId": "listOccurrences",
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "alarm_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Alarm Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OccurrenceRead"
+                  },
+                  "title": "Response Listoccurrences"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/alarm-profiles": {
+      "get": {
+        "tags": [
+          "Alarm Profiles"
+        ],
+        "summary": "List Profiles",
+        "operationId": "listProfiles",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProfileRead"
+                  },
+                  "type": "array",
+                  "title": "Response Listprofiles"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Alarm Profiles"
+        ],
+        "summary": "Create Profile",
+        "operationId": "createProfile",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
+    },
+    "/sounds": {
+      "get": {
+        "tags": [
+          "Sounds"
+        ],
+        "summary": "List Sounds",
+        "operationId": "list_sounds",
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/SoundCategory",
+              "title": "Category"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SoundRead"
+                  },
+                  "title": "Response List Sounds"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sounds/preview": {
+      "post": {
+        "tags": [
+          "Sounds"
+        ],
+        "summary": "Preview Sound",
+        "description": "Start playback and return immediately -- the sound keeps playing.",
+        "operationId": "preview_sound",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SoundPreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SoundRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
+    },
+    "/sounds/stop": {
+      "post": {
+        "tags": [
+          "Sounds"
+        ],
+        "summary": "Stop Playback",
+        "operationId": "stop_playback",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
+    },
+    "/sounds/volume": {
+      "post": {
+        "tags": [
+          "Sounds"
+        ],
+        "summary": "Set Volume",
+        "operationId": "set_volume",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VolumeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
+    },
+    "/rooms": {
+      "get": {
+        "tags": [
+          "Rooms & Scenes"
+        ],
+        "summary": "List Rooms",
+        "operationId": "list_rooms",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RoomRead"
+                  },
+                  "type": "array",
+                  "title": "Response List Rooms"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
+    },
+    "/rooms/{room_name}": {
+      "get": {
+        "tags": [
+          "Rooms & Scenes"
+        ],
+        "summary": "Get Room",
+        "operationId": "get_room",
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "room_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Room Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rooms/{room_name}/scenes/{scene_name}/activate": {
+      "post": {
+        "tags": [
+          "Rooms & Scenes"
+        ],
+        "summary": "Activate Scene",
+        "description": "Preview a scene the way an alarm would start it.",
+        "operationId": "activate_scene",
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "room_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Room Name"
+            }
+          },
+          {
+            "name": "scene_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Scene Name"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/audio-output": {
+      "get": {
+        "tags": [
+          "Audio Output"
+        ],
+        "summary": "Get Audio Output",
+        "operationId": "get_audio_output",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AudioOutputRead"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Audio Output"
+        ],
+        "summary": "Select Audio Output",
+        "description": "Switch the output. Anything currently playing is stopped first.",
+        "operationId": "select_audio_output",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AudioOutputRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AudioOutputRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AlarmCreate": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "schedule": {
+            "$ref": "#/components/schemas/ScheduleSchema"
+          },
+          "room_name": {
+            "type": "string",
+            "title": "Room Name"
+          },
+          "profile_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profile Id",
+            "description": "Defaults to the default profile."
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "schedule",
+          "room_name"
+        ],
+        "title": "AlarmCreate"
+      },
+      "AlarmRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "schedule": {
+            "$ref": "#/components/schemas/ScheduleSchema"
+          },
+          "room_name": {
+            "type": "string",
+            "title": "Room Name"
+          },
+          "profile_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Profile Id"
+          },
+          "is_enabled": {
+            "type": "boolean",
+            "title": "Is Enabled"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "next_occurrence": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Occurrence"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "schedule",
+          "room_name",
+          "profile_id",
+          "is_enabled",
+          "created_at",
+          "next_occurrence"
+        ],
+        "title": "AlarmRead"
+      },
+      "AudioOutput": {
+        "type": "string",
+        "enum": [
+          "local",
+          "sonos"
+        ],
+        "title": "AudioOutput",
+        "description": "Where alarm and preview audio is played."
+      },
+      "AudioOutputRead": {
+        "properties": {
+          "active": {
+            "$ref": "#/components/schemas/AudioOutput"
+          },
+          "available": {
+            "items": {
+              "$ref": "#/components/schemas/AudioOutput"
+            },
+            "type": "array",
+            "title": "Available"
+          }
+        },
+        "type": "object",
+        "required": [
+          "active",
+          "available"
+        ],
+        "title": "AudioOutputRead",
+        "description": "The device sounds are currently played on."
+      },
+      "AudioOutputRequest": {
+        "properties": {
+          "output": {
+            "$ref": "#/components/schemas/AudioOutput",
+            "description": "The output to play on from now on."
+          }
+        },
+        "type": "object",
+        "required": [
+          "output"
+        ],
+        "title": "AudioOutputRequest"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "IntroSchema": {
+        "properties": {
+          "sound_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Sound Id",
+            "description": "Id of a sound from GET /sounds, e.g. 'wake_up/bowls'."
+          }
+        },
+        "type": "object",
+        "required": [
+          "sound_id"
+        ],
+        "title": "IntroSchema"
+      },
+      "OccurrenceRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "alarm_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Alarm Id"
+          },
+          "scheduled_for": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Scheduled For"
+          },
+          "state": {
+            "$ref": "#/components/schemas/OccurrenceState"
+          },
+          "triggered_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Triggered At"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "snooze_count": {
+            "type": "integer",
+            "title": "Snooze Count"
+          },
+          "failure_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "alarm_id",
+          "scheduled_for",
+          "state",
+          "triggered_at",
+          "finished_at",
+          "snooze_count",
+          "failure_reason"
+        ],
+        "title": "OccurrenceRead"
+      },
+      "OccurrenceState": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "sunrise",
+          "ringing",
+          "snoozed",
+          "dismissed",
+          "skipped",
+          "failed"
+        ],
+        "title": "OccurrenceState"
+      },
+      "ProfileCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "intro": {
+            "$ref": "#/components/schemas/IntroSchema"
+          },
+          "ringtone": {
+            "$ref": "#/components/schemas/RingtoneSchema"
+          },
+          "sunrise": {
+            "$ref": "#/components/schemas/SunriseSchema",
+            "default": {
+              "scene_name": "Tageslichtwecker",
+              "duration_minutes": 7,
+              "brightness_start": 1,
+              "brightness_end": 100
+            }
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "intro",
+          "ringtone"
+        ],
+        "title": "ProfileCreate"
+      },
+      "ProfileRead": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "intro": {
+            "$ref": "#/components/schemas/IntroSchema"
+          },
+          "ringtone": {
+            "$ref": "#/components/schemas/RingtoneSchema"
+          },
+          "sunrise": {
+            "$ref": "#/components/schemas/SunriseSchema",
+            "default": {
+              "scene_name": "Tageslichtwecker",
+              "duration_minutes": 7,
+              "brightness_start": 1,
+              "brightness_end": 100
+            }
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "is_default": {
+            "type": "boolean",
+            "title": "Is Default"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "intro",
+          "ringtone",
+          "id",
+          "is_default"
+        ],
+        "title": "ProfileRead",
+        "description": "Everything a profile is created with, plus what the server owns."
+      },
+      "RingtoneSchema": {
+        "properties": {
+          "sound_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Sound Id",
+            "description": "Id of a sound from GET /sounds, e.g. 'wake_up/bowls'."
+          },
+          "volume": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Volume",
+            "default": 80
+          }
+        },
+        "type": "object",
+        "required": [
+          "sound_id"
+        ],
+        "title": "RingtoneSchema"
+      },
+      "RoomRead": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "scene_names": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Scene Names"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "scene_names"
+        ],
+        "title": "RoomRead"
+      },
+      "ScheduleSchema": {
+        "properties": {
+          "hour": {
+            "type": "integer",
+            "maximum": 23.0,
+            "minimum": 0.0,
+            "title": "Hour"
+          },
+          "minute": {
+            "type": "integer",
+            "maximum": 59.0,
+            "minimum": 0.0,
+            "title": "Minute"
+          },
+          "timezone": {
+            "type": "string",
+            "title": "Timezone",
+            "description": "IANA zone. The alarm keeps its wall-clock time across DST.",
+            "default": "Europe/Berlin"
+          },
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/Weekday"
+            },
+            "type": "array",
+            "title": "Days",
+            "description": "Empty means the alarm fires once, then disables itself."
+          }
+        },
+        "type": "object",
+        "required": [
+          "hour",
+          "minute"
+        ],
+        "title": "ScheduleSchema",
+        "description": "When an alarm fires, as wall-clock time in a named zone."
+      },
+      "SnoozeRequest": {
+        "properties": {
+          "minutes": {
+            "type": "integer",
+            "maximum": 60.0,
+            "minimum": 1.0,
+            "title": "Minutes",
+            "default": 10
+          }
+        },
+        "type": "object",
+        "title": "SnoozeRequest"
+      },
+      "SoundCategory": {
+        "type": "string",
+        "enum": [
+          "wake_up",
+          "get_up"
+        ],
+        "title": "SoundCategory"
+      },
+      "SoundPreviewRequest": {
+        "properties": {
+          "sound_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Sound Id"
+          },
+          "volume": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Volume",
+            "default": 60
+          }
+        },
+        "type": "object",
+        "required": [
+          "sound_id"
+        ],
+        "title": "SoundPreviewRequest"
+      },
+      "SoundRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "Store this UUID in a profile."
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "category": {
+            "$ref": "#/components/schemas/SoundCategory"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "category"
+        ],
+        "title": "SoundRead",
+        "description": "A sound as an alarm profile refers to it."
+      },
+      "SunriseSchema": {
+        "properties": {
+          "scene_name": {
+            "type": "string",
+            "title": "Scene Name",
+            "description": "Name of a Hue scene from GET /rooms/{room_name}.",
+            "default": "Tageslichtwecker"
+          },
+          "duration_minutes": {
+            "type": "integer",
+            "maximum": 120.0,
+            "minimum": 0.0,
+            "title": "Duration Minutes",
+            "default": 7
+          },
+          "brightness_start": {
+            "type": "integer",
+            "maximum": 99.0,
+            "minimum": 1.0,
+            "title": "Brightness Start",
+            "default": 1
+          },
+          "brightness_end": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 2.0,
+            "title": "Brightness End",
+            "default": 100
+          }
+        },
+        "type": "object",
+        "title": "SunriseSchema"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "VolumeRequest": {
+        "properties": {
+          "volume": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Volume"
+          }
+        },
+        "type": "object",
+        "required": [
+          "volume"
+        ],
+        "title": "VolumeRequest"
+      },
+      "Weekday": {
+        "type": "integer",
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "title": "Weekday"
+      }
+    },
+    "securitySchemes": {
+      "AccessToken": {
+        "type": "http",
+        "description": "Send the API access token as `Authorization: Bearer <token>`.",
+        "scheme": "bearer"
+      }
+    }
+  }
+}
