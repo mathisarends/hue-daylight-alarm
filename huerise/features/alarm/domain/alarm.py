@@ -26,6 +26,36 @@ class Alarm(Aggregate):
         self.room_name = room_name
         self.is_enabled = is_enabled
 
+    def update(
+        self,
+        label: str | None = None,
+        schedule: Schedule | None = None,
+        room_name: str | None = None,
+        profile_id: UUID | None = None,
+    ) -> list[str]:
+        """Apply the fields that were given, naming the ones that really moved.
+
+        None means "leave alone" -- none of these fields is nullable, so no
+        separate sentinel is needed. The returned names drive change
+        notification, so a value re-sent unchanged must not appear.
+        """
+        changed: list[str] = []
+
+        if label is not None and label != self.label:
+            self.label = label
+            changed.append("label")
+        if schedule is not None and schedule != self.schedule:
+            self.schedule = schedule
+            changed.append("schedule")
+        if room_name is not None and room_name != self.room_name:
+            self.room_name = room_name
+            changed.append("room_name")
+        if profile_id is not None and profile_id != self.profile_id:
+            self.profile_id = profile_id
+            changed.append("profile_id")
+
+        return changed
+
     def enable(self) -> None:
         if self.is_enabled:
             raise AlarmAlreadyInStateError(self.id, enabled=True)

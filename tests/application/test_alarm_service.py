@@ -101,6 +101,68 @@ class TestCreateAlarm:
             )
 
 
+class TestUpdateAlarm:
+    async def test_changes_only_what_was_sent(self) -> None:
+        alarm = make_alarm(hour=7, minute=0)
+        service = make_alarm_service(alarms=InMemoryAlarmRepository([alarm]))
+
+        result = await service.update(alarm.id, label="Weekend")
+
+        assert result.label == "Weekend"
+        assert result.schedule.hour == 7
+
+    async def test_raises_for_an_unknown_alarm(self) -> None:
+        service = make_alarm_service()
+
+        with pytest.raises(AlarmNotFoundError):
+            await service.update(uuid4(), label="Weekend")
+
+    async def test_rejects_an_unknown_profile_without_touching_the_alarm(self) -> None:
+        alarm = make_alarm()
+        service = make_alarm_service(alarms=InMemoryAlarmRepository([alarm]))
+
+        with pytest.raises(AlarmProfileNotFoundError):
+            await service.update(alarm.id, label="Weekend", profile_id=uuid4())
+
+        assert alarm.label == "Morning"
+
+    async def test_rescheduling_skips_the_run_queued_for_the_old_time(self) -> None:
+        alarm = make_alarm(hour=7, minute=0)
+        occurrence = make_occurrence(alarm.id, NOW)
+        occurrences = InMemoryOccurrenceRepository([occurrence])
+        service = make_alarm_service(
+            alarms=InMemoryAlarmRepository([alarm]), occurrences=occurrences
+        )
+
+        await service.update(alarm.id, schedule=Schedule(hour=9, minute=0))
+
+        assert occurrence.state is OccurrenceState.SKIPPED
+
+    async def test_a_change_other_than_the_time_keeps_the_queued_run(self) -> None:
+        alarm = make_alarm()
+        occurrence = make_occurrence(alarm.id, NOW)
+        occurrences = InMemoryOccurrenceRepository([occurrence])
+        service = make_alarm_service(
+            alarms=InMemoryAlarmRepository([alarm]), occurrences=occurrences
+        )
+
+        await service.update(alarm.id, label="Weekend")
+
+        assert occurrence.state is OccurrenceState.PENDING
+
+    async def test_rescheduling_leaves_a_sunrise_already_running(self) -> None:
+        alarm = make_alarm(hour=7, minute=0)
+        occurrence = make_occurrence(alarm.id, NOW, OccurrenceState.SUNRISE)
+        occurrences = InMemoryOccurrenceRepository([occurrence])
+        service = make_alarm_service(
+            alarms=InMemoryAlarmRepository([alarm]), occurrences=occurrences
+        )
+
+        await service.update(alarm.id, schedule=Schedule(hour=9, minute=0))
+
+        assert occurrence.state is OccurrenceState.SUNRISE
+
+
 class TestEnableDisable:
     async def test_enable_reactivates_the_alarm(self) -> None:
         alarm = make_alarm(is_enabled=False)

@@ -7,6 +7,7 @@ from huerise.features.alarm.application import AlarmService
 from huerise.features.alarm.presentation.alarm_schemas import (
     AlarmCreate,
     AlarmRead,
+    AlarmUpdate,
     OccurrenceRead,
     SnoozeRequest,
 )
@@ -48,6 +49,22 @@ async def get_alarm(
     alarm_service: FromDishka[AlarmService],
 ) -> AlarmRead:
     alarm = await alarm_service.find_by_id(alarm_id)
+    return AlarmRead.from_domain(alarm)
+
+
+@alarm_router.patch("/{alarm_id}", response_model=AlarmRead, operation_id="updateAlarm")
+async def update_alarm(
+    alarm_id: UUID,
+    body: AlarmUpdate,
+    alarm_service: FromDishka[AlarmService],
+) -> AlarmRead:
+    alarm = await alarm_service.update(
+        alarm_id,
+        label=body.label,
+        schedule=body.schedule.to_domain() if body.schedule is not None else None,
+        room_name=body.room_name,
+        profile_id=body.profile_id,
+    )
     return AlarmRead.from_domain(alarm)
 
 

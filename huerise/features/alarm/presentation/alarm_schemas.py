@@ -64,6 +64,15 @@ class AlarmCreate(BaseModel):
     )
 
 
+class AlarmUpdate(BaseModel):
+    """A partial change. Omitted fields keep their current value."""
+
+    label: str | None = None
+    schedule: ScheduleSchema | None = None
+    room_name: str | None = None
+    profile_id: UUID | None = None
+
+
 class AlarmRead(BaseModel):
     id: UUID
     label: str

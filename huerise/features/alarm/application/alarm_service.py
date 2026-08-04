@@ -11,6 +11,7 @@ from huerise.features.alarm.domain import (
     AlarmProfileRepository,
     AlarmRepository,
     NoActiveOccurrenceError,
+    OccurrenceState,
     Schedule,
 )
 from huerise.features.devices.application import AudioPlayer
@@ -66,6 +67,33 @@ class AlarmService:
         )
         return await self._alarms.save(alarm)
 
+    async def update(
+        self,
+        alarm_id: UUID,
+        label: str | None = None,
+        schedule: Schedule | None = None,
+        room_name: str | None = None,
+        profile_id: UUID | None = None,
+    ) -> Alarm:
+        """Change a wake-up rule. Omitted fields keep their current value."""
+        alarm = await self.find_by_id(alarm_id)
+        if profile_id is not None:
+            await self._resolve_profile(profile_id)
+
+        changed = alarm.update(
+            label=label,
+            schedule=schedule,
+            room_name=room_name,
+            profile_id=profile_id,
+        )
+        if not changed:
+            return alarm
+
+        logger.info("Updating alarm %s (%s)", alarm_id, ", ".join(changed))
+        if "schedule" in changed:
+            await self._drop_pending_occurrence(alarm_id)
+        return await self._alarms.save(alarm)
+
     async def enable(self, alarm_id: UUID) -> Alarm:
         logger.info("Enabling alarm %s", alarm_id)
         alarm = await self.find_by_id(alarm_id)
@@ -113,6 +141,19 @@ class AlarmService:
         if profile is None:
             raise AlarmProfileNotFoundError(profile_id)
         return profile
+
+    async def _drop_pending_occurrence(self, alarm_id: UUID) -> None:
+        """Retire the run materialised for the old time, so it cannot still fire.
+
+        Only a pending run is dropped. A sunrise already underway, or a snooze
+        belonging to it, is about the current wake-up and outlives a change to
+        tomorrow's schedule.
+        """
+        occurrence = await self._occurrences.find_active_for_alarm(alarm_id)
+        if occurrence is None or occurrence.state is not OccurrenceState.PENDING:
+            return
+        occurrence.skip()
+        await self._occurrences.save(occurrence)
 
     async def _cancel_active_occurrence(self, alarm_id: UUID) -> None:
         occurrence = await self._occurrences.find_active_for_alarm(alarm_id)
