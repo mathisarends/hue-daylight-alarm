@@ -4,12 +4,18 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from huerise.features.events.application import NextAlarmTracker
 from huerise.features.scheduler.application import AlarmScheduler
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     scheduler = await app.state.dishka_container.get(AlarmScheduler)
+
+    # Resolving the tracker is what subscribes it to the bus; nothing asks for
+    # it later, so without this the derived events would never be emitted.
+    tracker = await app.state.dishka_container.get(NextAlarmTracker)
+    await tracker.start()
 
     task = asyncio.create_task(scheduler.run())
     try:

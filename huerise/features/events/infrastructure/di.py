@@ -3,7 +3,12 @@ from collections.abc import Iterator
 from dishka import Provider, Scope, alias, provide
 from transitbus import EventBus
 
-from huerise.features.events.application import EventPublisher, EventStreamHub
+from huerise.features.alarm.domain import AlarmUnitOfWorkFactory
+from huerise.features.events.application import (
+    EventPublisher,
+    EventStreamHub,
+    NextAlarmTracker,
+)
 
 # How many events stay available for replay to a reconnecting client. One
 # wake-up costs roughly 80, so this covers a good many of them.
@@ -22,5 +27,11 @@ class EventsProvider(Provider):
         hub = EventStreamHub(bus)
         yield hub
         hub.close()
+
+    @provide
+    def next_alarm_tracker(
+        self, bus: EventBus, unit_of_work_factory: AlarmUnitOfWorkFactory
+    ) -> NextAlarmTracker:
+        return NextAlarmTracker(bus, unit_of_work_factory)
 
     publisher = alias(source=EventStreamHub, provides=EventPublisher)
