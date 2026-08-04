@@ -1,7 +1,8 @@
 from datetime import UTC, datetime, timedelta
 from unittest.mock import patch
 
-from huerise.features.alarm.domain import OccurrenceState, SunriseConfig
+from huerise.features.alarm.domain import OccurrenceState
+from huerise.features.devices.domain import SunriseRamp, sunrise_steps
 from huerise.features.events.domain import (
     OccurrenceDismissed,
     OccurrenceFailed,
@@ -10,9 +11,7 @@ from huerise.features.events.domain import (
     OccurrenceStarted,
 )
 from huerise.features.runner.application import AlarmRunner
-from huerise.features.runner.application.sunrise import sunrise_steps
 from tests.application.conftest import (
-    SCENE_ID,
     FakeUnitOfWork,
     FakeUnitOfWorkFactory,
     InMemoryAlarmRepository,
@@ -28,6 +27,15 @@ from tests.application.conftest import (
 
 NOW = datetime(2026, 8, 3, 5, 0, tzinfo=UTC)
 STEP = timedelta(seconds=6)
+
+
+def ramp_of(profile) -> SunriseRamp:
+    sunrise = profile.sunrise_config
+    return SunriseRamp(
+        duration=sunrise.duration,
+        brightness_start=sunrise.brightness_start,
+        brightness_end=sunrise.brightness_end,
+    )
 
 
 def make_runner(
@@ -55,49 +63,6 @@ def make_runner(
     return runner, occurrence, occurrences, lights, audio, alarm, profile
 
 
-class TestSunriseSteps:
-    def test_derives_step_count_from_duration(self) -> None:
-        config = SunriseConfig(
-            scene_id=SCENE_ID, scene_name="Sunrise", duration=timedelta(minutes=1)
-        )
-
-        assert len(list(sunrise_steps(config, STEP))) == 10
-
-    def test_walks_from_start_to_end_brightness(self) -> None:
-        config = SunriseConfig(
-            scene_id=SCENE_ID,
-            scene_name="Sunrise",
-            duration=timedelta(minutes=1),
-            brightness_start=10,
-            brightness_end=100,
-        )
-
-        brightness = [step.brightness for step in sunrise_steps(config, STEP)]
-
-        assert brightness[0] == 10
-        assert brightness[-1] == 100
-        assert brightness == sorted(brightness)
-
-    def test_always_yields_at_least_one_step(self) -> None:
-        config = SunriseConfig(
-            scene_id=SCENE_ID, scene_name="Sunrise", duration=timedelta(0)
-        )
-
-        assert [step.brightness for step in sunrise_steps(config, STEP)] == [1]
-
-    def test_each_step_knows_its_place_in_the_whole_sunrise(self) -> None:
-        config = SunriseConfig(
-            scene_id=SCENE_ID, scene_name="Sunrise", duration=timedelta(minutes=1)
-        )
-
-        steps = list(sunrise_steps(config, STEP))
-
-        assert [step.index for step in steps] == list(range(10))
-        assert {step.total for step in steps} == {10}
-        assert steps[3].elapsed_seconds == 18
-        assert steps[3].total_seconds == 60
-
-
 class TestRun:
     async def test_runs_the_full_sequence(self) -> None:
         runner, occurrence, occurrences, lights, audio, _, profile = make_runner()
@@ -120,7 +85,7 @@ class TestRun:
         with patch("asyncio.sleep"):
             await runner.run(occurrence)
 
-        expected = len(list(sunrise_steps(profile.sunrise_config, STEP)))
+        expected = len(list(sunrise_steps(ramp_of(profile), STEP)))
         assert lights.set_brightness.await_count == expected
 
     async def test_stops_when_the_occurrence_is_dismissed_mid_sunrise(self) -> None:
@@ -173,7 +138,7 @@ class TestPublishedEvents:
 
         progress = events.of_type(OccurrenceProgress)
         assert [event.brightness for event in progress] == [
-            step.brightness for step in sunrise_steps(profile.sunrise_config, STEP)
+            step.brightness for step in sunrise_steps(ramp_of(profile), STEP)
         ]
         assert progress[-1].percent == 100.0
 

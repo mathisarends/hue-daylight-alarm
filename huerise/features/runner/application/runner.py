@@ -11,6 +11,7 @@ from huerise.features.alarm.domain import (
     OccurrenceState,
 )
 from huerise.features.devices.application import AudioPlayer, Lights
+from huerise.features.devices.domain import STEP_INTERVAL, SunriseRamp, sunrise_steps
 from huerise.features.events.application import EventPublisher
 from huerise.features.events.domain import (
     OccurrenceDismissed,
@@ -23,7 +24,6 @@ from huerise.features.events.domain import (
 from huerise.features.runner.application.runner_port import (
     AlarmRunner as AlarmRunnerPort,
 )
-from huerise.features.runner.application.sunrise import STEP_INTERVAL, sunrise_steps
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +91,12 @@ class AlarmRunner(AlarmRunnerPort):
             sunrise.scene_id, brightness=sunrise.brightness_start
         )
 
-        for step in sunrise_steps(sunrise, self._step_interval):
+        ramp = SunriseRamp(
+            duration=sunrise.duration,
+            brightness_start=sunrise.brightness_start,
+            brightness_end=sunrise.brightness_end,
+        )
+        for step in sunrise_steps(ramp, self._step_interval):
             if not await self._still_in_state(occurrence.id, OccurrenceState.SUNRISE):
                 logger.info("Sunrise for %s interrupted", occurrence.id)
                 return
