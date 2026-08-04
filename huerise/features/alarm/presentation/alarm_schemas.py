@@ -33,8 +33,8 @@ class ScheduleSchema(BaseModel):
     def _known_timezone(cls, value: str) -> str:
         try:
             ZoneInfo(value)
-        except ZoneInfoNotFoundError:
-            raise ValueError(f"Unknown timezone: {value}")
+        except ZoneInfoNotFoundError as err:
+            raise ValueError(f"Unknown timezone: {value}") from err
         return value
 
     def to_domain(self) -> Schedule:

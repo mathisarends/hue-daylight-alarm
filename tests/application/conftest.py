@@ -165,7 +165,7 @@ class FakeUnitOfWork(AlarmUnitOfWork):
         self.profiles = profiles
         self.occurrences = occurrences
 
-    async def __aenter__(self) -> "FakeUnitOfWork":
+    async def __aenter__(self) -> FakeUnitOfWork:
         return self
 
     async def __aexit__(

@@ -20,7 +20,7 @@ class SQLAlarmUnitOfWork(AlarmUnitOfWork):
         self._session_factory = session_factory
         self._session: AsyncSession | None = None
 
-    async def __aenter__(self) -> "SQLAlarmUnitOfWork":
+    async def __aenter__(self) -> SQLAlarmUnitOfWork:
         self._session = self._session_factory()
         self.alarms = SQLAlarmRepository(self._session)
         self.profiles = SQLAlarmProfileRepository(self._session)

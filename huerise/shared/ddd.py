@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 
@@ -8,7 +8,7 @@ class Entity:
     ) -> None:
         self.id: UUID = id if id is not None else uuid4()
         self.created_at: datetime = (
-            created_at if created_at is not None else datetime.now(timezone.utc)
+            created_at if created_at is not None else datetime.now(UTC)
         )
 
 

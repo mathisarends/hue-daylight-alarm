@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import UUID
 
 from huerise.features.alarm.domain.exceptions import AlarmAlreadyInStateError
@@ -40,4 +40,4 @@ class Alarm(Aggregate):
         """Next UTC instant this alarm fires, or None while disabled."""
         if not self.is_enabled:
             return None
-        return self.schedule.next_occurrence(after or datetime.now(timezone.utc))
+        return self.schedule.next_occurrence(after or datetime.now(UTC))

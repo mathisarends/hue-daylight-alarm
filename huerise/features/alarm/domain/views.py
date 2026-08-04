@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from datetime import datetime, time, timedelta, timezone
+from datetime import UTC, datetime, time, timedelta
 from enum import IntEnum, StrEnum
 from uuid import UUID
 from zoneinfo import ZoneInfo
@@ -64,7 +64,7 @@ class Schedule:
     @classmethod
     def from_mask(
         cls, hour: int, minute: int, tz: ZoneInfo, recurrence_mask: int
-    ) -> "Schedule":
+    ) -> Schedule:
         weekdays = frozenset(
             Weekday(day) for day in range(_DAYS_IN_WEEK) if recurrence_mask >> day & 1
         )
@@ -106,7 +106,7 @@ class Schedule:
         local = datetime.combine(day, time(self.hour, self.minute)).replace(
             tzinfo=self.tz, fold=0
         )
-        return local.astimezone(timezone.utc)
+        return local.astimezone(UTC)
 
 
 @dataclass(frozen=True)

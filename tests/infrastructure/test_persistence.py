@@ -1,5 +1,5 @@
 from collections.abc import AsyncIterator
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 import pytest_asyncio
@@ -16,7 +16,7 @@ from huerise.features.alarm.infrastructure.persistence import (
 from huerise.infrastructure.database.models import OCCURRENCE_STATES
 from tests.application.conftest import make_alarm, make_occurrence, make_profile
 
-NOW = datetime(2026, 8, 3, 5, 0, tzinfo=timezone.utc)
+NOW = datetime(2026, 8, 3, 5, 0, tzinfo=UTC)
 
 
 @pytest_asyncio.fixture
@@ -29,7 +29,7 @@ async def session_factory() -> AsyncIterator[async_sessionmaker]:
 
 
 def test_orm_states_match_the_domain_enum() -> None:
-    assert OCCURRENCE_STATES == tuple(state.value for state in OccurrenceState)
+    assert tuple(state.value for state in OccurrenceState) == OCCURRENCE_STATES
 
 
 class TestRoundtrip:

@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest.mock import patch
 
 from huerise.features.alarm.domain import OccurrenceState, SunriseConfig
@@ -17,7 +17,7 @@ from tests.application.conftest import (
     make_profile,
 )
 
-NOW = datetime(2026, 8, 3, 5, 0, tzinfo=timezone.utc)
+NOW = datetime(2026, 8, 3, 5, 0, tzinfo=UTC)
 STEP = timedelta(seconds=6)
 
 

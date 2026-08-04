@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -9,7 +9,7 @@ BERLIN = ZoneInfo("Europe/Berlin")
 
 
 def utc(*args: int) -> datetime:
-    return datetime(*args, tzinfo=timezone.utc)
+    return datetime(*args, tzinfo=UTC)
 
 
 def local(*args: int) -> datetime:

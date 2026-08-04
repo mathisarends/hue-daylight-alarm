@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
@@ -12,7 +12,7 @@ from huerise.features.alarm.domain import (
 )
 
 BERLIN = ZoneInfo("Europe/Berlin")
-NOW = datetime(2026, 8, 3, 4, 0, tzinfo=timezone.utc)
+NOW = datetime(2026, 8, 3, 4, 0, tzinfo=UTC)
 
 
 def make_alarm(is_enabled: bool = True, weekdays: frozenset[Weekday] = frozenset()):
@@ -51,7 +51,7 @@ class TestNextOccurrence:
         alarm = make_alarm()
 
         assert alarm.next_occurrence(NOW) == datetime(
-            2026, 8, 3, 5, 0, tzinfo=timezone.utc
+            2026, 8, 3, 5, 0, tzinfo=UTC
         )
 
     def test_returns_none_while_disabled(self) -> None:

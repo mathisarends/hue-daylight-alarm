@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 from huerise.features.alarm.domain.exceptions import (
@@ -61,7 +61,7 @@ class AlarmOccurrence(Entity):
     def start_sunrise(self, now: datetime | None = None) -> None:
         self._require(_WAITING_STATES, OccurrenceState.SUNRISE)
         self.state = OccurrenceState.SUNRISE
-        self.triggered_at = now or datetime.now(timezone.utc)
+        self.triggered_at = now or datetime.now(UTC)
 
     def ring(self) -> None:
         self._require({OccurrenceState.SUNRISE}, OccurrenceState.RINGING)
@@ -70,13 +70,13 @@ class AlarmOccurrence(Entity):
     def dismiss(self, now: datetime | None = None) -> None:
         self._require(_RUNNING_STATES | _WAITING_STATES, OccurrenceState.DISMISSED)
         self.state = OccurrenceState.DISMISSED
-        self.finished_at = now or datetime.now(timezone.utc)
+        self.finished_at = now or datetime.now(UTC)
 
     def snooze(self, minutes: int = 10, now: datetime | None = None) -> None:
         if not self.is_running:
             raise OccurrenceNotRunningError(self.id)
         self.state = OccurrenceState.SNOOZED
-        self.scheduled_for = (now or datetime.now(timezone.utc)) + timedelta(
+        self.scheduled_for = (now or datetime.now(UTC)) + timedelta(
             minutes=minutes
         )
         self.snooze_count += 1
@@ -85,12 +85,12 @@ class AlarmOccurrence(Entity):
         """Drop a run that is no longer worth firing, e.g. missed while offline."""
         self._require(_WAITING_STATES, OccurrenceState.SKIPPED)
         self.state = OccurrenceState.SKIPPED
-        self.finished_at = now or datetime.now(timezone.utc)
+        self.finished_at = now or datetime.now(UTC)
 
     def fail(self, reason: str, now: datetime | None = None) -> None:
         self.state = OccurrenceState.FAILED
         self.failure_reason = reason
-        self.finished_at = now or datetime.now(timezone.utc)
+        self.finished_at = now or datetime.now(UTC)
 
     def _require(self, allowed: set[OccurrenceState], target: OccurrenceState) -> None:
         if self.state not in allowed:

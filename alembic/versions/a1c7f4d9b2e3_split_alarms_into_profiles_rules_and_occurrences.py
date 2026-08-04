@@ -14,7 +14,6 @@ Create Date: 2026-08-03
 """
 
 from collections.abc import Sequence
-from typing import Union
 from uuid import UUID
 
 import sqlalchemy as sa
@@ -23,9 +22,9 @@ import sqlmodel
 from alembic import op
 
 revision: str = "a1c7f4d9b2e3"
-down_revision: Union[str, Sequence[str], None] = "6e482063878e"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | Sequence[str] | None = "6e482063878e"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 DEFAULT_PROFILE_ID = UUID("0198f0c4-0000-7000-8000-000000000001")
 

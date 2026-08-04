@@ -39,6 +39,7 @@ class AlarmRunner(AlarmRunnerPort):
         self._audio = audio
         self._unit_of_work_factory = unit_of_work_factory
         self._step_interval = step_interval
+        self._intro_tasks: set[asyncio.Task[None]] = set()
 
     async def run(self, occurrence: AlarmOccurrence) -> None:
         try:
@@ -62,9 +63,11 @@ class AlarmRunner(AlarmRunnerPort):
     ) -> None:
         sunrise = profile.sunrise_config
 
-        asyncio.create_task(
+        intro_task = asyncio.create_task(
             self._audio.play(profile.intro_config.sound_id, volume=INTRO_VOLUME)
         )
+        self._intro_tasks.add(intro_task)
+        intro_task.add_done_callback(self._intro_finished)
         await self._lights.activate_scene(alarm.room_name, sunrise.scene_name)
 
         for brightness in sunrise_steps(sunrise, self._step_interval):
@@ -73,6 +76,15 @@ class AlarmRunner(AlarmRunnerPort):
                 return
             await self._lights.set_brightness(alarm.room_name, brightness)
             await asyncio.sleep(self._step_interval.total_seconds())
+
+    def _intro_finished(self, task: asyncio.Task[None]) -> None:
+        self._intro_tasks.discard(task)
+        if task.cancelled():
+            return
+        try:
+            task.result()
+        except Exception:
+            logger.exception("Intro playback failed")
 
     async def _run_ringtone(self, profile: AlarmProfile) -> None:
         ringtone = profile.ringtone_config

@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from huerise.features.alarm.domain import (
     AlarmOccurrence,
@@ -47,7 +47,7 @@ class AlarmScheduler:
             await asyncio.sleep(self._tick_interval.total_seconds())
 
     async def tick(self, now: datetime | None = None) -> None:
-        now = now or datetime.now(timezone.utc)
+        now = now or datetime.now(UTC)
         await self._materialise(now)
         for occurrence in await self._claim_due(now):
             self._spawn(occurrence)

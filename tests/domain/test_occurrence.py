@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import pytest
@@ -10,7 +10,7 @@ from huerise.features.alarm.domain import (
     OccurrenceState,
 )
 
-NOW = datetime(2026, 8, 3, 5, 0, tzinfo=timezone.utc)
+NOW = datetime(2026, 8, 3, 5, 0, tzinfo=UTC)
 
 
 def make_occurrence(

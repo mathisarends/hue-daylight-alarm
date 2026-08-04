@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock
 
 from huerise.features.alarm.domain import OccurrenceState, Weekday
@@ -17,8 +17,8 @@ from tests.application.conftest import (
 )
 
 # 2026-08-03 is a Monday. 04:00 UTC == 06:00 Berlin.
-NOW = datetime(2026, 8, 3, 4, 0, tzinfo=timezone.utc)
-SEVEN_BERLIN = datetime(2026, 8, 3, 5, 0, tzinfo=timezone.utc)
+NOW = datetime(2026, 8, 3, 4, 0, tzinfo=UTC)
+SEVEN_BERLIN = datetime(2026, 8, 3, 5, 0, tzinfo=UTC)
 
 
 def make_runner() -> AlarmRunner:
