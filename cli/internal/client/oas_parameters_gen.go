@@ -67,3 +67,8 @@ type SnoozeAlarmParams struct {
 type StreamEventsParams struct {
 	LastEventID OptString `json:",omitempty,omitzero"`
 }
+
+// UpdateAlarmParams is parameters of updateAlarm operation.
+type UpdateAlarmParams struct {
+	AlarmID uuid.UUID
+}

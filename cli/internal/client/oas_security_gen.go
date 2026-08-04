@@ -40,6 +40,7 @@ var operationRolesAccessToken = map[string][]string{
 	SnoozeAlarmOperation:       []string{},
 	StopPlaybackOperation:      []string{},
 	StreamEventsOperation:      []string{},
+	UpdateAlarmOperation:       []string{},
 }
 
 // GetRolesForAccessToken returns the required roles for the given operation.

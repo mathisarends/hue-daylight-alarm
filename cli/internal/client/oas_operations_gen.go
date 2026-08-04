@@ -28,4 +28,5 @@ const (
 	SnoozeAlarmOperation       OperationName = "SnoozeAlarm"
 	StopPlaybackOperation      OperationName = "StopPlayback"
 	StreamEventsOperation      OperationName = "StreamEvents"
+	UpdateAlarmOperation       OperationName = "UpdateAlarm"
 )

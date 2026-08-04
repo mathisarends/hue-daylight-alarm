@@ -68,3 +68,7 @@ type SnoozeAlarmRes interface {
 type StreamEventsRes interface {
 	streamEventsRes()
 }
+
+type UpdateAlarmRes interface {
+	updateAlarmRes()
+}

@@ -9,7 +9,7 @@
     "/alarms": {
       "get": {
         "tags": [
-          "Alarms"
+          "alarms"
         ],
         "summary": "List Alarms",
         "operationId": "listAlarms",
@@ -37,7 +37,7 @@
       },
       "post": {
         "tags": [
-          "Alarms"
+          "alarms"
         ],
         "summary": "Create Alarm",
         "operationId": "create_alarm",
@@ -83,7 +83,7 @@
     "/alarms/{alarm_id}": {
       "get": {
         "tags": [
-          "Alarms"
+          "alarms"
         ],
         "summary": "Get Alarm",
         "operationId": "getAlarm",
@@ -127,9 +127,65 @@
           }
         }
       },
+      "patch": {
+        "tags": [
+          "alarms"
+        ],
+        "summary": "Update Alarm",
+        "operationId": "updateAlarm",
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "alarm_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Alarm Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlarmUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlarmRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "delete": {
         "tags": [
-          "Alarms"
+          "alarms"
         ],
         "summary": "Delete Alarm",
         "operationId": "deleteAlarm",
@@ -170,7 +226,7 @@
     "/alarms/{alarm_id}/enable": {
       "post": {
         "tags": [
-          "Alarms"
+          "alarms"
         ],
         "summary": "Enable Alarm",
         "operationId": "enableAlarm",
@@ -218,7 +274,7 @@
     "/alarms/{alarm_id}/disable": {
       "post": {
         "tags": [
-          "Alarms"
+          "alarms"
         ],
         "summary": "Disable Alarm",
         "operationId": "disableAlarm",
@@ -266,7 +322,7 @@
     "/alarms/{alarm_id}/snooze": {
       "post": {
         "tags": [
-          "Alarms"
+          "alarms"
         ],
         "summary": "Snooze Alarm",
         "operationId": "snoozeAlarm",
@@ -324,7 +380,7 @@
     "/alarms/{alarm_id}/dismiss": {
       "post": {
         "tags": [
-          "Alarms"
+          "alarms"
         ],
         "summary": "Dismiss Alarm",
         "operationId": "dismissAlarm",
@@ -372,7 +428,7 @@
     "/alarms/{alarm_id}/occurrences": {
       "get": {
         "tags": [
-          "Alarms"
+          "alarms"
         ],
         "summary": "List Occurrences",
         "operationId": "listOccurrences",
@@ -434,7 +490,7 @@
     "/alarm-profiles": {
       "get": {
         "tags": [
-          "Alarm Profiles"
+          "alarm-profiles"
         ],
         "summary": "List Profiles",
         "operationId": "listProfiles",
@@ -462,7 +518,7 @@
       },
       "post": {
         "tags": [
-          "Alarm Profiles"
+          "alarm-profiles"
         ],
         "summary": "Create Profile",
         "operationId": "createProfile",
@@ -508,7 +564,7 @@
     "/alarm-profiles/{profile_id}": {
       "delete": {
         "tags": [
-          "Alarm Profiles"
+          "alarm-profiles"
         ],
         "summary": "Delete Profile",
         "operationId": "deleteProfile",
@@ -549,7 +605,7 @@
     "/sounds": {
       "get": {
         "tags": [
-          "Sounds"
+          "sounds"
         ],
         "summary": "List Sounds",
         "operationId": "list_sounds",
@@ -600,7 +656,7 @@
     "/sounds/preview": {
       "post": {
         "tags": [
-          "Sounds"
+          "sounds"
         ],
         "summary": "Preview Sound",
         "description": "Start playback and return immediately -- the sound keeps playing.",
@@ -647,7 +703,7 @@
     "/sounds/stop": {
       "post": {
         "tags": [
-          "Sounds"
+          "sounds"
         ],
         "summary": "Stop Playback",
         "operationId": "stop_playback",
@@ -666,7 +722,7 @@
     "/sounds/volume": {
       "post": {
         "tags": [
-          "Sounds"
+          "sounds"
         ],
         "summary": "Set Volume",
         "operationId": "set_volume",
@@ -705,7 +761,7 @@
     "/rooms": {
       "get": {
         "tags": [
-          "Rooms & Scenes"
+          "scenes"
         ],
         "summary": "List Rooms",
         "operationId": "list_rooms",
@@ -735,7 +791,7 @@
     "/rooms/{room_name}": {
       "get": {
         "tags": [
-          "Rooms & Scenes"
+          "scenes"
         ],
         "summary": "Get Room",
         "operationId": "get_room",
@@ -782,7 +838,7 @@
     "/rooms/{room_name}/scenes/{scene_name}/activate": {
       "post": {
         "tags": [
-          "Rooms & Scenes"
+          "scenes"
         ],
         "summary": "Activate Scene",
         "description": "Preview a scene the way an alarm would start it.",
@@ -832,7 +888,7 @@
     "/audio-output": {
       "get": {
         "tags": [
-          "Audio Output"
+          "audio-output"
         ],
         "summary": "Get Audio Output",
         "operationId": "get_audio_output",
@@ -856,7 +912,7 @@
       },
       "put": {
         "tags": [
-          "Audio Output"
+          "audio-output"
         ],
         "summary": "Select Audio Output",
         "description": "Switch the output. Anything currently playing is stopped first.",
@@ -903,7 +959,7 @@
     "/eventstream": {
       "get": {
         "tags": [
-          "Events"
+          "events"
         ],
         "summary": "Subscribe to the alarm event stream",
         "description": "Server-sent events covering every change to alarms and to the run currently in\nprogress, so a display can stay in sync without polling.\n\nEach frame carries the event id in `id:`, the discriminator in `event:` and the\nevent itself as JSON in `data:`. Reconnect with `Last-Event-ID` to resume; if\nthat id has rolled out of the buffer nothing is replayed, so resync over\n`GET /alarms` first. A `: keepalive` comment arrives whenever the stream is\nidle.",
@@ -1121,6 +1177,18 @@
         ],
         "title": "AlarmDeleted"
       },
+      "AlarmField": {
+        "type": "string",
+        "enum": [
+          "label",
+          "schedule",
+          "room_name",
+          "profile_id",
+          "is_enabled"
+        ],
+        "title": "AlarmField",
+        "description": "A field of an alarm rule that a change can be reported against."
+      },
       "AlarmRead": {
         "properties": {
           "id": {
@@ -1232,6 +1300,57 @@
         "title": "AlarmSnapshot",
         "description": "An alarm rule as of the moment an event fired.\n\nCarries enough to render a row without a follow-up GET, so a display can\nstay in sync from the stream alone."
       },
+      "AlarmUpdate": {
+        "properties": {
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "schedule": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ScheduleSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "room_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Room Name"
+          },
+          "profile_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profile Id"
+          }
+        },
+        "type": "object",
+        "title": "AlarmUpdate",
+        "description": "A partial change. Omitted fields keep their current value."
+      },
       "AlarmUpdated": {
         "properties": {
           "id": {
@@ -1265,11 +1384,11 @@
           },
           "changed": {
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/AlarmField"
             },
             "type": "array",
             "title": "Changed",
-            "description": "Names of the fields this update touched, e.g. `is_enabled`."
+            "description": "The fields this update actually moved."
           }
         },
         "additionalProperties": false,

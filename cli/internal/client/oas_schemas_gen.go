@@ -185,6 +185,56 @@ func (*AlarmRead) createAlarmRes()  {}
 func (*AlarmRead) disableAlarmRes() {}
 func (*AlarmRead) enableAlarmRes()  {}
 func (*AlarmRead) getAlarmRes()     {}
+func (*AlarmRead) updateAlarmRes()  {}
+
+// A partial change. Omitted fields keep their current value.
+// Ref: #/components/schemas/AlarmUpdate
+type AlarmUpdate struct {
+	Label     OptNilString         `json:"label"`
+	Schedule  OptNilScheduleSchema `json:"schedule"`
+	RoomName  OptNilString         `json:"room_name"`
+	ProfileID OptNilUUID           `json:"profile_id"`
+}
+
+// GetLabel returns the value of Label.
+func (s *AlarmUpdate) GetLabel() OptNilString {
+	return s.Label
+}
+
+// GetSchedule returns the value of Schedule.
+func (s *AlarmUpdate) GetSchedule() OptNilScheduleSchema {
+	return s.Schedule
+}
+
+// GetRoomName returns the value of RoomName.
+func (s *AlarmUpdate) GetRoomName() OptNilString {
+	return s.RoomName
+}
+
+// GetProfileID returns the value of ProfileID.
+func (s *AlarmUpdate) GetProfileID() OptNilUUID {
+	return s.ProfileID
+}
+
+// SetLabel sets the value of Label.
+func (s *AlarmUpdate) SetLabel(val OptNilString) {
+	s.Label = val
+}
+
+// SetSchedule sets the value of Schedule.
+func (s *AlarmUpdate) SetSchedule(val OptNilScheduleSchema) {
+	s.Schedule = val
+}
+
+// SetRoomName sets the value of RoomName.
+func (s *AlarmUpdate) SetRoomName(val OptNilString) {
+	s.RoomName = val
+}
+
+// SetProfileID sets the value of ProfileID.
+func (s *AlarmUpdate) SetProfileID(val OptNilUUID) {
+	s.ProfileID = val
+}
 
 // Where alarm and preview audio is played.
 // Ref: #/components/schemas/AudioOutput
@@ -316,6 +366,7 @@ func (*HTTPValidationError) selectAudioOutputRes() {}
 func (*HTTPValidationError) setVolumeRes()         {}
 func (*HTTPValidationError) snoozeAlarmRes()       {}
 func (*HTTPValidationError) streamEventsRes()      {}
+func (*HTTPValidationError) updateAlarmRes()       {}
 
 // Ref: #/components/schemas/IntroSchema
 type IntroSchema struct {
@@ -643,6 +694,132 @@ func (o OptInt) Get() (v int, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptInt) Or(d int) int {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptNilScheduleSchema returns new OptNilScheduleSchema with value set to v.
+func NewOptNilScheduleSchema(v ScheduleSchema) OptNilScheduleSchema {
+	return OptNilScheduleSchema{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptNilScheduleSchema is optional nullable ScheduleSchema.
+type OptNilScheduleSchema struct {
+	Value ScheduleSchema
+	Set   bool
+	Null  bool
+}
+
+// IsSet returns true if OptNilScheduleSchema was set.
+func (o OptNilScheduleSchema) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptNilScheduleSchema) Reset() {
+	var v ScheduleSchema
+	o.Value = v
+	o.Set = false
+	o.Null = false
+}
+
+// SetTo sets value to v.
+func (o *OptNilScheduleSchema) SetTo(v ScheduleSchema) {
+	o.Set = true
+	o.Null = false
+	o.Value = v
+}
+
+// IsNull returns true if value is Null.
+func (o OptNilScheduleSchema) IsNull() bool { return o.Null }
+
+// SetToNull sets value to null.
+func (o *OptNilScheduleSchema) SetToNull() {
+	o.Set = true
+	o.Null = true
+	var v ScheduleSchema
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptNilScheduleSchema) Get() (v ScheduleSchema, ok bool) {
+	if o.Null {
+		return v, false
+	}
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptNilScheduleSchema) Or(d ScheduleSchema) ScheduleSchema {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptNilString returns new OptNilString with value set to v.
+func NewOptNilString(v string) OptNilString {
+	return OptNilString{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptNilString is optional nullable string.
+type OptNilString struct {
+	Value string
+	Set   bool
+	Null  bool
+}
+
+// IsSet returns true if OptNilString was set.
+func (o OptNilString) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptNilString) Reset() {
+	var v string
+	o.Value = v
+	o.Set = false
+	o.Null = false
+}
+
+// SetTo sets value to v.
+func (o *OptNilString) SetTo(v string) {
+	o.Set = true
+	o.Null = false
+	o.Value = v
+}
+
+// IsNull returns true if value is Null.
+func (o OptNilString) IsNull() bool { return o.Null }
+
+// SetToNull sets value to null.
+func (o *OptNilString) SetToNull() {
+	o.Set = true
+	o.Null = true
+	var v string
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptNilString) Get() (v string, ok bool) {
+	if o.Null {
+		return v, false
+	}
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptNilString) Or(d string) string {
 	if v, ok := o.Get(); ok {
 		return v
 	}
