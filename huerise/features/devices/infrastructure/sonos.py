@@ -6,8 +6,12 @@ from datetime import timedelta
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from huerise.features.devices.application import AudioPlayer, SoundCatalog
-from huerise.features.devices.domain import AudioOutput, AudioOutputUnavailableError
+from huerise.features.devices.application import AudioPlayer
+from huerise.features.devices.domain import (
+    AudioOutput,
+    AudioOutputUnavailableError,
+    SoundRepository,
+)
 from huerise.infrastructure.storage import StorageBackend
 
 if TYPE_CHECKING:
@@ -31,17 +35,17 @@ class SonosAudioPlayer(AudioPlayer):
 
     def __init__(
         self,
-        catalog: SoundCatalog,
+        sounds: SoundRepository,
         storage: StorageBackend,
         client: SonosClient,
     ) -> None:
-        self._catalog = catalog
+        self._sounds = sounds
         self._storage = storage
         self._client = client
         self._stopped = asyncio.Event()
 
     async def play(self, sound_id: UUID, volume: int) -> None:
-        sound = await self._catalog.get(sound_id)
+        sound = await self._sounds.get(sound_id)
         url = await self._storage.public_url(sound.storage_path, _LINK_LIFETIME)
         self._stopped.clear()
 

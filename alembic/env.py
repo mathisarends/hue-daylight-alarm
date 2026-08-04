@@ -9,12 +9,14 @@ from huerise.infrastructure.database.models import (
     AlarmModel,
     AlarmOccurrenceModel,
     AlarmProfileModel,
+    SoundModel,
 )
 
 __all__ = [
     "AlarmModel",
     "AlarmOccurrenceModel",
     "AlarmProfileModel",
+    "SoundModel",
 ]
 
 config = context.config

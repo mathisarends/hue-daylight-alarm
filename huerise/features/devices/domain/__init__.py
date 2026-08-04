@@ -8,6 +8,7 @@ from .exceptions import (
 )
 from .room import Room
 from .sound import Sound, SoundCategory
+from .sound_repository import SoundRepository
 
 __all__ = [
     "AudioOutput",
@@ -19,4 +20,5 @@ __all__ = [
     "Sound",
     "SoundCategory",
     "SoundNotFoundError",
+    "SoundRepository",
 ]

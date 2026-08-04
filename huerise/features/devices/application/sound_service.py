@@ -3,8 +3,7 @@ import logging
 from uuid import UUID
 
 from huerise.features.devices.application.ports import AudioPlayer
-from huerise.features.devices.application.sound_catalog import SoundCatalog
-from huerise.features.devices.domain import Sound, SoundCategory
+from huerise.features.devices.domain import Sound, SoundCategory, SoundRepository
 
 logger = logging.getLogger(__name__)
 
@@ -27,16 +26,16 @@ def _preview_finished(task: asyncio.Task[None]) -> None:
 
 
 class SoundService:
-    def __init__(self, catalog: SoundCatalog, audio: AudioPlayer) -> None:
-        self._catalog = catalog
+    def __init__(self, sounds: SoundRepository, audio: AudioPlayer) -> None:
+        self._sounds = sounds
         self._audio = audio
 
     async def list_sounds(self, category: SoundCategory | None = None) -> list[Sound]:
-        return await self._catalog.list_sounds(category)
+        return await self._sounds.find_all(category)
 
     async def preview(self, sound_id: UUID, volume: int = PREVIEW_VOLUME) -> Sound:
         """Start playback in the background and return the sound being played."""
-        sound = await self._catalog.get(sound_id)
+        sound = await self._sounds.get(sound_id)
         logger.info("Previewing sound %s at volume %d", sound.id, volume)
 
         await self._audio.stop()

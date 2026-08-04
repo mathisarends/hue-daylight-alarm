@@ -13,6 +13,8 @@ from huerise.features.alarm.infrastructure.persistence import (
     SQLAlarmRepository,
     SQLAlarmUnitOfWorkFactory,
 )
+from huerise.features.devices.domain import Sound, SoundCategory
+from huerise.features.devices.infrastructure.persistence import SQLSoundRepository
 from huerise.infrastructure.database.models import OCCURRENCE_STATES
 from tests.application.conftest import make_alarm, make_occurrence, make_profile
 
@@ -33,6 +35,24 @@ def test_orm_states_match_the_domain_enum() -> None:
 
 
 class TestRoundtrip:
+    async def test_sound_keeps_its_explicit_storage_metadata(
+        self, session_factory
+    ) -> None:
+        sound = Sound(
+            name="My own sound",
+            category=SoundCategory.WAKE_UP,
+            storage_path="sounds/custom/application-owned-key.mp3",
+        )
+
+        stored = await SQLSoundRepository(session_factory).save(sound)
+        loaded = await SQLSoundRepository(session_factory).find_by_id(sound.id)
+
+        assert loaded is not None
+        assert loaded.id == stored.id
+        assert loaded.name == "My own sound"
+        assert loaded.storage_path == "sounds/custom/application-owned-key.mp3"
+        assert loaded.created_at == sound.created_at
+
     async def test_alarm_keeps_timezone_and_recurrence(self, session_factory) -> None:
         profile = make_profile()
         alarm = make_alarm(hour=6, minute=45, profile_id=profile.id)

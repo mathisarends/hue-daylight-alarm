@@ -4,8 +4,7 @@ from uuid import UUID
 
 import pytest
 
-from huerise.features.devices.application import SoundCatalog
-from huerise.features.devices.domain import Sound, SoundCategory
+from huerise.features.devices.domain import Sound, SoundCategory, SoundRepository
 from huerise.features.devices.infrastructure import sonos
 from huerise.features.devices.infrastructure.settings import SonosSettings
 from huerise.features.devices.infrastructure.sonos import SonosAudioPlayer
@@ -15,8 +14,8 @@ SOUND_ID = UUID("1693baba-146e-5b14-acf2-6f76554f36e9")
 
 
 def make_player(speaker: MagicMock) -> SonosAudioPlayer:
-    catalog = MagicMock(spec=SoundCatalog)
-    catalog.get = AsyncMock(
+    sounds = MagicMock(spec=SoundRepository)
+    sounds.get = AsyncMock(
         return_value=Sound(
             id=SOUND_ID,
             name="bowls",
@@ -27,7 +26,7 @@ def make_player(speaker: MagicMock) -> SonosAudioPlayer:
     storage = MagicMock(spec=StorageBackend)
     storage.public_url = AsyncMock(return_value="http://192.168.1.5:9000/bowls.mp3")
 
-    return SonosAudioPlayer(catalog, storage, speaker)
+    return SonosAudioPlayer(sounds, storage, speaker)
 
 
 def make_speaker(states: list[str]) -> MagicMock:

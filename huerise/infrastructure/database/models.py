@@ -33,6 +33,18 @@ class DatabaseEntity(SQLModel):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
 
 
+class SoundModel(DatabaseEntity, table=True):
+    __tablename__ = "sounds"
+    __table_args__ = (
+        UniqueConstraint("category", "name", name="uq_sounds_category_name"),
+    )
+
+    name: str
+    category: str = Field(index=True)
+    storage_path: str = Field(unique=True)
+    created_at: datetime = Field(sa_column=Column(UtcDateTime, nullable=False))
+
+
 class AlarmProfileModel(DatabaseEntity, table=True):
     """How an alarm behaves. Reusable across alarms."""
 

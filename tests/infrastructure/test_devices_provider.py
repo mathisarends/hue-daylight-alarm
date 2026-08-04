@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, MagicMock
 from dishka import Provider, Scope, make_async_container, provide
 
 from huerise.features.devices.application import SwitchableAudioPlayer
-from huerise.features.devices.domain import AudioOutput
+from huerise.features.devices.domain import AudioOutput, SoundRepository
 from huerise.features.devices.infrastructure.di import DevicesProvider
 from huerise.infrastructure.storage import StorageBackend
 
@@ -14,6 +14,10 @@ class StorageStubProvider(Provider):
     @provide
     def storage(self) -> StorageBackend:
         return MagicMock(spec=StorageBackend)
+
+    @provide
+    def sounds(self) -> SoundRepository:
+        return MagicMock(spec=SoundRepository)
 
 
 async def test_composition_root_injects_an_eagerly_connected_sonos_client(

@@ -22,51 +22,52 @@ from huerise.features.alarm.domain import (
     Weekday,
 )
 from huerise.features.devices.application import AudioPlayer, Lights
+from huerise.features.devices.domain import Sound, SoundCategory, SoundRepository
 from huerise.features.events.application import EventPublisher
 from huerise.features.events.domain import HueriseEvent
-from huerise.infrastructure.storage import StorageBackend, StorageFile, UploadResponse
-from huerise.infrastructure.storage.port import DEFAULT_LINK_LIFETIME
 
 BERLIN = ZoneInfo("Europe/Berlin")
 
 
-class FakeStorage(StorageBackend):
-    """Object storage holding nothing but the keys it was handed."""
-
-    def __init__(self, paths: list[str]) -> None:
-        self.paths = paths
-        self.list_calls = 0
-
-    async def list_files(self, path: str = "") -> list[StorageFile]:
-        self.list_calls += 1
-        return [
-            StorageFile(name=p.rsplit("/", maxsplit=1)[-1], storage_path=p)
-            for p in self.paths
-            if p.startswith(path)
-        ]
-
-    async def download_bytes(self, path: str) -> bytes:
-        raise NotImplementedError
-
-    async def upload_bytes(
-        self, path: str, data: bytes, content_type: str | None = None
-    ) -> UploadResponse:
-        raise NotImplementedError
-
-    async def public_url(
-        self, path: str, lifetime: timedelta = DEFAULT_LINK_LIFETIME
-    ) -> str:
-        return f"https://storage.test/{path}"
+def make_sounds() -> list[Sound]:
+    return [
+        Sound(
+            id=UUID("1693baba-146e-5b14-acf2-6f76554f36e9"),
+            name="bowls",
+            category=SoundCategory.WAKE_UP,
+            storage_path="wake_up_sounds/wake-up-bowls.mp3",
+        ),
+        Sound(
+            id=UUID("bb804011-6bb8-5b4e-9d90-ebe5e11becb0"),
+            name="mist",
+            category=SoundCategory.WAKE_UP,
+            storage_path="wake_up_sounds/wake-up-mist.mp3",
+        ),
+        Sound(
+            id=UUID("5c0806e7-7162-5be7-948e-33d349bde4a8"),
+            name="aurora",
+            category=SoundCategory.GET_UP,
+            storage_path="get_up_sounds/get-up-aurora.mp3",
+        ),
+    ]
 
 
-def make_sound_storage() -> FakeStorage:
-    return FakeStorage(
-        [
-            "wake_up_sounds/wake-up-bowls.mp3",
-            "wake_up_sounds/wake-up-mist.mp3",
-            "get_up_sounds/get-up-aurora.mp3",
-        ]
-    )
+class InMemorySoundRepository(SoundRepository):
+    def __init__(self, sounds: list[Sound] | None = None) -> None:
+        self.items = {sound.id: sound for sound in sounds or []}
+
+    async def find_by_id(self, sound_id: UUID) -> Sound | None:
+        return self.items.get(sound_id)
+
+    async def find_all(self, category: SoundCategory | None = None) -> list[Sound]:
+        sounds = self.items.values()
+        if category is not None:
+            sounds = (sound for sound in sounds if sound.category is category)
+        return sorted(sounds, key=lambda sound: (sound.category, sound.name))
+
+    async def save(self, sound: Sound) -> Sound:
+        self.items[sound.id] = sound
+        return sound
 
 
 class InMemoryAlarmRepository(AlarmRepository):

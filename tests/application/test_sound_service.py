@@ -4,13 +4,13 @@ from uuid import UUID
 
 import pytest
 
-from huerise.features.devices.application import SoundCatalog, SoundService
+from huerise.features.devices.application import SoundService
 from huerise.features.devices.domain import SoundNotFoundError
-from tests.application.conftest import make_audio, make_sound_storage
+from tests.application.conftest import InMemorySoundRepository, make_audio, make_sounds
 
 
 def make_sound_service(audio) -> SoundService:
-    return SoundService(SoundCatalog(make_sound_storage()), audio)
+    return SoundService(InMemorySoundRepository(make_sounds()), audio)
 
 
 class TestSoundService:

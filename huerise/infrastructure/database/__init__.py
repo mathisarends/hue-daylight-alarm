@@ -3,6 +3,7 @@ from .models import (
     AlarmOccurrenceModel,
     AlarmProfileModel,
     DatabaseEntity,
+    SoundModel,
 )
 from .repository import Repository
 from .settings import DatabaseSettings
@@ -14,4 +15,5 @@ __all__ = [
     "DatabaseEntity",
     "DatabaseSettings",
     "Repository",
+    "SoundModel",
 ]

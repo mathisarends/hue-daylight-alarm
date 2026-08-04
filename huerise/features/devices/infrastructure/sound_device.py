@@ -7,15 +7,16 @@ import numpy as np
 import sounddevice as sd
 import soundfile as sf
 
-from huerise.features.devices.application import AudioPlayer, SoundCatalog
+from huerise.features.devices.application import AudioPlayer
+from huerise.features.devices.domain import SoundRepository
 from huerise.infrastructure.storage import StorageBackend
 
 _CHUNK_SIZE = 1024
 
 
 class SoundDeviceAudioPlayer(AudioPlayer):
-    def __init__(self, catalog: SoundCatalog, storage: StorageBackend) -> None:
-        self._catalog = catalog
+    def __init__(self, sounds: SoundRepository, storage: StorageBackend) -> None:
+        self._sounds = sounds
         self._storage = storage
         self._volume = 100
         self._stop_event = threading.Event()
@@ -25,7 +26,7 @@ class SoundDeviceAudioPlayer(AudioPlayer):
         self._volume = volume
         self._stop_event.clear()
 
-        sound = await self._catalog.get(sound_id)
+        sound = await self._sounds.get(sound_id)
         audio_data = await self._storage.download_bytes(sound.storage_path)
 
         loop = asyncio.get_running_loop()

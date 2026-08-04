@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Self
 from uuid import UUID
 
@@ -14,10 +15,16 @@ class SoundRead(BaseModel):
     id: UUID = Field(description="Store this UUID in a profile.")
     name: str
     category: SoundCategory
+    created_at: datetime
 
     @classmethod
     def from_domain(cls, sound: Sound) -> Self:
-        return cls(id=sound.id, name=sound.name, category=sound.category)
+        return cls(
+            id=sound.id,
+            name=sound.name,
+            category=sound.category,
+            created_at=sound.created_at,
+        )
 
 
 class SoundPreviewRequest(BaseModel):

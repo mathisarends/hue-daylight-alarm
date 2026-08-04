@@ -3,18 +3,23 @@ from collections.abc import AsyncIterator
 
 from dishka import Provider, Scope, alias, provide
 from hueify import Hueify
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from huerise.features.devices.application import (
     AudioOutputService,
     AudioPlayer,
     Lights,
     SceneService,
-    SoundCatalog,
     SoundService,
     SwitchableAudioPlayer,
 )
-from huerise.features.devices.domain import AudioOutput, AudioOutputUnavailableError
+from huerise.features.devices.domain import (
+    AudioOutput,
+    AudioOutputUnavailableError,
+    SoundRepository,
+)
 from huerise.features.devices.infrastructure.hue import HueLights
+from huerise.features.devices.infrastructure.persistence import SQLSoundRepository
 from huerise.features.devices.infrastructure.settings import (
     AudioSettings,
     HueCredentials,
@@ -45,8 +50,10 @@ class DevicesProvider(Provider):
         return HueLights(hue)
 
     @provide
-    def sound_catalog(self, storage: StorageBackend) -> SoundCatalog:
-        return SoundCatalog(storage)
+    def sound_repository(
+        self, session_factory: async_sessionmaker[AsyncSession]
+    ) -> SoundRepository:
+        return SQLSoundRepository(session_factory)
 
     @provide
     def audio_settings(self) -> AudioSettings:
@@ -59,7 +66,7 @@ class DevicesProvider(Provider):
     @provide
     async def switchable_audio(
         self,
-        catalog: SoundCatalog,
+        sounds: SoundRepository,
         storage: StorageBackend,
         settings: AudioSettings,
         sonos_settings: SonosSettings,
@@ -74,7 +81,7 @@ class DevicesProvider(Provider):
                 SoundDeviceAudioPlayer,
             )
 
-            players[AudioOutput.LOCAL] = SoundDeviceAudioPlayer(catalog, storage)
+            players[AudioOutput.LOCAL] = SoundDeviceAudioPlayer(sounds, storage)
 
         if AudioOutput.SONOS in settings.backends:
             # sonosify and its UPnP stack stay out of local-only processes.
@@ -98,9 +105,7 @@ class DevicesProvider(Provider):
                 await sonos_client.get_room_name(),
                 sonos_client.ip,
             )
-            players[AudioOutput.SONOS] = SonosAudioPlayer(
-                catalog, storage, sonos_client
-            )
+            players[AudioOutput.SONOS] = SonosAudioPlayer(sounds, storage, sonos_client)
 
         try:
             yield SwitchableAudioPlayer(players, active=settings.initial_output)
@@ -115,8 +120,10 @@ class DevicesProvider(Provider):
         return SceneService(lights)
 
     @provide(scope=Scope.REQUEST)
-    def sound_service(self, catalog: SoundCatalog, audio: AudioPlayer) -> SoundService:
-        return SoundService(catalog, audio)
+    def sound_service(
+        self, sounds: SoundRepository, audio: AudioPlayer
+    ) -> SoundService:
+        return SoundService(sounds, audio)
 
     @provide(scope=Scope.REQUEST)
     def audio_output_service(self, player: SwitchableAudioPlayer) -> AudioOutputService:
