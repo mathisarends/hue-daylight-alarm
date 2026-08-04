@@ -58,6 +58,3 @@ build-backend = "hatchling.build"
 include = [
     "huerise/**/*.py",
 ]
-
-[tool.uv.workspace]
-members = ["cli"]
