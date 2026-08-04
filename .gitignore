@@ -18,6 +18,7 @@ site/
 build/
 develop-eggs/
 dist/
+bin/
 downloads/
 eggs/
 .eggs/
