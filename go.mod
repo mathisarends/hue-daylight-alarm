@@ -5,6 +5,7 @@ go 1.25.0
 tool github.com/ogen-go/ogen/cmd/ogen
 
 require (
+	github.com/alecthomas/kong v1.16.0 // indirect
 	github.com/dlclark/regexp2 v1.11.5 // indirect
 	github.com/fatih/color v1.19.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
