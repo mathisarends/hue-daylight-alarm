@@ -98,13 +98,22 @@ func (command alarmsCreateCommand) Run(runtime *Runtime) error {
 	if command.Minute < 0 || command.Minute > 59 {
 		return &commandError{Code: "usage", Message: "minute must be between 0 and 59", ExitCode: 2}
 	}
+	apiClient, err := runtime.client()
+	if err != nil {
+		return err
+	}
+	room, err := resolveRoom(runtime, apiClient, command.Room)
+	if err != nil {
+		return err
+	}
 	request := &client.AlarmCreate{
 		Label: command.Label,
 		Schedule: client.ScheduleSchema{
 			Hour: command.Hour, Minute: command.Minute,
 			Timezone: client.NewOptString(command.Timezone), Days: days,
 		},
-		RoomName: command.Room,
+		RoomID:   room.ID,
+		RoomName: room.Name,
 	}
 	if command.ProfileID != "" {
 		profileID, parseErr := uuid.Parse(command.ProfileID)
@@ -112,10 +121,6 @@ func (command alarmsCreateCommand) Run(runtime *Runtime) error {
 			return &commandError{Code: "usage", Message: "invalid --profile-id: " + parseErr.Error(), ExitCode: 2}
 		}
 		request.ProfileID = client.NewOptNilUUID(profileID)
-	}
-	apiClient, err := runtime.client()
-	if err != nil {
-		return err
 	}
 	response, err := apiClient.CreateAlarm(runtime.ctx, request)
 	if err != nil {

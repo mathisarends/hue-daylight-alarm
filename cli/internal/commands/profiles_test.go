@@ -14,10 +14,19 @@ func TestProfilesCreateBuildsTypedRequest(t *testing.T) {
 		introID    = "398defb2-fea7-45cd-a668-7e756e706fc4"
 		ringtoneID = "bd6af8a6-a692-4c0c-a271-e50b7c9a47f8"
 		profileID  = "9d01d00b-343d-4821-9660-2c455d968ce1"
+		roomID     = "7a6d3f2e-1111-4a11-9a11-1a2b3c4d5e6f"
+		sceneID    = "7a6d3f2e-2222-4a11-9a11-1a2b3c4d5e6f"
 	)
 	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		if request.Method != http.MethodPost || request.URL.Path != "/alarm-profiles" {
+		switch {
+		case request.Method == http.MethodGet && request.URL.Path == "/rooms":
+			writer.Header().Set("Content-Type", "application/json")
+			_, _ = writer.Write([]byte(`[{"id":"` + roomID + `","name":"Bedroom","scenes":[{"id":"` + sceneID + `","name":"Morning"}]}]`))
+			return
+		case request.Method == http.MethodPost && request.URL.Path == "/alarm-profiles":
+		default:
 			t.Errorf("request = %s %s", request.Method, request.URL.Path)
+			return
 		}
 		var body map[string]any
 		if err := json.NewDecoder(request.Body).Decode(&body); err != nil {
@@ -25,7 +34,7 @@ func TestProfilesCreateBuildsTypedRequest(t *testing.T) {
 			return
 		}
 		sunrise := body["sunrise"].(map[string]any)
-		if body["name"] != "Weekday" || sunrise["duration_minutes"] != float64(10) {
+		if body["name"] != "Weekday" || sunrise["duration_minutes"] != float64(10) || sunrise["scene_id"] != sceneID {
 			t.Errorf("body = %#v", body)
 		}
 		writer.Header().Set("Content-Type", "application/json")
@@ -34,7 +43,7 @@ func TestProfilesCreateBuildsTypedRequest(t *testing.T) {
             "name":"Weekday",
             "intro":{"sound_id":"` + introID + `"},
             "ringtone":{"sound_id":"` + ringtoneID + `","volume":75},
-            "sunrise":{"scene_name":"Morning","duration_minutes":10,"brightness_start":1,"brightness_end":100},
+            "sunrise":{"scene_id":"` + sceneID + `","scene_name":"Morning","duration_minutes":10,"brightness_start":1,"brightness_end":100},
             "id":"` + profileID + `",
             "is_default":false
         }`))
@@ -43,6 +52,7 @@ func TestProfilesCreateBuildsTypedRequest(t *testing.T) {
 
 	stdout, stderr, exitCode := runTestCLI(t, server.URL,
 		"profiles", "create", "Weekday",
+		"--room=Bedroom",
 		"--intro-sound-id="+introID,
 		"--ringtone-sound-id="+ringtoneID,
 		"--ringtone-volume=75",
@@ -60,6 +70,7 @@ func TestProfilesCreateValidatesBrightness(t *testing.T) {
 	const id = "398defb2-fea7-45cd-a668-7e756e706fc4"
 	stdout, stderr, exitCode := runTestCLI(t, "http://unused.invalid",
 		"profiles", "create", "Invalid",
+		"--room=Bedroom",
 		"--intro-sound-id="+id,
 		"--ringtone-sound-id="+id,
 		"--brightness-start=80",

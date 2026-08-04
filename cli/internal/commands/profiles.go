@@ -18,6 +18,7 @@ type profilesListCommand struct{}
 
 type profilesCreateCommand struct {
 	Name            string    `arg:"" help:"Human-readable profile name."`
+	Room            string    `required:"" help:"Room the sunrise scene lives in."`
 	IntroSoundID    uuid.UUID `name:"intro-sound-id" required:"" help:"Sound UUID from sounds list."`
 	RingtoneSoundID uuid.UUID `name:"ringtone-sound-id" required:"" help:"Sound UUID from sounds list."`
 	RingtoneVolume  int       `default:"80" help:"Ringtone volume (0-100)."`
@@ -58,6 +59,10 @@ func (command profilesCreateCommand) Run(runtime *Runtime) error {
 	if err != nil {
 		return err
 	}
+	_, scene, err := resolveRoomAndScene(runtime, apiClient, command.Room, command.SceneName)
+	if err != nil {
+		return err
+	}
 	request := &client.ProfileCreate{
 		Name:  command.Name,
 		Intro: client.IntroSchema{SoundID: command.IntroSoundID},
@@ -65,12 +70,13 @@ func (command profilesCreateCommand) Run(runtime *Runtime) error {
 			SoundID: command.RingtoneSoundID,
 			Volume:  client.NewOptInt(command.RingtoneVolume),
 		},
-		Sunrise: client.NewOptSunriseSchema(client.SunriseSchema{
-			SceneName:       client.NewOptString(command.SceneName),
+		Sunrise: client.SunriseSchema{
+			SceneID:         scene.ID,
+			SceneName:       scene.Name,
 			DurationMinutes: client.NewOptInt(command.DurationMinutes),
 			BrightnessStart: client.NewOptInt(command.BrightnessStart),
 			BrightnessEnd:   client.NewOptInt(command.BrightnessEnd),
-		}),
+		},
 	}
 	response, err := apiClient.CreateProfile(runtime.ctx, request)
 	if err != nil {
@@ -147,15 +153,11 @@ func writeProfile(runtime *Runtime, profile *client.ProfileRead) error {
 }
 
 func profileRow(profile client.ProfileRead) []string {
-	scene := "-"
-	if sunrise, ok := profile.Sunrise.Get(); ok {
-		scene = sunrise.SceneName.Or("-")
-	}
 	return []string{
 		profile.ID.String(),
 		profile.Name,
 		strconv.FormatBool(profile.IsDefault),
-		scene,
+		profile.Sunrise.SceneName,
 		profile.Intro.SoundID.String(),
 		profile.Ringtone.SoundID.String(),
 	}
