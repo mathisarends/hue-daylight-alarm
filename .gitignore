@@ -99,3 +99,6 @@ bandit-report.json
 *.db-journal
 *.db-wal
 data/
+
+# Claude Code local settings
+.claude/settings.local.json
