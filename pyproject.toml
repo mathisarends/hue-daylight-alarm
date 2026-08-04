@@ -16,6 +16,7 @@ dependencies = [
     "uvicorn[standard]>=0.34.0",
     "aioboto3>=15.5.0",
     "tzdata>=2026.3",
+    "transitbus>=0.1.0",
 ]
 
 [project.optional-dependencies]
