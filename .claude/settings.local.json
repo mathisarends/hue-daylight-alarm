@@ -25,7 +25,18 @@
       "Bash(git merge *)",
       "Bash(git branch *)",
       "Read(//c/code/huerise/tests/presentation/**)",
-      "Bash(API_ACCESS_TOKEN=abc123 uv run python -c ' *)"
+      "Bash(API_ACCESS_TOKEN=abc123 uv run python -c ' *)",
+      "Bash(.venv/Scripts/python.exe *)",
+      "Bash(uv --version)",
+      "Bash(uvx openapi-python-client *)",
+      "Bash(uv sync *)",
+      "Bash(chmod +x *)",
+      "Bash(bash scripts/generate_cli_client.sh)",
+      "Bash(HUERISE_API_TOKEN=dummy uv run huerise --help)",
+      "Bash(HUERISE_API_TOKEN=dummy uv run huerise alarms --help)",
+      "Bash(HUERISE_API_TOKEN=dummy uv run huerise alarms create --help)",
+      "Bash(HUERISE_API_TOKEN=dummy HUERISE_API_URL=http://localhost:59999 uv run huerise alarms list)",
+      "Bash(env -u HUERISE_API_TOKEN -u HUERISE_API_URL uv run huerise sounds list --category wake_up)"
     ]
   }
 }

@@ -173,9 +173,37 @@ Discovery happens on the first playback, not at startup — running with the
 local output never touches the network. When the speaker cannot be reached,
 the affected request answers `503`.
 
+## CLI
+
+`cli/` is a typed command-line client for the API, built for humans and
+agents alike: every command supports `--json` for machine-readable output,
+alongside readable tables by default.
+
+```bash
+export HUERISE_API_TOKEN=$API_ACCESS_TOKEN   # same value as the server's
+export HUERISE_API_URL=http://localhost:8000 # defaults to this
+
+uv run huerise alarms list
+uv run huerise alarms create "Weekday sunrise" --room "Bedroom" \
+  --hour 7 --minute 0 --day mon --day tue --day wed --day thu --day fri
+uv run huerise sounds list --json
+```
+
+Run `uv run huerise --help` for the full command tree.
+
+The CLI's types (`cli/src/huerise_cli/generated/`) are generated from the
+API's own OpenAPI schema, not hand-maintained. After changing a router or
+schema, regenerate them with:
+
+```bash
+./scripts/generate_cli_client.sh
+```
+
 ## Local Development
 
-Requires [uv](https://docs.astral.sh/uv/) and Python 3.14+.
+Requires [uv](https://docs.astral.sh/uv/) and Python 3.14+. The repo is a uv
+workspace — `huerise` (the API) and `huerise-cli` (the CLI, in `cli/`) share
+one lockfile and virtualenv.
 
 ```bash
 uv sync
