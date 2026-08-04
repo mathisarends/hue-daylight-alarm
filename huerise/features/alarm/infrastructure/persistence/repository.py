@@ -13,11 +13,11 @@ from huerise.features.alarm.domain import (
     AlarmProfile,
     AlarmProfileRepository,
     AlarmRepository,
-    IntroSettings,
+    IntroConfig,
     OccurrenceState,
-    RingtoneSettings,
+    RingtoneConfig,
     Schedule,
-    SunriseSettings,
+    SunriseConfig,
 )
 from huerise.infrastructure.database import (
     AlarmModel,
@@ -49,14 +49,14 @@ class SQLAlarmProfileRepository(
             id=orm.id,
             name=orm.name,
             is_default=orm.is_default,
-            intro_settings=IntroSettings(sound_id=orm.intro_sound_id),
-            sunrise_settings=SunriseSettings(
+            intro_config=IntroConfig(sound_id=orm.intro_sound_id),
+            sunrise_config=SunriseConfig(
                 scene_name=orm.sunrise_scene_name,
                 duration=timedelta(minutes=orm.sunrise_duration_minutes),
                 brightness_start=orm.sunrise_brightness_start,
                 brightness_end=orm.sunrise_brightness_end,
             ),
-            ringtone_settings=RingtoneSettings(
+            ringtone_config=RingtoneConfig(
                 sound_id=orm.ringtone_sound_id,
                 volume=orm.ringtone_volume,
             ),
@@ -67,13 +67,13 @@ class SQLAlarmProfileRepository(
             id=domain.id,
             name=domain.name,
             is_default=domain.is_default,
-            intro_sound_id=domain.intro_settings.sound_id,
-            sunrise_scene_name=domain.sunrise_settings.scene_name,
-            sunrise_duration_minutes=domain.sunrise_settings.duration_minutes,
-            sunrise_brightness_start=domain.sunrise_settings.brightness_start,
-            sunrise_brightness_end=domain.sunrise_settings.brightness_end,
-            ringtone_sound_id=domain.ringtone_settings.sound_id,
-            ringtone_volume=domain.ringtone_settings.volume,
+            intro_sound_id=domain.intro_config.sound_id,
+            sunrise_scene_name=domain.sunrise_config.scene_name,
+            sunrise_duration_minutes=domain.sunrise_config.duration_minutes,
+            sunrise_brightness_start=domain.sunrise_config.brightness_start,
+            sunrise_brightness_end=domain.sunrise_config.brightness_end,
+            ringtone_sound_id=domain.ringtone_config.sound_id,
+            ringtone_volume=domain.ringtone_config.volume,
         )
 
 

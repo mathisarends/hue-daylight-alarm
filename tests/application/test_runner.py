@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
-from huerise.features.alarm.domain import OccurrenceState, SunriseSettings
+from huerise.features.alarm.domain import OccurrenceState, SunriseConfig
 from huerise.features.runner.application import AlarmRunner
 from huerise.features.runner.application.sunrise import sunrise_steps
 from tests.application.conftest import (
@@ -44,25 +44,25 @@ def make_runner(sunrise_duration: timedelta = timedelta(minutes=1)):
 
 class TestSunriseSteps:
     def test_derives_step_count_from_duration(self) -> None:
-        settings = SunriseSettings(duration=timedelta(minutes=1))
+        config = SunriseConfig(duration=timedelta(minutes=1))
 
-        assert len(list(sunrise_steps(settings, STEP))) == 10
+        assert len(list(sunrise_steps(config, STEP))) == 10
 
     def test_walks_from_start_to_end_brightness(self) -> None:
-        settings = SunriseSettings(
+        config = SunriseConfig(
             duration=timedelta(minutes=1), brightness_start=10, brightness_end=100
         )
 
-        steps = list(sunrise_steps(settings, STEP))
+        steps = list(sunrise_steps(config, STEP))
 
         assert steps[0] == 10
         assert steps[-1] == 100
         assert steps == sorted(steps)
 
     def test_always_yields_at_least_one_step(self) -> None:
-        settings = SunriseSettings(duration=timedelta(0))
+        config = SunriseConfig(duration=timedelta(0))
 
-        assert list(sunrise_steps(settings, STEP)) == [1]
+        assert list(sunrise_steps(config, STEP)) == [1]
 
 
 class TestRun:
@@ -73,10 +73,10 @@ class TestRun:
             await runner.run(occurrence)
 
         lights.activate_scene.assert_awaited_once_with(
-            alarm.room_name, profile.sunrise_settings.scene_name
+            alarm.room_name, profile.sunrise_config.scene_name
         )
         audio.play.assert_any_await(
-            profile.ringtone_settings.sound_id, profile.ringtone_settings.volume
+            profile.ringtone_config.sound_id, profile.ringtone_config.volume
         )
         assert occurrences.items[occurrence.id].state is OccurrenceState.DISMISSED
 
@@ -86,7 +86,7 @@ class TestRun:
         with patch("asyncio.sleep"):
             await runner.run(occurrence)
 
-        expected = len(list(sunrise_steps(profile.sunrise_settings, STEP)))
+        expected = len(list(sunrise_steps(profile.sunrise_config, STEP)))
         assert lights.set_brightness.await_count == expected
 
     async def test_stops_when_the_occurrence_is_dismissed_mid_sunrise(self) -> None:

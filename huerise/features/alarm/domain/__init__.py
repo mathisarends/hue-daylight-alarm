@@ -19,11 +19,11 @@ from .repository import (
 from .unit_of_work import AlarmUnitOfWork, AlarmUnitOfWorkFactory
 from .views import (
     DEFAULT_TIMEZONE,
-    IntroSettings,
+    IntroConfig,
     OccurrenceState,
-    RingtoneSettings,
+    RingtoneConfig,
     Schedule,
-    SunriseSettings,
+    SunriseConfig,
     Weekday,
 )
 
@@ -41,14 +41,14 @@ __all__ = [
     "AlarmUnitOfWork",
     "AlarmUnitOfWorkFactory",
     "HueriseError",
-    "IntroSettings",
+    "IntroConfig",
     "InvalidOccurrenceTransitionError",
     "NoActiveOccurrenceError",
     "OccurrenceNotFoundError",
     "OccurrenceNotRunningError",
     "OccurrenceState",
-    "RingtoneSettings",
+    "RingtoneConfig",
     "Schedule",
-    "SunriseSettings",
+    "SunriseConfig",
     "Weekday",
 ]
