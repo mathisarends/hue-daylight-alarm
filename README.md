@@ -171,6 +171,18 @@ the optional Compose override:
 docker compose -f compose.yml -f compose.audio.yml up --build
 ```
 
+Convenience scripts select matching build and runtime backends. Any additional
+arguments are forwarded to `docker compose up`, for example `-d`:
+
+```bash
+./scripts/start_docker_local.sh -d
+./scripts/start_docker_sonos.sh -d
+./scripts/start_docker_all.sh -d
+```
+
+The `local` and `all` scripts include the Linux `/dev/snd` override; use the
+Sonos script on Docker Desktop for Windows or macOS.
+
 The regular `docker compose up --build` remains portable and is also the right
 choice when using Sonos. Docker Desktop on Windows and macOS cannot pass host
 audio through the Linux `/dev/snd` mapping.
