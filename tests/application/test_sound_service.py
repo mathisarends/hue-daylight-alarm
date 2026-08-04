@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from uuid import UUID
 
 import pytest
@@ -33,3 +34,19 @@ class TestSoundService:
             await service.preview(UUID("680dc52c-db89-5a81-aaa2-860a89ccef39"))
 
         audio.play.assert_not_awaited()
+
+    async def test_preview_logs_background_playback_errors(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        audio = make_audio()
+        audio.play.side_effect = RuntimeError("speaker is offline")
+        service = make_sound_service(audio)
+        sound_id = UUID("1693baba-146e-5b14-acf2-6f76554f36e9")
+
+        with caplog.at_level(logging.ERROR):
+            await service.preview(sound_id)
+            await asyncio.sleep(0)
+            await asyncio.sleep(0)
+
+        assert "Sound preview playback failed" in caplog.text
+        assert "speaker is offline" in caplog.text

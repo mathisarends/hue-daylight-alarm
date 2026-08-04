@@ -1,4 +1,4 @@
-FROM python:3.13-slim AS builder
+FROM python:3.14-slim AS builder
 
 WORKDIR /app
 
@@ -8,7 +8,7 @@ COPY pyproject.toml uv.lock README.md ./
 RUN uv sync --frozen --no-dev
 
 
-FROM python:3.13-slim AS runtime
+FROM python:3.14-slim AS runtime
 
 WORKDIR /app
 
@@ -20,10 +20,10 @@ COPY huerise/ ./huerise/
 ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
 
-CMD ["python", "-m", "uvicorn", "huerise.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "-m", "uvicorn", "huerise.main:app", "--host", "0.0.0.0", "--port", "8000", "--loop", "asyncio"]
 
 
-FROM python:3.13-slim AS dev
+FROM python:3.14-slim AS dev
 
 WORKDIR /app
 
@@ -39,4 +39,4 @@ COPY huerise/ ./huerise/
 ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
 
-CMD ["python", "-m", "uvicorn", "huerise.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["python", "-m", "uvicorn", "huerise.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--loop", "asyncio"]

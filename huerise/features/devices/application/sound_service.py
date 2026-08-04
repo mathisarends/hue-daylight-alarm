@@ -15,6 +15,17 @@ PREVIEW_VOLUME = 60
 _previews: set[asyncio.Task[None]] = set()
 
 
+def _preview_finished(task: asyncio.Task[None]) -> None:
+    """Release a preview task and retrieve any background exception."""
+    _previews.discard(task)
+    if task.cancelled():
+        return
+    try:
+        task.result()
+    except Exception:
+        logger.exception("Sound preview playback failed")
+
+
 class SoundService:
     def __init__(self, catalog: SoundCatalog, audio: AudioPlayer) -> None:
         self._catalog = catalog
@@ -31,7 +42,7 @@ class SoundService:
         await self._audio.stop()
         task = asyncio.create_task(self._audio.play(sound.id, volume))
         _previews.add(task)
-        task.add_done_callback(_previews.discard)
+        task.add_done_callback(_preview_finished)
         return sound
 
     async def stop(self) -> None:

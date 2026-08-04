@@ -45,6 +45,18 @@ def make_speaker(states: list[str]) -> MagicMock:
     return speaker
 
 
+def test_reads_speaker_name_and_ip_address_from_environment(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("SONOS_SPEAKER_NAME", "Sonos Era 100")
+    monkeypatch.setenv("SONOS_IP_ADDRESS", "192.168.178.68")
+
+    settings = SonosSettings(_env_file=None)
+
+    assert settings.speaker_name == "Sonos Era 100"
+    assert settings.ip_address == "192.168.178.68"
+
+
 @pytest.fixture(autouse=True)
 def instant_polling(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(sonos, "_POLL_INTERVAL", 0)

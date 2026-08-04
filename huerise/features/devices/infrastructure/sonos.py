@@ -87,7 +87,7 @@ class SonosAudioPlayer(AudioPlayer):
                 discovery_timeout=self._settings.discovery_timeout
             )
             self._client = await controller.client(
-                self._settings.room_name, ip=self._settings.ip
+                self._settings.speaker_name, ip=self._settings.ip_address
             )
             logger.info(
                 "Connected to Sonos speaker %s at %s",

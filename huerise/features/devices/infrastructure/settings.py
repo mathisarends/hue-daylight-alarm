@@ -36,10 +36,10 @@ class SonosSettings(BaseSettings):
         extra="ignore",
     )
 
-    room_name: str | None = None
+    speaker_name: str | None = None
     """Speaker to play on. Without one, discovery picks the first coordinator."""
 
-    ip: str | None = None
+    ip_address: str | None = None
     """Skips SSDP discovery, which multicast-blocking networks may swallow."""
 
     discovery_timeout: float = Field(default=5.0, gt=0)

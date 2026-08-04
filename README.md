@@ -158,13 +158,16 @@ A Sonos speaker streams the sound itself instead of receiving audio from the
 API, so it needs two things:
 
 ```
-SONOS_ROOM_NAME=Bedroom
+SONOS_SPEAKER_NAME=Sonos Era 100
+SONOS_IP_ADDRESS=192.168.178.68
 MINIO_PUBLIC_ENDPOINT_URL=http://192.168.1.5:9000
 ```
 
-- `SONOS_ROOM_NAME` — the speaker to play on. Left empty, discovery picks the
-  first group coordinator it finds. Set `SONOS_IP` instead if your network
-  swallows the SSDP multicast that discovery relies on.
+- `SONOS_SPEAKER_NAME` — the speaker to play on. Left empty, discovery picks
+  the first group coordinator it finds.
+- `SONOS_IP_ADDRESS` — connects directly and skips SSDP discovery. This is the
+  recommended setting when Huerise runs in Docker, where multicast discovery
+  may not reach the local network.
 - `MINIO_PUBLIC_ENDPOINT_URL` — the address the **speaker** reaches MinIO
   under. Sounds are handed over as presigned links, and a link is only valid
   for the host it was signed for, so `localhost` does not work here.
