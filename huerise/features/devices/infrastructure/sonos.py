@@ -47,9 +47,7 @@ class SonosAudioPlayer(AudioPlayer):
 
         async with _translated_errors():
             await self._client.set_volume(volume)
-            logger.info(
-                "Playing %s on Sonos speaker %s", sound.name, self._client.ip
-            )
+            logger.info("Playing %s on Sonos speaker %s", sound.name, self._client.ip)
             await self._client.play_uri(url, title=sound.name)
             await self._await_end(self._client)
 

@@ -76,9 +76,7 @@ class AlarmOccurrence(Entity):
         if not self.is_running:
             raise OccurrenceNotRunningError(self.id)
         self.state = OccurrenceState.SNOOZED
-        self.scheduled_for = (now or datetime.now(UTC)) + timedelta(
-            minutes=minutes
-        )
+        self.scheduled_for = (now or datetime.now(UTC)) + timedelta(minutes=minutes)
         self.snooze_count += 1
 
     def skip(self, now: datetime | None = None) -> None:

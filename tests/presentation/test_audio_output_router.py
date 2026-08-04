@@ -93,8 +93,7 @@ def test_reports_an_unconfigured_output_readably(
 
     assert response.status_code == 503
     assert response.json() == {
-        "detail": "Audio output 'sonos' is unavailable: "
-        "no player is configured for it"
+        "detail": "Audio output 'sonos' is unavailable: no player is configured for it"
     }
 
 

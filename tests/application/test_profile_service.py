@@ -10,9 +10,7 @@ from tests.application.conftest import InMemoryProfileRepository, make_profile
 async def test_find_all_profiles() -> None:
     profile = make_profile()
 
-    result = await AlarmProfileService(
-        InMemoryProfileRepository([profile])
-    ).find_all()
+    result = await AlarmProfileService(InMemoryProfileRepository([profile])).find_all()
 
     assert result == [profile]
 
@@ -20,9 +18,9 @@ async def test_find_all_profiles() -> None:
 async def test_find_profile_by_id() -> None:
     profile = make_profile()
 
-    result = await AlarmProfileService(
-        InMemoryProfileRepository([profile])
-    ).find_by_id(profile.id)
+    result = await AlarmProfileService(InMemoryProfileRepository([profile])).find_by_id(
+        profile.id
+    )
 
     assert result == profile
 
