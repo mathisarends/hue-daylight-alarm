@@ -22,7 +22,10 @@ type commandTree struct {
 	APIURL  string `name:"api-url" help:"Override HUERISE_API_URL."`
 	Token   string `help:"Override HUERISE_API_TOKEN." hidden:""`
 
-	Version versionCommand `cmd:"" help:"Print version information."`
+	Rooms       roomsCommand       `cmd:"" help:"Browse rooms and Hue scenes."`
+	Sounds      soundsCommand      `cmd:"" help:"Browse and preview sounds."`
+	AudioOutput audioOutputCommand `cmd:"" name:"audio-output" help:"Switch where audio is played."`
+	Version     versionCommand     `cmd:"" help:"Print version information."`
 }
 
 type versionCommand struct{}
