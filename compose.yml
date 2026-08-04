@@ -81,6 +81,7 @@ services:
       - "8080:8080"
     volumes:
       - sqlite_data:/data
+      - ./adminer/plugins-enabled:/var/www/html/plugins-enabled
     environment:
       - ADMINER_DEFAULT_DRIVER=sqlite
       - ADMINER_DEFAULT_DB=/data/daylight.db
