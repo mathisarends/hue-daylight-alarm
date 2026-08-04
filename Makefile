@@ -2,20 +2,21 @@
 
 build:
 	mkdir -p bin
-	go build -o bin/huerise ./cmd/huerise
+	go -C cli build -o ../bin/huerise ./cmd/huerise
 
 fmt:
-	go fmt ./cmd/... ./internal/...
+	go -C cli fmt ./cmd/... ./internal/...
 
 test:
-	go test ./...
+	go -C cli test ./...
 
 vet:
-	go vet ./...
+	go -C cli vet ./...
 
 generate:
 	uv run python scripts/export_openapi.py
-	go generate ./internal/generate
+	cp openapi.json cli/openapi.json
+	go -C cli generate ./internal/generate
 
 check-generated: generate
-	git diff --exit-code -- openapi.json internal/api
+	git diff --exit-code -- openapi.json cli/internal/client
