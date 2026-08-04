@@ -30,7 +30,7 @@ class SoundService:
         self._sounds = sounds
         self._audio = audio
 
-    async def list_sounds(self, category: SoundCategory | None = None) -> list[Sound]:
+    async def find_all(self, category: SoundCategory | None = None) -> list[Sound]:
         return await self._sounds.find_all(category)
 
     async def preview(self, sound_id: UUID, volume: int = PREVIEW_VOLUME) -> Sound:

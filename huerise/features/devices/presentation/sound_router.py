@@ -23,7 +23,7 @@ async def list_sounds(
     sound_service: FromDishka[SoundService],
     category: SoundCategory | None = None,
 ) -> list[SoundRead]:
-    sounds = await sound_service.list_sounds(category)
+    sounds = await sound_service.find_all(category)
     return [SoundRead.from_domain(sound) for sound in sounds]
 
 
