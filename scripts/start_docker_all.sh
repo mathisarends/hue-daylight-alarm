@@ -6,4 +6,4 @@ repo_dir="$(cd "$script_dir/.." && pwd)"
 cd "$repo_dir"
 
 export AUDIO_BACKENDS=all
-exec docker compose -f compose.yml -f compose.audio.yml up --build "$@"
+exec docker compose -f compose.yml -f compose.audio.yml up --build --detach "$@"
