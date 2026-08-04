@@ -22,7 +22,7 @@ profile_router = APIRouter(
 async def list_profiles(
     profile_service: FromDishka[AlarmProfileService],
 ) -> list[ProfileRead]:
-    profiles = await profile_service.list_profiles()
+    profiles = await profile_service.find_all()
     return [ProfileRead.from_domain(profile) for profile in profiles]
 
 
@@ -33,7 +33,7 @@ async def create_profile(
     body: ProfileCreate,
     profile_service: FromDishka[AlarmProfileService],
 ) -> ProfileRead:
-    profile = await profile_service.create_profile(
+    profile = await profile_service.create(
         name=body.name,
         intro_config=body.intro.to_domain(),
         sunrise_config=body.sunrise.to_domain(),

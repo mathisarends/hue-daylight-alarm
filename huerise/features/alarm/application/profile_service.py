@@ -17,16 +17,16 @@ class AlarmProfileService:
     def __init__(self, profiles: AlarmProfileRepository) -> None:
         self._profiles = profiles
 
-    async def list_profiles(self) -> list[AlarmProfile]:
+    async def find_all(self) -> list[AlarmProfile]:
         return await self._profiles.find_all()
 
-    async def get_profile(self, profile_id: UUID) -> AlarmProfile:
+    async def find_by_id(self, profile_id: UUID) -> AlarmProfile:
         profile = await self._profiles.find_by_id(profile_id)
         if profile is None:
             raise AlarmProfileNotFoundError(profile_id)
         return profile
 
-    async def create_profile(
+    async def create(
         self,
         name: str,
         intro_config: IntroConfig,
