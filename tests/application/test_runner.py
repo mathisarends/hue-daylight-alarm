@@ -1,5 +1,5 @@
 from datetime import UTC, datetime, timedelta
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 from huerise.features.alarm.domain import OccurrenceState
 from huerise.features.devices.domain import SunriseRamp, sunrise_steps
@@ -70,10 +70,13 @@ class TestRun:
         with patch("asyncio.sleep"):
             await runner.run(occurrence)
 
-        lights.activate_scene.assert_awaited_once_with(
-            profile.sunrise_config.scene_id,
-            brightness=profile.sunrise_config.brightness_start,
-        )
+        assert lights.activate_scene.await_args_list == [
+            call(
+                profile.sunrise_config.scene_id,
+                brightness=profile.sunrise_config.brightness_start,
+            ),
+            call(profile.sunrise_config.scene_id),
+        ]
         audio.play.assert_any_await(
             profile.ringtone_config.sound_id, profile.ringtone_config.volume
         )
@@ -131,14 +134,25 @@ class TestPublishedEvents:
 
     async def test_reports_progress_once_per_brightness_step(self) -> None:
         events = RecordingPublisher()
-        runner, occurrence, _, _, _, _, profile = make_runner(events=events)
+        runner, occurrence, _, lights, _, _, profile = make_runner(events=events)
 
         with patch("asyncio.sleep"):
             await runner.run(occurrence)
 
         progress = events.of_type(OccurrenceProgress)
+        scene_brightness = round(
+            (await lights.list_rooms())[0].scenes[0].brightness or 100
+        )
         assert [event.brightness for event in progress] == [
-            step.brightness for step in sunrise_steps(ramp_of(profile), STEP)
+            step.brightness
+            for step in sunrise_steps(
+                SunriseRamp(
+                    duration=profile.sunrise_config.duration,
+                    brightness_start=profile.sunrise_config.brightness_start,
+                    brightness_end=scene_brightness,
+                ),
+                STEP,
+            )
         ]
         assert progress[-1].percent == 100.0
 

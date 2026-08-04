@@ -22,7 +22,13 @@ from huerise.features.alarm.domain import (
     Weekday,
 )
 from huerise.features.devices.application import AudioPlayer, Lights
-from huerise.features.devices.domain import Sound, SoundCategory, SoundRepository
+from huerise.features.devices.domain import (
+    Room,
+    Scene,
+    Sound,
+    SoundCategory,
+    SoundRepository,
+)
 from huerise.features.events.application import EventPublisher
 from huerise.features.events.domain import HueriseEvent
 
@@ -246,7 +252,21 @@ def make_audio() -> AudioPlayer:
 
 def make_lights() -> Lights:
     lights = MagicMock(spec=Lights)
-    lights.list_rooms = AsyncMock(return_value=[])
+    lights.list_rooms = AsyncMock(
+        return_value=[
+            Room(
+                id=ROOM_ID,
+                name="Bedroom",
+                scenes=(
+                    Scene(
+                        id=SCENE_ID,
+                        name="Tageslichtwecker",
+                        brightness=72,
+                    ),
+                ),
+            )
+        ]
+    )
     lights.activate_scene = AsyncMock()
     lights.set_brightness = AsyncMock()
     return lights
@@ -277,6 +297,7 @@ def make_alarm_service(
     profiles: AlarmProfileRepository | None = None,
     occurrences: AlarmOccurrenceRepository | None = None,
     audio: AudioPlayer | None = None,
+    lights: Lights | None = None,
     events: EventPublisher | None = None,
 ) -> AlarmService:
     return AlarmService(
@@ -288,5 +309,6 @@ def make_alarm_service(
         if occurrences is not None
         else InMemoryOccurrenceRepository(),
         audio=audio if audio is not None else make_audio(),
+        lights=lights if lights is not None else make_lights(),
         events=events if events is not None else RecordingPublisher(),
     )

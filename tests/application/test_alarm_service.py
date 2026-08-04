@@ -12,6 +12,7 @@ from huerise.features.alarm.domain import (
     Schedule,
     Weekday,
 )
+from huerise.features.devices.domain import Room, SceneNotFoundError
 from huerise.features.events.domain import (
     AlarmCreated,
     AlarmDeleted,
@@ -29,6 +30,7 @@ from tests.application.conftest import (
     make_alarm,
     make_alarm_service,
     make_audio,
+    make_lights,
     make_occurrence,
     make_profile,
 )
@@ -119,6 +121,24 @@ class TestCreateAlarm:
                 room_name="Bedroom",
                 profile_id=uuid4(),
             )
+
+    async def test_rejects_a_profile_scene_missing_from_the_hue_room(self) -> None:
+        lights = make_lights()
+        lights.list_rooms.return_value = [
+            Room(id=ROOM_ID, name="Bedroom", scenes=())
+        ]
+        alarms = InMemoryAlarmRepository()
+        service = make_alarm_service(alarms=alarms, lights=lights)
+
+        with pytest.raises(SceneNotFoundError):
+            await service.create(
+                label="Work",
+                schedule=Schedule(hour=6, minute=45),
+                room_id=ROOM_ID,
+                room_name="Bedroom",
+            )
+
+        assert alarms.items == {}
 
 
 class TestPublishedEvents:

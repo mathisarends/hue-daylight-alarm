@@ -11,7 +11,14 @@ from huerise.features.alarm.domain import (
     OccurrenceState,
 )
 from huerise.features.devices.application import AudioPlayer, Lights
-from huerise.features.devices.domain import STEP_INTERVAL, SunriseRamp, sunrise_steps
+from huerise.features.devices.domain import (
+    STEP_INTERVAL,
+    RoomNotFoundError,
+    Scene,
+    SceneNotFoundError,
+    SunriseRamp,
+    sunrise_steps,
+)
 from huerise.features.events.application import EventPublisher
 from huerise.features.events.domain import (
     OccurrenceDismissed,
@@ -87,6 +94,20 @@ class AlarmRunner(AlarmRunnerPort):
         )
         self._intro_tasks.add(intro_task)
         intro_task.add_done_callback(self._intro_finished)
+        scene = await self._get_scene(alarm.room_id, sunrise.scene_id)
+        brightness_end = (
+            round(scene.brightness)
+            if scene.brightness is not None
+            else sunrise.brightness_end
+        )
+        # A profile may impose a lower ceiling, but its default of 100% must
+        # not make a dimmer Hue scene brighter than it was configured.
+        brightness_end = min(brightness_end, sunrise.brightness_end)
+        if brightness_end <= sunrise.brightness_start:
+            raise ValueError(
+                f"Scene '{scene.name}' brightness must be above the sunrise "
+                f"start brightness ({sunrise.brightness_start}%)"
+            )
         await self._lights.activate_scene(
             sunrise.scene_id, brightness=sunrise.brightness_start
         )
@@ -94,7 +115,7 @@ class AlarmRunner(AlarmRunnerPort):
         ramp = SunriseRamp(
             duration=sunrise.duration,
             brightness_start=sunrise.brightness_start,
-            brightness_end=sunrise.brightness_end,
+            brightness_end=brightness_end,
         )
         for step in sunrise_steps(ramp, self._step_interval):
             if not await self._still_in_state(occurrence.id, OccurrenceState.SUNRISE):
@@ -113,6 +134,22 @@ class AlarmRunner(AlarmRunnerPort):
                 )
             )
             await asyncio.sleep(self._step_interval.total_seconds())
+
+        # Group dimming flattens the individual light levels. A final recall
+        # without an override restores the scene exactly as stored in Hue.
+        await self._lights.activate_scene(sunrise.scene_id)
+
+    async def _get_scene(self, room_id: UUID, scene_id: UUID) -> Scene:
+        room = next(
+            (room for room in await self._lights.list_rooms() if room.id == room_id),
+            None,
+        )
+        if room is None:
+            raise RoomNotFoundError(str(room_id))
+        scene = next((scene for scene in room.scenes if scene.id == scene_id), None)
+        if scene is None:
+            raise SceneNotFoundError(str(room_id), str(scene_id))
+        return scene
 
     def _intro_finished(self, task: asyncio.Task[None]) -> None:
         self._intro_tasks.discard(task)

@@ -1,6 +1,7 @@
 from uuid import UUID
 
 from hueify import Hueify
+from hueify.models import Scene as HueScene
 
 from huerise.features.devices.application import Lights
 from huerise.features.devices.domain import Room, Scene
@@ -17,7 +18,11 @@ class HueLights(Lights):
                 id=room.id,
                 name=room.name,
                 scenes=tuple(
-                    Scene(id=scene.id, name=scene.name)
+                    Scene(
+                        id=scene.id,
+                        name=scene.name,
+                        brightness=_scene_brightness(scene),
+                    )
                     for scene in await self._hue.rooms.scenes(room.id)
                 ),
             )
@@ -31,3 +36,25 @@ class HueLights(Lights):
 
     async def set_brightness(self, room_id: UUID, brightness: float) -> None:
         await self._hue.rooms.set_brightness(room_id, brightness)
+
+
+def _scene_brightness(scene: HueScene) -> float | None:
+    """Return Hue's effective group brightness for a stored scene.
+
+    Hue stores one action per light, not a single scene-level brightness.  The
+    grouped-light API represents the group brightness as the mean of its lit
+    members, so use the same aggregation here.  Off lights are excluded: their
+    remembered dimming value is not part of the visible scene.
+    """
+    brightnesses: list[float] = []
+    for target in scene.actions:
+        action = target.action
+        if action.is_on is False:
+            continue
+        brightness = action.brightness
+        if brightness is not None:
+            brightnesses.append(brightness)
+
+    if not brightnesses:
+        return None
+    return sum(brightnesses) / len(brightnesses)

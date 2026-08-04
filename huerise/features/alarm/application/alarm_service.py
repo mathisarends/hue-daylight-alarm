@@ -15,7 +15,8 @@ from huerise.features.alarm.domain import (
     OccurrenceState,
     Schedule,
 )
-from huerise.features.devices.application import AudioPlayer
+from huerise.features.devices.application import AudioPlayer, Lights
+from huerise.features.devices.domain import RoomNotFoundError, SceneNotFoundError
 from huerise.features.events.application import EventPublisher
 from huerise.features.events.domain import (
     AlarmCreated,
@@ -38,12 +39,14 @@ class AlarmService:
         profiles: AlarmProfileRepository,
         occurrences: AlarmOccurrenceRepository,
         audio: AudioPlayer,
+        lights: Lights,
         events: EventPublisher,
     ) -> None:
         self._alarms = alarms
         self._profiles = profiles
         self._occurrences = occurrences
         self._audio = audio
+        self._lights = lights
         self._events = events
 
     async def find_all(self) -> list[Alarm]:
@@ -65,6 +68,7 @@ class AlarmService:
     ) -> Alarm:
         """Create a wake-up rule. Without weekdays it fires once and disables itself."""
         profile = await self._resolve_profile(profile_id)
+        await self._validate_scene(room_id, profile)
 
         logger.info(
             "Creating alarm '%s' at %02d:%02d %s (%s)",
@@ -96,8 +100,9 @@ class AlarmService:
     ) -> Alarm:
         """Change a wake-up rule. Omitted fields keep their current value."""
         alarm = await self.find_by_id(alarm_id)
-        if profile_id is not None:
-            await self._resolve_profile(profile_id)
+        if room_id is not None or profile_id is not None:
+            profile = await self._resolve_profile(profile_id or alarm.profile_id)
+            await self._validate_scene(room_id or alarm.room_id, profile)
 
         changed = alarm.update(
             label=label,
@@ -191,6 +196,34 @@ class AlarmService:
         if profile is None:
             raise AlarmProfileNotFoundError(profile_id)
         return profile
+
+    async def _validate_scene(self, room_id: UUID, profile: AlarmProfile) -> None:
+        room = next(
+            (room for room in await self._lights.list_rooms() if room.id == room_id),
+            None,
+        )
+        if room is None:
+            raise RoomNotFoundError(str(room_id))
+        scene = next(
+            (
+                scene
+                for scene in room.scenes
+                if scene.id == profile.sunrise_config.scene_id
+            ),
+            None,
+        )
+        if scene is None:
+            raise SceneNotFoundError(str(room_id), str(profile.sunrise_config.scene_id))
+
+        brightness = scene.brightness
+        if (
+            brightness is not None
+            and round(brightness) <= profile.sunrise_config.brightness_start
+        ):
+            raise ValueError(
+                f"Scene '{scene.name}' brightness must be above the sunrise "
+                f"start brightness ({profile.sunrise_config.brightness_start}%)"
+            )
 
     async def _drop_pending_occurrence(self, alarm_id: UUID) -> None:
         """Retire the run materialised for the old time, so it cannot still fire.

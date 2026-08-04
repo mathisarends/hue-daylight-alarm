@@ -8,6 +8,7 @@ class Scene:
 
     id: UUID
     name: str
+    brightness: float | None = None
 
 
 @dataclass(frozen=True, slots=True)
