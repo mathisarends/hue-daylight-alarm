@@ -1346,9 +1346,10 @@ func (s *SoundPreviewRequest) SetVolume(val OptInt) {
 // Ref: #/components/schemas/SoundRead
 type SoundRead struct {
 	// Store this UUID in a profile.
-	ID       uuid.UUID     `json:"id"`
-	Name     string        `json:"name"`
-	Category SoundCategory `json:"category"`
+	ID        uuid.UUID     `json:"id"`
+	Name      string        `json:"name"`
+	Category  SoundCategory `json:"category"`
+	CreatedAt time.Time     `json:"created_at"`
 }
 
 // GetID returns the value of ID.
@@ -1366,6 +1367,11 @@ func (s *SoundRead) GetCategory() SoundCategory {
 	return s.Category
 }
 
+// GetCreatedAt returns the value of CreatedAt.
+func (s *SoundRead) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
 // SetID sets the value of ID.
 func (s *SoundRead) SetID(val uuid.UUID) {
 	s.ID = val
@@ -1379,6 +1385,11 @@ func (s *SoundRead) SetName(val string) {
 // SetCategory sets the value of Category.
 func (s *SoundRead) SetCategory(val SoundCategory) {
 	s.Category = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *SoundRead) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
 }
 
 func (*SoundRead) previewSoundRes() {}

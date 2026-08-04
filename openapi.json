@@ -2374,13 +2374,19 @@
           },
           "category": {
             "$ref": "#/components/schemas/SoundCategory"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
           }
         },
         "type": "object",
         "required": [
           "id",
           "name",
-          "category"
+          "category",
+          "created_at"
         ],
         "title": "SoundRead",
         "description": "A sound as an alarm profile refers to it."

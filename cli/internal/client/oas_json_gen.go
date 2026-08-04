@@ -2569,12 +2569,17 @@ func (s *SoundRead) encodeFields(e *jx.Encoder) {
 		e.FieldStart("category")
 		s.Category.Encode(e)
 	}
+	{
+		e.FieldStart("created_at")
+		json.EncodeDateTime(e, s.CreatedAt)
+	}
 }
 
-var jsonFieldsNameOfSoundRead = [3]string{
+var jsonFieldsNameOfSoundRead = [4]string{
 	0: "id",
 	1: "name",
 	2: "category",
+	3: "created_at",
 }
 
 // Decode decodes SoundRead from json.
@@ -2620,6 +2625,18 @@ func (s *SoundRead) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"category\"")
 			}
+		case "created_at":
+			requiredBitSet[0] |= 1 << 3
+			if err := func() error {
+				v, err := json.DecodeDateTime(d)
+				s.CreatedAt = v
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"created_at\"")
+			}
 		default:
 			return d.Skip()
 		}
@@ -2630,7 +2647,7 @@ func (s *SoundRead) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00000111,
+		0b00001111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.

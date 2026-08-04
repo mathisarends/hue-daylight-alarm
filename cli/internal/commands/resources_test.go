@@ -55,7 +55,10 @@ func TestSoundsPreviewSendsGeneratedRequest(t *testing.T) {
 		}
 		writer.Header().Set("Content-Type", "application/json")
 		writer.WriteHeader(http.StatusAccepted)
-		_, _ = writer.Write([]byte(fmt.Sprintf(`{"id":%q,"name":"Shimmer","category":"get_up"}`, soundID)))
+		_, _ = writer.Write([]byte(fmt.Sprintf(
+			`{"id":%q,"name":"Shimmer","category":"get_up","created_at":"2026-08-04T08:00:00Z"}`,
+			soundID,
+		)))
 	}))
 	defer server.Close()
 
