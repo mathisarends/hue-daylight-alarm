@@ -6,7 +6,7 @@ import pytest_asyncio
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlmodel import SQLModel
 
-from huerise.features.alarm.domain import OccurrenceState
+from huerise.features.alarm.domain import AlarmDefect, OccurrenceState
 from huerise.features.alarm.infrastructure.persistence import (
     SQLAlarmOccurrenceRepository,
     SQLAlarmProfileRepository,
@@ -15,7 +15,7 @@ from huerise.features.alarm.infrastructure.persistence import (
 )
 from huerise.features.devices.domain import Sound, SoundCategory
 from huerise.features.devices.infrastructure.persistence import SQLSoundRepository
-from huerise.infrastructure.database.models import OCCURRENCE_STATES
+from huerise.infrastructure.database.models import ALARM_DEFECTS, OCCURRENCE_STATES
 from tests.application.conftest import make_alarm, make_occurrence, make_profile
 
 NOW = datetime(2026, 8, 3, 5, 0, tzinfo=UTC)
@@ -32,6 +32,10 @@ async def session_factory() -> AsyncIterator[async_sessionmaker]:
 
 def test_orm_states_match_the_domain_enum() -> None:
     assert tuple(state.value for state in OccurrenceState) == OCCURRENCE_STATES
+
+
+def test_orm_defects_match_the_domain_enum() -> None:
+    assert tuple(defect.value for defect in AlarmDefect) == ALARM_DEFECTS
 
 
 class TestRoundtrip:
@@ -85,6 +89,24 @@ class TestRoundtrip:
         assert stored is not None
         assert stored.created_at.tzinfo is not None
         assert stored.created_at == alarm.created_at
+
+    async def test_alarm_defect_roundtrips_as_enum(self, session_factory) -> None:
+        """A defect outlives the process: the bridge reports a deletion once."""
+        profile = make_profile()
+        alarm = make_alarm(profile_id=profile.id)
+        alarm.set_defect(AlarmDefect.ROOM_MISSING)
+
+        async with session_factory() as session:
+            await SQLAlarmProfileRepository(session).save(profile)
+            await SQLAlarmRepository(session).save(alarm)
+            await session.commit()
+
+        async with session_factory() as session:
+            stored = await SQLAlarmRepository(session).find_by_id(alarm.id)
+
+        assert stored is not None
+        assert stored.defect is AlarmDefect.ROOM_MISSING
+        assert stored.is_broken
 
     async def test_occurrence_state_roundtrips_as_enum(self, session_factory) -> None:
         profile = make_profile()

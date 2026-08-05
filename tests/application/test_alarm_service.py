@@ -4,6 +4,7 @@ from uuid import uuid4
 import pytest
 
 from huerise.features.alarm.domain import (
+    AlarmDefect,
     AlarmField,
     AlarmNotFoundError,
     AlarmProfileNotFoundError,
@@ -124,9 +125,7 @@ class TestCreateAlarm:
 
     async def test_rejects_a_profile_scene_missing_from_the_hue_room(self) -> None:
         lights = make_lights()
-        lights.list_rooms.return_value = [
-            Room(id=ROOM_ID, name="Bedroom", scenes=())
-        ]
+        lights.list_rooms.return_value = [Room(id=ROOM_ID, name="Bedroom", scenes=())]
         alarms = InMemoryAlarmRepository()
         service = make_alarm_service(alarms=alarms, lights=lights)
 
@@ -308,6 +307,23 @@ class TestUpdateAlarm:
             await service.update(alarm.id, label="Weekend", profile_id=uuid4())
 
         assert alarm.label == "Morning"
+
+    async def test_re_picking_the_room_clears_a_defect(self) -> None:
+        """The room and scene were just checked, so the bridge trouble is over."""
+        profile = make_profile()
+        alarm = make_alarm(profile_id=profile.id)
+        alarm.set_defect(AlarmDefect.ROOM_MISSING)
+        published = RecordingPublisher()
+        service = make_alarm_service(
+            alarms=InMemoryAlarmRepository([alarm]),
+            profiles=InMemoryProfileRepository([profile]),
+            events=published,
+        )
+
+        result = await service.update(alarm.id, room_id=ROOM_ID, room_name="Bedroom")
+
+        assert result.defect is None
+        assert published.only(AlarmUpdated).changed == [AlarmField.DEFECT]
 
     async def test_rescheduling_skips_the_run_queued_for_the_old_time(self) -> None:
         alarm = make_alarm(hour=7, minute=0)
