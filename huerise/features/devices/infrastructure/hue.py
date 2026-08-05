@@ -60,10 +60,24 @@ class HueLightEvents(LightEvents):
     def subscribe(self, handler: LightChangeHandler) -> None:
         self._handlers.append(handler)
 
+    def unsubscribe(self, handler: LightChangeHandler) -> None:
+        if handler in self._handlers:
+            self._handlers.remove(handler)
+
     async def start(self) -> None:
         for resource_type in self._RESOURCES:
             self._hue.on(resource_type, self._on_event)
-        await self._hue.start_events()
+        try:
+            await self._hue.start_events()
+        except BaseException:
+            for resource_type in self._RESOURCES:
+                self._hue.off(resource_type, self._on_event)
+            raise
+
+    async def stop(self) -> None:
+        for resource_type in self._RESOURCES:
+            self._hue.off(resource_type, self._on_event)
+        await self._hue.stop_events()
 
     async def _on_event(self, event: RoomEvent | SceneEvent) -> None:
         # Too chatty for INFO: every scene recall passes through here as well.

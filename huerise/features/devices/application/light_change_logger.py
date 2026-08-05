@@ -12,7 +12,11 @@ class LightChangeLogger:
     def __init__(self, events: LightEvents) -> None:
         self._events = events
 
+    async def start(self) -> None:
         self._events.subscribe(self._log)
+
+    async def stop(self) -> None:
+        self._events.unsubscribe(self._log)
 
     async def _log(self, change: LightChange) -> None:
         logger.info(

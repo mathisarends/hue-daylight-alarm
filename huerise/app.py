@@ -4,11 +4,12 @@ from fastapi import FastAPI
 
 from huerise.features import FEATURES
 from huerise.infrastructure.di import DatabaseProvider, StorageProvider
-from huerise.lifespan import lifespan
+from huerise.lifespan import LifecycleProvider, lifespan
 
 INFRASTRUCTURE_PROVIDERS: tuple[type[Provider], ...] = (
     DatabaseProvider,
     StorageProvider,
+    LifecycleProvider,
 )
 
 _TITLE = "Huerise Alarm API"

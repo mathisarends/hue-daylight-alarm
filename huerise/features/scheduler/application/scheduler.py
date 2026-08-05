@@ -17,13 +17,13 @@ from huerise.features.runner.application.runner_port import AlarmRunner
 
 logger = logging.getLogger(__name__)
 
-TICK_INTERVAL = timedelta(seconds=30)
+_TICK_INTERVAL = timedelta(seconds=30)
 # How far ahead occurrences are materialised. One day is enough to see every
 # rule at least once while keeping the table small.
-LOOKAHEAD = timedelta(hours=24)
+_LOOKAHEAD = timedelta(hours=24)
 # An occurrence missed by more than this (process was down) is skipped rather
 # than fired hours late.
-GRACE_PERIOD = timedelta(minutes=15)
+_GRACE_PERIOD = timedelta(minutes=15)
 
 
 class AlarmScheduler:
@@ -34,9 +34,9 @@ class AlarmScheduler:
         unit_of_work_factory: AlarmUnitOfWorkFactory,
         runner: AlarmRunner,
         events: EventPublisher,
-        tick_interval: timedelta = TICK_INTERVAL,
-        lookahead: timedelta = LOOKAHEAD,
-        grace_period: timedelta = GRACE_PERIOD,
+        tick_interval: timedelta = _TICK_INTERVAL,
+        lookahead: timedelta = _LOOKAHEAD,
+        grace_period: timedelta = _GRACE_PERIOD,
     ) -> None:
         self._unit_of_work_factory = unit_of_work_factory
         self._runner = runner
@@ -45,6 +45,21 @@ class AlarmScheduler:
         self._lookahead = lookahead
         self._grace_period = grace_period
         self._running_tasks: set[asyncio.Task[None]] = set()
+        self._task: asyncio.Task[None] | None = None
+
+    async def start(self) -> None:
+        self._task = asyncio.create_task(self.run())
+
+    async def stop(self) -> None:
+        if self._task is None:
+            return
+        self._task.cancel()
+        try:
+            await self._task
+        except asyncio.CancelledError:
+            pass
+        finally:
+            self._task = None
 
     async def run(self) -> None:
         while True:

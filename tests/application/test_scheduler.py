@@ -55,6 +55,27 @@ def make_scheduler(
     return scheduler, occurrences, runner, alarms
 
 
+async def test_lifecycle_owns_the_scheduler_loop() -> None:
+    scheduler, _, _, _ = make_scheduler()
+    started = asyncio.Event()
+    cancelled = asyncio.Event()
+
+    async def run_until_cancelled() -> None:
+        started.set()
+        try:
+            await asyncio.Future()
+        finally:
+            cancelled.set()
+
+    scheduler.run = run_until_cancelled
+
+    await scheduler.start()
+    await started.wait()
+    await scheduler.stop()
+
+    assert cancelled.is_set()
+
+
 class TestMaterialise:
     async def test_creates_the_next_occurrence_for_an_enabled_alarm(self) -> None:
         alarm = make_alarm(hour=7, minute=0)

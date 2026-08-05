@@ -1,5 +1,6 @@
 import logging
-from datetime import datetime
+from collections.abc import Callable
+from datetime import UTC, datetime
 from uuid import UUID
 
 from transitbus import EventBus
@@ -18,6 +19,10 @@ from huerise.features.events.domain import (
 logger = logging.getLogger(__name__)
 
 type Upcoming = tuple[Alarm, datetime]
+
+
+def _utc_now() -> datetime:
+    return datetime.now(UTC)
 
 
 class NextAlarmTracker:
@@ -40,19 +45,26 @@ class NextAlarmTracker:
     )
 
     def __init__(
-        self, bus: EventBus, unit_of_work_factory: AlarmUnitOfWorkFactory
+        self,
+        bus: EventBus,
+        unit_of_work_factory: AlarmUnitOfWorkFactory,
+        now: Callable[[], datetime] = _utc_now,
     ) -> None:
         self._bus = bus
         self._unit_of_work_factory = unit_of_work_factory
+        self._now = now
         self._current: tuple[UUID, datetime] | None = None
-
-        for trigger in self.TRIGGERS:
-            self._bus.on(trigger, self._on_trigger)
 
     async def start(self) -> None:
         """Take the baseline, so that the first change published is a real one."""
         self._current = _key(await self._earliest())
+        for trigger in self.TRIGGERS:
+            self._bus.on(trigger, self._on_trigger)
         logger.info("Tracking next alarm from %s", _describe(self._current))
+
+    async def stop(self) -> None:
+        for trigger in self.TRIGGERS:
+            self._bus.off(trigger, self._on_trigger)
 
     async def _on_trigger(self, event: HueriseEvent) -> None:
         upcoming = await self._earliest()
@@ -73,10 +85,11 @@ class NextAlarmTracker:
         async with self._unit_of_work_factory.create() as uow:
             alarms = await uow.alarms.find_enabled()
 
+        now = self._now()
         upcoming = [
             (alarm, when)
             for alarm in alarms
-            if (when := alarm.next_occurrence()) is not None
+            if (when := alarm.next_occurrence(now)) is not None
         ]
         return min(upcoming, key=lambda candidate: candidate[1], default=None)
 

@@ -27,7 +27,7 @@ from tests.application.conftest import (
     make_profile,
 )
 
-NOW = datetime(2026, 8, 3, 4, 0, tzinfo=UTC)
+NOW = datetime(2026, 8, 3, 3, 0, tzinfo=UTC)
 
 
 async def make_tracker(
@@ -40,7 +40,9 @@ async def make_tracker(
         occurrences=InMemoryOccurrenceRepository(),
     )
     bus = EventBus(name="test", max_history=100)
-    tracker = NextAlarmTracker(bus, FakeUnitOfWorkFactory(unit_of_work))
+    tracker = NextAlarmTracker(
+        bus, FakeUnitOfWorkFactory(unit_of_work), now=lambda: NOW
+    )
     await tracker.start()
     return bus, repository, tracker
 
@@ -61,6 +63,26 @@ async def announce(bus: EventBus, event: HueriseEvent) -> None:
     await settle(bus)
 
 
+async def test_subscription_is_owned_by_the_tracker_lifecycle() -> None:
+    repository = InMemoryAlarmRepository()
+    unit_of_work = FakeUnitOfWork(
+        alarms=repository,
+        profiles=InMemoryProfileRepository(),
+        occurrences=InMemoryOccurrenceRepository(),
+    )
+    bus = EventBus(name="test", max_history=100)
+
+    tracker = NextAlarmTracker(
+        bus, FakeUnitOfWorkFactory(unit_of_work), now=lambda: NOW
+    )
+
+    assert bus.handler_count == 0
+    await tracker.start()
+    assert bus.handler_count == len(tracker.TRIGGERS)
+    await tracker.stop()
+    assert bus.handler_count == 0
+
+
 async def test_a_new_earlier_alarm_becomes_the_next_one() -> None:
     later = make_alarm(hour=9, minute=0)
     bus, repository, _ = await make_tracker(later)
@@ -73,7 +95,7 @@ async def test_a_new_earlier_alarm_becomes_the_next_one() -> None:
     assert len(published) == 1
     assert published[0].alarm is not None
     assert published[0].alarm.id == earlier.id
-    assert published[0].scheduled_for == earlier.next_occurrence()
+    assert published[0].scheduled_for == earlier.next_occurrence(NOW)
 
 
 async def test_a_new_later_alarm_leaves_the_next_one_alone() -> None:

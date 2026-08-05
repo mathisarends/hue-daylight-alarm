@@ -1,32 +1,35 @@
-import asyncio
-import contextlib
-from contextlib import asynccontextmanager
+from collections.abc import AsyncGenerator
+from contextlib import AsyncExitStack, asynccontextmanager
 
+from dishka import Provider, Scope, provide
 from fastapi import FastAPI
 
 from huerise.features.devices.application import LightChangeLogger, LightEvents
 from huerise.features.events.application import NextAlarmTracker
 from huerise.features.scheduler.application import AlarmScheduler
+from huerise.lifecycle import Runnable
+
+
+class LifecycleProvider(Provider):
+    scope = Scope.APP
+
+    @provide
+    def runnables(
+        self,
+        light_events: LightEvents,
+        light_logger: LightChangeLogger,
+        tracker: NextAlarmTracker,
+        scheduler: AlarmScheduler,
+    ) -> list[Runnable]:
+        return [light_events, light_logger, tracker, scheduler]
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
-    scheduler = await app.state.dishka_container.get(AlarmScheduler)
-
-    # Resolving the tracker is what subscribes it to the bus; nothing asks for
-    # it later, so without this the derived events would never be emitted.
-    tracker = await app.state.dishka_container.get(NextAlarmTracker)
-    await tracker.start()
-
-    # Same here: resolving the logger is what subscribes it.
-    await app.state.dishka_container.get(LightChangeLogger)
-    await (await app.state.dishka_container.get(LightEvents)).start()
-
-    task = asyncio.create_task(scheduler.run())
-    try:
+async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
+    container = app.state.dishka_container
+    async with AsyncExitStack() as stack:
+        stack.push_async_callback(container.close)
+        for runnable in await container.get(list[Runnable]):
+            await runnable.start()
+            stack.push_async_callback(runnable.stop)
         yield
-    finally:
-        task.cancel()
-        with contextlib.suppress(asyncio.CancelledError):
-            await task
-        await app.state.dishka_container.close()
