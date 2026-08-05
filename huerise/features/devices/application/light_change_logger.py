@@ -2,11 +2,12 @@ import logging
 
 from huerise.features.devices.application.ports import LightEvents
 from huerise.features.devices.domain import LightChange
+from huerise.lifecycle import Runnable
 
 logger = logging.getLogger(__name__)
 
 
-class LightChangeLogger:
+class LightChangeLogger(Runnable):
     """Reports bridge changes while nothing else acts on them yet."""
 
     def __init__(self, events: LightEvents) -> None:

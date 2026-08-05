@@ -14,6 +14,7 @@ from huerise.features.events.domain import (
     OccurrenceSnapshot,
 )
 from huerise.features.runner.application.runner_port import AlarmRunner
+from huerise.lifecycle import Runnable
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +27,7 @@ _LOOKAHEAD = timedelta(hours=24)
 _GRACE_PERIOD = timedelta(minutes=15)
 
 
-class AlarmScheduler:
+class AlarmScheduler(Runnable):
     """Turns alarm rules into occurrences and hands due ones to the runner."""
 
     def __init__(

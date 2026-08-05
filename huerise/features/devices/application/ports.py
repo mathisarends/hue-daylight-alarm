@@ -3,6 +3,7 @@ from collections.abc import Awaitable, Callable
 from uuid import UUID
 
 from huerise.features.devices.domain import LightChange, Room
+from huerise.lifecycle import Runnable
 
 type LightChangeHandler = Callable[[LightChange], Awaitable[None]]
 
@@ -37,7 +38,7 @@ class Lights(ABC):
     async def set_brightness(self, room_id: UUID, brightness: float) -> None: ...
 
 
-class LightEvents(ABC):
+class LightEvents(ABC, Runnable):
     """Rooms and scenes changing on the bridge, pushed as they happen."""
 
     @abstractmethod

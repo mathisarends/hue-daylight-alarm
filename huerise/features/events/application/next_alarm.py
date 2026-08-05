@@ -15,6 +15,7 @@ from huerise.features.events.domain import (
     NextAlarmChanged,
     OccurrenceStarted,
 )
+from huerise.lifecycle import Runnable
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +26,7 @@ def _utc_now() -> datetime:
     return datetime.now(UTC)
 
 
-class NextAlarmTracker:
+class NextAlarmTracker(Runnable):
     """Derives `alarm.next_changed` so that nobody has to emit it by hand.
 
     Listens for the events that can move the next wake-up, recomputes it, and
