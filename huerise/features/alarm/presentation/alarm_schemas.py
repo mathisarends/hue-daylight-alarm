@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from huerise.features.alarm.domain import (
     Alarm,
+    AlarmDefect,
     AlarmOccurrence,
     OccurrenceState,
     Schedule,
@@ -85,6 +86,13 @@ class AlarmRead(BaseModel):
     is_enabled: bool
     created_at: datetime
     next_occurrence: datetime | None
+    defect: AlarmDefect | None = Field(
+        default=None,
+        description=(
+            "Set when the room or scene this alarm points at no longer exists "
+            "on the bridge and could not be replaced automatically."
+        ),
+    )
 
     @classmethod
     def from_domain(cls, alarm: Alarm) -> Self:
@@ -98,6 +106,7 @@ class AlarmRead(BaseModel):
             is_enabled=alarm.is_enabled,
             created_at=alarm.created_at,
             next_occurrence=alarm.next_occurrence(),
+            defect=alarm.defect,
         )
 
 

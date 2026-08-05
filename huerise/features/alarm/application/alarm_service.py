@@ -100,7 +100,8 @@ class AlarmService:
     ) -> Alarm:
         """Change a wake-up rule. Omitted fields keep their current value."""
         alarm = await self.find_by_id(alarm_id)
-        if room_id is not None or profile_id is not None:
+        revalidated = room_id is not None or profile_id is not None
+        if revalidated:
             profile = await self._resolve_profile(profile_id or alarm.profile_id)
             await self._validate_scene(room_id or alarm.room_id, profile)
 
@@ -111,6 +112,10 @@ class AlarmService:
             room_name=room_name,
             profile_id=profile_id,
         )
+        # Room and scene were just checked against the bridge, so whatever the
+        # bridge broke earlier is settled.
+        if revalidated and alarm.set_defect(None):
+            changed.append(AlarmField.DEFECT)
         if not changed:
             return alarm
 

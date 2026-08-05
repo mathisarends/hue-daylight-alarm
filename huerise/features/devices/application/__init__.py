@@ -1,5 +1,4 @@
 from .audio_output import AudioOutputService, AudioOutputStatus, SwitchableAudioPlayer
-from .light_change_logger import LightChangeLogger
 from .ports import AudioPlayer, LightChangeHandler, LightEvents, Lights
 from .scene_service import SceneService, SunriseDemo
 from .sound_service import SoundService
@@ -12,7 +11,6 @@ __all__ = [
     "AudioOutputStatus",
     "AudioPlayer",
     "LightChangeHandler",
-    "LightChangeLogger",
     "LightEvents",
     "Lights",
     "SceneService",

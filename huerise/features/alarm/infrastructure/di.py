@@ -1,7 +1,11 @@
 from dishka import Provider, Scope, provide
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from huerise.features.alarm.application import AlarmProfileService, AlarmService
+from huerise.features.alarm.application import (
+    AlarmProfileService,
+    AlarmService,
+    LightReferenceSync,
+)
 from huerise.features.alarm.domain import (
     AlarmOccurrenceRepository,
     AlarmProfileRepository,
@@ -14,7 +18,7 @@ from huerise.features.alarm.infrastructure.persistence import (
     SQLAlarmRepository,
     SQLAlarmUnitOfWorkFactory,
 )
-from huerise.features.devices.application import AudioPlayer, Lights
+from huerise.features.devices.application import AudioPlayer, LightEvents, Lights
 from huerise.features.events.application import EventPublisher
 
 
@@ -61,3 +65,18 @@ class AlarmProvider(Provider):
     @provide
     def profile_service(self, profiles: AlarmProfileRepository) -> AlarmProfileService:
         return AlarmProfileService(profiles)
+
+    @provide(scope=Scope.APP)
+    def light_reference_sync(
+        self,
+        light_events: LightEvents,
+        lights: Lights,
+        unit_of_work_factory: AlarmUnitOfWorkFactory,
+        publisher: EventPublisher,
+    ) -> LightReferenceSync:
+        return LightReferenceSync(
+            events=light_events,
+            lights=lights,
+            unit_of_work_factory=unit_of_work_factory,
+            publisher=publisher,
+        )
