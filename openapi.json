@@ -1146,7 +1146,8 @@
                       "occurrence.scheduled": "#/components/schemas/OccurrenceScheduled",
                       "occurrence.skipped": "#/components/schemas/OccurrenceSkipped",
                       "occurrence.snoozed": "#/components/schemas/OccurrenceSnoozed",
-                      "occurrence.started": "#/components/schemas/OccurrenceStarted"
+                      "occurrence.started": "#/components/schemas/OccurrenceStarted",
+                      "profile.updated": "#/components/schemas/ProfileUpdated"
                     },
                     "propertyName": "type"
                   },
@@ -1162,6 +1163,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/NextAlarmChanged"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ProfileUpdated"
                     },
                     {
                       "$ref": "#/components/schemas/OccurrenceScheduled"
@@ -1288,6 +1292,15 @@
         ],
         "title": "AlarmCreated"
       },
+      "AlarmDefect": {
+        "type": "string",
+        "enum": [
+          "room_missing",
+          "scene_missing"
+        ],
+        "title": "AlarmDefect",
+        "description": "Why an alarm cannot currently light a room.\n\nSet when a Hue resource an alarm points at stops resolving and could not be\nreplaced, so a client can say so long before the wake-up is due."
+      },
       "AlarmDeleted": {
         "properties": {
           "id": {
@@ -1336,7 +1349,8 @@
           "schedule",
           "room",
           "profile_id",
-          "is_enabled"
+          "is_enabled",
+          "defect"
         ],
         "title": "AlarmField",
         "description": "A field of an alarm rule that a change can be reported against."
@@ -1389,6 +1403,17 @@
               }
             ],
             "title": "Next Occurrence"
+          },
+          "defect": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AlarmDefect"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Set when the room or scene this alarm points at no longer exists on the bridge and could not be replaced automatically."
           }
         },
         "type": "object",
@@ -1443,6 +1468,17 @@
               }
             ],
             "title": "Next Occurrence"
+          },
+          "defect": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AlarmDefect"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Why this alarm cannot light its room."
           }
         },
         "type": "object",
@@ -1584,6 +1620,9 @@
             "$ref": "#/components/schemas/NextAlarmChanged"
           },
           {
+            "$ref": "#/components/schemas/ProfileUpdated"
+          },
+          {
             "$ref": "#/components/schemas/OccurrenceScheduled"
           },
           {
@@ -1622,7 +1661,8 @@
             "occurrence.scheduled": "#/components/schemas/OccurrenceScheduled",
             "occurrence.skipped": "#/components/schemas/OccurrenceSkipped",
             "occurrence.snoozed": "#/components/schemas/OccurrenceSnoozed",
-            "occurrence.started": "#/components/schemas/OccurrenceStarted"
+            "occurrence.started": "#/components/schemas/OccurrenceStarted",
+            "profile.updated": "#/components/schemas/ProfileUpdated"
           }
         }
       },
@@ -2330,6 +2370,14 @@
         ],
         "title": "ProfileCreate"
       },
+      "ProfileField": {
+        "type": "string",
+        "enum": [
+          "sunrise_scene"
+        ],
+        "title": "ProfileField",
+        "description": "A field of a profile that a change can be reported against."
+      },
       "ProfileRead": {
         "properties": {
           "name": {
@@ -2366,6 +2414,83 @@
         ],
         "title": "ProfileRead",
         "description": "Everything a profile is created with, plus what the server owns."
+      },
+      "ProfileSnapshot": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "is_default": {
+            "type": "boolean",
+            "title": "Is Default"
+          },
+          "sunrise": {
+            "$ref": "#/components/schemas/SunriseSnapshot"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "is_default",
+          "sunrise"
+        ],
+        "title": "ProfileSnapshot",
+        "description": "The behaviour shared by every alarm using it, as of an event.\n\nOnly the sunrise is carried: the intro and ringtone are sounds this app\nowns, and nothing outside it can move them."
+      },
+      "ProfileUpdated": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "type": {
+            "type": "string",
+            "const": "profile.updated",
+            "title": "Type",
+            "default": "profile.updated"
+          },
+          "profile": {
+            "$ref": "#/components/schemas/ProfileSnapshot"
+          },
+          "changed": {
+            "items": {
+              "$ref": "#/components/schemas/ProfileField"
+            },
+            "type": "array",
+            "title": "Changed",
+            "description": "The fields this update actually moved."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "profile",
+          "changed"
+        ],
+        "title": "ProfileUpdated"
       },
       "RingtoneSchema": {
         "properties": {
@@ -2723,6 +2848,40 @@
           "scene_name"
         ],
         "title": "SunriseSchema"
+      },
+      "SunriseSnapshot": {
+        "properties": {
+          "scene_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Scene Id"
+          },
+          "scene_name": {
+            "type": "string",
+            "title": "Scene Name"
+          },
+          "duration_minutes": {
+            "type": "integer",
+            "title": "Duration Minutes"
+          },
+          "brightness_start": {
+            "type": "integer",
+            "title": "Brightness Start"
+          },
+          "brightness_end": {
+            "type": "integer",
+            "title": "Brightness End"
+          }
+        },
+        "type": "object",
+        "required": [
+          "scene_id",
+          "scene_name",
+          "duration_minutes",
+          "brightness_start",
+          "brightness_end"
+        ],
+        "title": "SunriseSnapshot"
       },
       "ValidationError": {
         "properties": {

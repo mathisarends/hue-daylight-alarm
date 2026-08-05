@@ -176,6 +176,46 @@ func (s *AlarmCreate) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
+// Encode encodes AlarmDefect as json.
+func (s AlarmDefect) Encode(e *jx.Encoder) {
+	e.Str(string(s))
+}
+
+// Decode decodes AlarmDefect from json.
+func (s *AlarmDefect) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode AlarmDefect to nil")
+	}
+	v, err := d.StrBytes()
+	if err != nil {
+		return err
+	}
+	// Try to use constant string.
+	switch AlarmDefect(v) {
+	case AlarmDefectRoomMissing:
+		*s = AlarmDefectRoomMissing
+	case AlarmDefectSceneMissing:
+		*s = AlarmDefectSceneMissing
+	default:
+		*s = AlarmDefect(v)
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s AlarmDefect) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *AlarmDefect) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
 // Encode implements json.Marshaler.
 func (s *AlarmRead) Encode(e *jx.Encoder) {
 	e.ObjStart()
@@ -221,9 +261,15 @@ func (s *AlarmRead) encodeFields(e *jx.Encoder) {
 		e.FieldStart("next_occurrence")
 		s.NextOccurrence.Encode(e, json.EncodeDateTime)
 	}
+	{
+		if s.Defect.Set {
+			e.FieldStart("defect")
+			s.Defect.Encode(e)
+		}
+	}
 }
 
-var jsonFieldsNameOfAlarmRead = [9]string{
+var jsonFieldsNameOfAlarmRead = [10]string{
 	0: "id",
 	1: "label",
 	2: "schedule",
@@ -233,6 +279,7 @@ var jsonFieldsNameOfAlarmRead = [9]string{
 	6: "is_enabled",
 	7: "created_at",
 	8: "next_occurrence",
+	9: "defect",
 }
 
 // Decode decodes AlarmRead from json.
@@ -347,6 +394,16 @@ func (s *AlarmRead) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"next_occurrence\"")
+			}
+		case "defect":
+			if err := func() error {
+				s.Defect.Reset()
+				if err := s.Defect.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"defect\"")
 			}
 		default:
 			return d.Skip()
@@ -1476,6 +1533,55 @@ func (s OptInt) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *OptInt) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes AlarmDefect as json.
+func (o OptNilAlarmDefect) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	if o.Null {
+		e.Null()
+		return
+	}
+	e.Str(string(o.Value))
+}
+
+// Decode decodes AlarmDefect from json.
+func (o *OptNilAlarmDefect) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptNilAlarmDefect to nil")
+	}
+	if d.Next() == jx.Null {
+		if err := d.Null(); err != nil {
+			return err
+		}
+
+		var v AlarmDefect
+		o.Value = v
+		o.Set = true
+		o.Null = true
+		return nil
+	}
+	o.Set = true
+	o.Null = false
+	if err := o.Value.Decode(d); err != nil {
+		return err
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptNilAlarmDefect) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptNilAlarmDefect) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }

@@ -100,6 +100,51 @@ func (s *AlarmCreate) SetProfileID(val OptNilUUID) {
 	s.ProfileID = val
 }
 
+// Why an alarm cannot currently light a room.
+// Set when a Hue resource an alarm points at stops resolving and could not be
+// replaced, so a client can say so long before the wake-up is due.
+// Ref: #/components/schemas/AlarmDefect
+type AlarmDefect string
+
+const (
+	AlarmDefectRoomMissing  AlarmDefect = "room_missing"
+	AlarmDefectSceneMissing AlarmDefect = "scene_missing"
+)
+
+// AllValues returns all AlarmDefect values.
+func (AlarmDefect) AllValues() []AlarmDefect {
+	return []AlarmDefect{
+		AlarmDefectRoomMissing,
+		AlarmDefectSceneMissing,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s AlarmDefect) MarshalText() ([]byte, error) {
+	switch s {
+	case AlarmDefectRoomMissing:
+		return []byte(s), nil
+	case AlarmDefectSceneMissing:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *AlarmDefect) UnmarshalText(data []byte) error {
+	switch AlarmDefect(data) {
+	case AlarmDefectRoomMissing:
+		*s = AlarmDefectRoomMissing
+		return nil
+	case AlarmDefectSceneMissing:
+		*s = AlarmDefectSceneMissing
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // Ref: #/components/schemas/AlarmRead
 type AlarmRead struct {
 	ID             uuid.UUID      `json:"id"`
@@ -111,6 +156,9 @@ type AlarmRead struct {
 	IsEnabled      bool           `json:"is_enabled"`
 	CreatedAt      time.Time      `json:"created_at"`
 	NextOccurrence NilDateTime    `json:"next_occurrence"`
+	// Set when the room or scene this alarm points at no longer exists on the bridge and could not be
+	// replaced automatically.
+	Defect OptNilAlarmDefect `json:"defect"`
 }
 
 // GetID returns the value of ID.
@@ -158,6 +206,11 @@ func (s *AlarmRead) GetNextOccurrence() NilDateTime {
 	return s.NextOccurrence
 }
 
+// GetDefect returns the value of Defect.
+func (s *AlarmRead) GetDefect() OptNilAlarmDefect {
+	return s.Defect
+}
+
 // SetID sets the value of ID.
 func (s *AlarmRead) SetID(val uuid.UUID) {
 	s.ID = val
@@ -201,6 +254,11 @@ func (s *AlarmRead) SetCreatedAt(val time.Time) {
 // SetNextOccurrence sets the value of NextOccurrence.
 func (s *AlarmRead) SetNextOccurrence(val NilDateTime) {
 	s.NextOccurrence = val
+}
+
+// SetDefect sets the value of Defect.
+func (s *AlarmRead) SetDefect(val OptNilAlarmDefect) {
+	s.Defect = val
 }
 
 func (*AlarmRead) createAlarmRes()  {}
@@ -775,6 +833,69 @@ func (o OptInt) Get() (v int, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptInt) Or(d int) int {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptNilAlarmDefect returns new OptNilAlarmDefect with value set to v.
+func NewOptNilAlarmDefect(v AlarmDefect) OptNilAlarmDefect {
+	return OptNilAlarmDefect{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptNilAlarmDefect is optional nullable AlarmDefect.
+type OptNilAlarmDefect struct {
+	Value AlarmDefect
+	Set   bool
+	Null  bool
+}
+
+// IsSet returns true if OptNilAlarmDefect was set.
+func (o OptNilAlarmDefect) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptNilAlarmDefect) Reset() {
+	var v AlarmDefect
+	o.Value = v
+	o.Set = false
+	o.Null = false
+}
+
+// SetTo sets value to v.
+func (o *OptNilAlarmDefect) SetTo(v AlarmDefect) {
+	o.Set = true
+	o.Null = false
+	o.Value = v
+}
+
+// IsNull returns true if value is Null.
+func (o OptNilAlarmDefect) IsNull() bool { return o.Null }
+
+// SetToNull sets value to null.
+func (o *OptNilAlarmDefect) SetToNull() {
+	o.Set = true
+	o.Null = true
+	var v AlarmDefect
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptNilAlarmDefect) Get() (v AlarmDefect, ok bool) {
+	if o.Null {
+		return v, false
+	}
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptNilAlarmDefect) Or(d AlarmDefect) AlarmDefect {
 	if v, ok := o.Get(); ok {
 		return v
 	}
