@@ -14,8 +14,15 @@ from .events import (
     OccurrenceSkipped,
     OccurrenceSnoozed,
     OccurrenceStarted,
+    ProfileUpdated,
 )
-from .snapshots import AlarmSnapshot, OccurrenceSnapshot, ScheduleSnapshot
+from .snapshots import (
+    AlarmSnapshot,
+    OccurrenceSnapshot,
+    ProfileSnapshot,
+    ScheduleSnapshot,
+    SunriseSnapshot,
+)
 
 __all__ = [
     "AlarmCreated",
@@ -35,5 +42,8 @@ __all__ = [
     "OccurrenceSnapshot",
     "OccurrenceSnoozed",
     "OccurrenceStarted",
+    "ProfileSnapshot",
+    "ProfileUpdated",
     "ScheduleSnapshot",
+    "SunriseSnapshot",
 ]

@@ -2,13 +2,16 @@ from datetime import datetime
 from typing import Self
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from huerise.features.alarm.domain import (
     Alarm,
+    AlarmDefect,
     AlarmOccurrence,
+    AlarmProfile,
     OccurrenceState,
     Schedule,
+    SunriseConfig,
     Weekday,
 )
 
@@ -43,6 +46,9 @@ class AlarmSnapshot(BaseModel):
     profile_id: UUID
     is_enabled: bool
     next_occurrence: datetime | None
+    defect: AlarmDefect | None = Field(
+        default=None, description="Why this alarm cannot light its room."
+    )
 
     @classmethod
     def from_domain(cls, alarm: Alarm) -> Self:
@@ -54,6 +60,47 @@ class AlarmSnapshot(BaseModel):
             profile_id=alarm.profile_id,
             is_enabled=alarm.is_enabled,
             next_occurrence=alarm.next_occurrence(),
+            defect=alarm.defect,
+        )
+
+
+class SunriseSnapshot(BaseModel):
+    scene_id: UUID
+    scene_name: str
+    duration_minutes: int
+    brightness_start: int
+    brightness_end: int
+
+    @classmethod
+    def from_domain(cls, sunrise: SunriseConfig) -> Self:
+        return cls(
+            scene_id=sunrise.scene_id,
+            scene_name=sunrise.scene_name,
+            duration_minutes=sunrise.duration_minutes,
+            brightness_start=sunrise.brightness_start,
+            brightness_end=sunrise.brightness_end,
+        )
+
+
+class ProfileSnapshot(BaseModel):
+    """The behaviour shared by every alarm using it, as of an event.
+
+    Only the sunrise is carried: the intro and ringtone are sounds this app
+    owns, and nothing outside it can move them.
+    """
+
+    id: UUID
+    name: str
+    is_default: bool
+    sunrise: SunriseSnapshot
+
+    @classmethod
+    def from_domain(cls, profile: AlarmProfile) -> Self:
+        return cls(
+            id=profile.id,
+            name=profile.name,
+            is_default=profile.is_default,
+            sunrise=SunriseSnapshot.from_domain(profile.sunrise_config),
         )
 
 

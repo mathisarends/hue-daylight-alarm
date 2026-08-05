@@ -6,8 +6,12 @@ from uuid import UUID
 from pydantic import Field, computed_field
 from transitbus import Event
 
-from huerise.features.alarm.domain import AlarmField
-from huerise.features.events.domain.snapshots import AlarmSnapshot, OccurrenceSnapshot
+from huerise.features.alarm.domain import AlarmField, ProfileField
+from huerise.features.events.domain.snapshots import (
+    AlarmSnapshot,
+    OccurrenceSnapshot,
+    ProfileSnapshot,
+)
 
 
 class EventType(StrEnum):
@@ -17,6 +21,8 @@ class EventType(StrEnum):
     ALARM_UPDATED = "alarm.updated"
     ALARM_DELETED = "alarm.deleted"
     NEXT_ALARM_CHANGED = "alarm.next_changed"
+
+    PROFILE_UPDATED = "profile.updated"
 
     OCCURRENCE_SCHEDULED = "occurrence.scheduled"
     OCCURRENCE_STARTED = "occurrence.started"
@@ -71,6 +77,14 @@ class NextAlarmChanged(HueriseEvent):
         description="None when no enabled alarm remains."
     )
     scheduled_for: datetime | None
+
+
+class ProfileUpdated(HueriseEvent):
+    type: Literal[EventType.PROFILE_UPDATED] = EventType.PROFILE_UPDATED
+    profile: ProfileSnapshot
+    changed: list[ProfileField] = Field(
+        description="The fields this update actually moved."
+    )
 
 
 class OccurrenceScheduled(HueriseEvent):
@@ -140,6 +154,7 @@ type AnyHueriseEvent = Annotated[
     | AlarmUpdated
     | AlarmDeleted
     | NextAlarmChanged
+    | ProfileUpdated
     | OccurrenceScheduled
     | OccurrenceStarted
     | OccurrenceProgress
