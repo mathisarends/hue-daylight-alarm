@@ -1,3 +1,4 @@
+from dataclasses import replace
 from uuid import UUID
 
 from huerise.features.alarm.domain.views import (
@@ -26,3 +27,14 @@ class AlarmProfile(Aggregate):
         self.sunrise_config = sunrise_config
         self.ringtone_config = ringtone_config
         self.is_default = is_default
+
+    def use_scene(self, scene_id: UUID, scene_name: str) -> bool:
+        """Point the sunrise at a Hue scene, keeping the rest of the curve.
+
+        Reports whether that moved, so the caller can decide to notify.
+        """
+        sunrise = self.sunrise_config
+        if sunrise.scene_id == scene_id and sunrise.scene_name == scene_name:
+            return False
+        self.sunrise_config = replace(sunrise, scene_id=scene_id, scene_name=scene_name)
+        return True

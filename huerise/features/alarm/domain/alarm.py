@@ -2,7 +2,7 @@ from datetime import UTC, datetime
 from uuid import UUID
 
 from huerise.features.alarm.domain.exceptions import AlarmAlreadyInStateError
-from huerise.features.alarm.domain.views import AlarmField, Schedule
+from huerise.features.alarm.domain.views import AlarmDefect, AlarmField, Schedule
 from huerise.shared.ddd import Aggregate
 
 
@@ -17,6 +17,7 @@ class Alarm(Aggregate):
         room_id: UUID,
         room_name: str,
         is_enabled: bool = True,
+        defect: AlarmDefect | None = None,
         id: UUID | None = None,
         created_at: datetime | None = None,
     ) -> None:
@@ -27,6 +28,21 @@ class Alarm(Aggregate):
         self.room_id = room_id
         self.room_name = room_name
         self.is_enabled = is_enabled
+        self.defect = defect
+
+    @property
+    def is_broken(self) -> bool:
+        return self.defect is not None
+
+    def set_defect(self, defect: AlarmDefect | None) -> bool:
+        """Record why this alarm cannot run, or None once it can again.
+
+        Reports whether that moved, so the caller can decide to notify.
+        """
+        if self.defect is defect:
+            return False
+        self.defect = defect
+        return True
 
     def update(
         self,

@@ -27,6 +27,24 @@ class AlarmField(StrEnum):
     ROOM = "room"
     PROFILE_ID = "profile_id"
     IS_ENABLED = "is_enabled"
+    DEFECT = "defect"
+
+
+class AlarmDefect(StrEnum):
+    """Why an alarm cannot currently light a room.
+
+    Set when a Hue resource an alarm points at stops resolving and could not be
+    replaced, so a client can say so long before the wake-up is due.
+    """
+
+    ROOM_MISSING = "room_missing"
+    SCENE_MISSING = "scene_missing"
+
+
+class ProfileField(StrEnum):
+    """A field of a profile that a change can be reported against."""
+
+    SUNRISE_SCENE = "sunrise_scene"
 
 
 class OccurrenceState(StrEnum):
