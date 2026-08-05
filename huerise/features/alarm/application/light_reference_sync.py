@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Iterable, Iterator
 
 from huerise.features.alarm.domain import (
     Alarm,
@@ -77,65 +78,26 @@ class LightReferenceSync(Runnable):
                 return []
 
             if change.name is not None:
-                return await self._rename_room(uow, alarms, change.name)
+                repaired = [
+                    (alarm, _rename_room(alarm, change.name)) for alarm in alarms
+                ]
+            else:
+                # A bare identity is what a deletion looks like, but so is a change
+                # to something we don't track -- only the bridge can tell them apart.
+                rooms = await self._lights.list_rooms()
+                if any(room.id == change.id for room in rooms):
+                    return []
 
-            # A bare identity is what a deletion looks like, but so is a change
-            # to something we don't track -- only the bridge can tell them apart.
-            rooms = await self._lights.list_rooms()
-            if any(room.id == change.id for room in rooms):
-                return []
+                logger.info(
+                    "Hue room %s is gone, repairing what points at it", change.id
+                )
+                repaired = [(alarm, _repair_room(alarm, rooms)) for alarm in alarms]
 
-            logger.info("Hue room %s is gone, repairing what points at it", change.id)
-            published: list[HueriseEvent] = []
-            for alarm in alarms:
-                changed = self._repair_room(alarm, rooms)
-                if changed:
-                    published.append(await self._save_alarm(uow, alarm, changed))
-            return published
-
-    async def _rename_room(
-        self, uow: AlarmUnitOfWork, alarms: list[Alarm], name: str
-    ) -> list[HueriseEvent]:
-        published: list[HueriseEvent] = []
-        for alarm in alarms:
-            changed = alarm.update(room_name=name)
-            # The bridge just named the room, so it is there again.
-            if alarm.defect is AlarmDefect.ROOM_MISSING and alarm.set_defect(None):
-                changed.append(AlarmField.DEFECT)
-            if not changed:
-                continue
-            logger.info("Room of alarm %s is now called '%s'", alarm.id, name)
-            published.append(await self._save_alarm(uow, alarm, changed))
-        return published
-
-    def _repair_room(self, alarm: Alarm, rooms: list[Room]) -> list[AlarmField]:
-        """Adopt the room that took over the name, or record the alarm as broken.
-
-        A room deleted and set up again in the Hue app comes back under a new ID
-        with the same name -- that is the one case worth repairing. Guessing any
-        further would mean waking someone in a room they never chose.
-        """
-        replacement = _room_named(rooms, alarm.room_name)
-        if replacement is None:
-            logger.warning(
-                "Room '%s' no longer exists, alarm %s cannot light anything",
-                alarm.room_name,
-                alarm.id,
-            )
-            if not alarm.set_defect(AlarmDefect.ROOM_MISSING):
-                return []
-            return [AlarmField.DEFECT]
-
-        logger.info(
-            "Room '%s' came back as %s, re-pointing alarm %s",
-            replacement.name,
-            replacement.id,
-            alarm.id,
-        )
-        changed = alarm.update(room_id=replacement.id, room_name=replacement.name)
-        if alarm.defect is AlarmDefect.ROOM_MISSING and alarm.set_defect(None):
-            changed.append(AlarmField.DEFECT)
-        return changed
+            return [
+                await self._save_alarm(uow, alarm, changed)
+                for alarm, changed in repaired
+                if changed
+            ]
 
     async def _sync_scene(self, change: LightChange) -> list[HueriseEvent]:
         async with self._unit_of_work_factory.create() as uow:
@@ -152,7 +114,7 @@ class LightReferenceSync(Runnable):
                 return await self._rename_scene(uow, profiles, alarms, change.name)
 
             rooms = await self._lights.list_rooms()
-            if any(scene.id == change.id for room in rooms for scene in room.scenes):
+            if any(scene.id == change.id for scene in _scenes_of(rooms)):
                 return []
 
             logger.info("Hue scene %s is gone, repairing what points at it", change.id)
@@ -223,17 +185,17 @@ class LightReferenceSync(Runnable):
         An alarm whose room is missing keeps that defect: the room explains the
         missing scene, and it is the one the user has to sort out.
         """
-        published: list[HueriseEvent] = []
-        for alarm in alarms:
-            if alarm.profile_id != profile.id:
-                continue
-            if alarm.defect is AlarmDefect.ROOM_MISSING:
-                continue
-            if alarm.set_defect(defect):
-                published.append(
-                    await self._save_alarm(uow, alarm, [AlarmField.DEFECT])
-                )
-        return published
+        running_it = [
+            alarm
+            for alarm in alarms
+            if alarm.profile_id == profile.id
+            and alarm.defect is not AlarmDefect.ROOM_MISSING
+        ]
+        return [
+            await self._save_alarm(uow, alarm, [AlarmField.DEFECT])
+            for alarm in running_it
+            if alarm.set_defect(defect)
+        ]
 
     async def _save_alarm(
         self, uow: AlarmUnitOfWork, alarm: Alarm, changed: list[AlarmField]
@@ -251,9 +213,47 @@ class LightReferenceSync(Runnable):
         )
 
 
-def _room_named(rooms: list[Room], name: str) -> Room | None:
-    wanted = name.casefold()
-    return next((room for room in rooms if room.name.casefold() == wanted), None)
+def _rename_room(alarm: Alarm, name: str) -> list[AlarmField]:
+    changed = alarm.update(room_name=name)
+    if changed:
+        logger.info("Room of alarm %s is now called '%s'", alarm.id, name)
+    return changed + _clear_missing_room(alarm)
+
+
+def _repair_room(alarm: Alarm, rooms: list[Room]) -> list[AlarmField]:
+    """Adopt the room that took over the name, or record the alarm as broken.
+
+    A room deleted and set up again in the Hue app comes back under a new ID
+    with the same name -- that is the one case worth repairing. Guessing any
+    further would mean waking someone in a room they never chose.
+    """
+    replacement = _named(rooms, alarm.room_name)
+    if replacement is None:
+        logger.warning(
+            "Room '%s' no longer exists, alarm %s cannot light anything",
+            alarm.room_name,
+            alarm.id,
+        )
+        if not alarm.set_defect(AlarmDefect.ROOM_MISSING):
+            return []
+        return [AlarmField.DEFECT]
+
+    logger.info(
+        "Room '%s' came back as %s, re-pointing alarm %s",
+        replacement.name,
+        replacement.id,
+        alarm.id,
+    )
+    changed = alarm.update(room_id=replacement.id, room_name=replacement.name)
+    return changed + _clear_missing_room(alarm)
+
+
+def _clear_missing_room(alarm: Alarm) -> list[AlarmField]:
+    """The bridge just reported the room, so a ROOM_MISSING defect is stale."""
+    if alarm.defect is not AlarmDefect.ROOM_MISSING:
+        return []
+    alarm.set_defect(None)
+    return [AlarmField.DEFECT]
 
 
 def _replacement_scene(
@@ -271,22 +271,13 @@ def _replacement_scene(
     own_rooms = [room for room in rooms if room.id in room_ids]
 
     for candidates in (own_rooms, rooms):
-        namesake = next(
-            (
-                scene
-                for room in candidates
-                for scene in room.scenes
-                if scene.name.casefold() == sunrise.scene_name.casefold()
-            ),
-            None,
-        )
+        namesake = _named(_scenes_of(candidates), sunrise.scene_name)
         if namesake is not None:
             return namesake
 
     reachable = [
         scene
-        for room in own_rooms
-        for scene in room.scenes
+        for scene in _scenes_of(own_rooms)
         if _sunrise_target(scene, sunrise) > sunrise.brightness_start
     ]
     return max(
@@ -299,3 +290,15 @@ def _sunrise_target(scene: Scene, sunrise: SunriseConfig) -> int:
     if scene.brightness is None:
         return sunrise.brightness_end
     return min(round(scene.brightness), sunrise.brightness_end)
+
+
+def _scenes_of(rooms: Iterable[Room]) -> Iterator[Scene]:
+    return (scene for room in rooms for scene in room.scenes)
+
+
+def _named[T: Room | Scene](candidates: Iterable[T], name: str) -> T | None:
+    wanted = name.casefold()
+    return next(
+        (candidate for candidate in candidates if candidate.name.casefold() == wanted),
+        None,
+    )
