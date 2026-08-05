@@ -1,9 +1,12 @@
 from datetime import UTC, datetime, timedelta
 from unittest.mock import call, patch
 
-from huerise.features.alarm.domain import OccurrenceState
-from huerise.features.devices.domain import SunriseRamp, sunrise_steps
+import pytest
+
+from huerise.features.alarm.domain import AlarmDefect, AlarmField, OccurrenceState
+from huerise.features.devices.domain import Room, Scene, SunriseRamp, sunrise_steps
 from huerise.features.events.domain import (
+    AlarmUpdated,
     OccurrenceDismissed,
     OccurrenceFailed,
     OccurrenceProgress,
@@ -12,6 +15,8 @@ from huerise.features.events.domain import (
 )
 from huerise.features.runner.application import AlarmRunner
 from tests.application.conftest import (
+    ROOM_ID,
+    SCENE_ID,
     FakeUnitOfWork,
     FakeUnitOfWorkFactory,
     InMemoryAlarmRepository,
@@ -107,16 +112,141 @@ class TestRun:
         assert lights.set_brightness.await_count == 1
         assert occurrences.items[occurrence.id].state is OccurrenceState.DISMISSED
 
-    async def test_marks_the_occurrence_failed_on_error(self) -> None:
-        runner, occurrence, occurrences, lights, _, _, _ = make_runner()
-        lights.activate_scene.side_effect = RuntimeError("bridge unreachable")
+    async def test_marks_the_occurrence_failed_when_the_ringtone_fails(self) -> None:
+        runner, occurrence, occurrences, _, audio, _, _ = make_runner()
+        audio.play.side_effect = RuntimeError("speaker unreachable")
 
         with patch("asyncio.sleep"):
             await runner.run(occurrence)
 
         stored = occurrences.items[occurrence.id]
         assert stored.state is OccurrenceState.FAILED
-        assert "bridge unreachable" in (stored.failure_reason or "")
+        assert "speaker unreachable" in (stored.failure_reason or "")
+
+
+class TestWakingUpWithoutLight:
+    """The lights are the gentle part, the ringtone is the alarm."""
+
+    async def test_rings_when_the_bridge_cannot_be_reached(self) -> None:
+        runner, occurrence, occurrences, lights, audio, _, profile = make_runner()
+        lights.activate_scene.side_effect = RuntimeError("bridge unreachable")
+
+        with patch("asyncio.sleep"):
+            await runner.run(occurrence)
+
+        audio.play.assert_any_await(
+            profile.ringtone_config.sound_id, profile.ringtone_config.volume
+        )
+        assert occurrences.items[occurrence.id].state is OccurrenceState.DISMISSED
+
+    async def test_rings_when_the_room_is_gone(self) -> None:
+        runner, occurrence, occurrences, lights, audio, _, profile = make_runner()
+        lights.list_rooms.return_value = []
+
+        with patch("asyncio.sleep"):
+            await runner.run(occurrence)
+
+        audio.play.assert_any_await(
+            profile.ringtone_config.sound_id, profile.ringtone_config.volume
+        )
+        assert occurrences.items[occurrence.id].state is OccurrenceState.DISMISSED
+
+    async def test_the_ringtone_keeps_its_time(self) -> None:
+        """Waking someone a whole ramp early is not a fallback, it is a bug."""
+        runner, occurrence, _, lights, _, _, profile = make_runner()
+        lights.list_rooms.return_value = []
+
+        with patch("asyncio.sleep") as sleep:
+            await runner.run(occurrence)
+
+        waited = sum(call.args[0] for call in sleep.await_args_list)
+        assert waited == pytest.approx(
+            profile.sunrise_config.duration.total_seconds(), abs=STEP.total_seconds()
+        )
+
+    async def test_a_dismiss_during_the_dark_stretch_wins(self) -> None:
+        events = RecordingPublisher()
+        runner, occurrence, occurrences, lights, _, _, _ = make_runner(events=events)
+        lights.list_rooms.return_value = []
+
+        async def dismiss(*args, **kwargs) -> None:
+            stored = occurrences.items[occurrence.id]
+            if stored.state is OccurrenceState.SUNRISE:
+                stored.dismiss(NOW)
+
+        with patch("asyncio.sleep", side_effect=dismiss):
+            await runner.run(occurrence)
+
+        assert events.of_type(OccurrenceRinging) == []
+        assert occurrences.items[occurrence.id].state is OccurrenceState.DISMISSED
+
+    async def test_a_missing_room_is_recorded_on_the_alarm(self) -> None:
+        events = RecordingPublisher()
+        runner, occurrence, _, lights, _, alarm, _ = make_runner(events=events)
+        lights.list_rooms.return_value = []
+
+        with patch("asyncio.sleep"):
+            await runner.run(occurrence)
+
+        assert alarm.defect is AlarmDefect.ROOM_MISSING
+        published = events.only(AlarmUpdated)
+        assert published.changed == [AlarmField.DEFECT]
+        assert published.alarm.defect is AlarmDefect.ROOM_MISSING
+
+    async def test_a_missing_scene_is_recorded_on_the_alarm(self) -> None:
+        runner, occurrence, _, lights, _, alarm, _ = make_runner()
+        lights.list_rooms.return_value = [Room(id=ROOM_ID, name="Bedroom", scenes=())]
+
+        with patch("asyncio.sleep"):
+            await runner.run(occurrence)
+
+        assert alarm.defect is AlarmDefect.SCENE_MISSING
+
+    async def test_a_defect_already_known_is_not_reported_again(self) -> None:
+        events = RecordingPublisher()
+        runner, occurrence, occurrences, lights, _, alarm, _ = make_runner(
+            events=events
+        )
+        alarm.set_defect(AlarmDefect.ROOM_MISSING)
+        lights.list_rooms.return_value = []
+
+        with patch("asyncio.sleep"):
+            await runner.run(occurrence)
+
+        assert events.of_type(AlarmUpdated) == []
+        assert occurrences.items[occurrence.id].state is OccurrenceState.DISMISSED
+
+    async def test_a_scene_too_dim_to_ramp_still_rings(self) -> None:
+        """A curve that cannot be walked is a setting, not a broken alarm."""
+        events = RecordingPublisher()
+        runner, occurrence, occurrences, lights, _, alarm, _ = make_runner(
+            events=events
+        )
+        lights.list_rooms.return_value = [
+            Room(
+                id=ROOM_ID,
+                name="Bedroom",
+                scenes=(Scene(id=SCENE_ID, name="Nightlight", brightness=1),),
+            )
+        ]
+
+        with patch("asyncio.sleep"):
+            await runner.run(occurrence)
+
+        assert occurrences.items[occurrence.id].state is OccurrenceState.DISMISSED
+        assert alarm.defect is None
+        assert events.of_type(AlarmUpdated) == []
+
+    async def test_an_unreachable_bridge_is_not_blamed_on_the_alarm(self) -> None:
+        events = RecordingPublisher()
+        runner, occurrence, _, lights, _, alarm, _ = make_runner(events=events)
+        lights.activate_scene.side_effect = RuntimeError("bridge unreachable")
+
+        with patch("asyncio.sleep"):
+            await runner.run(occurrence)
+
+        assert alarm.defect is None
+        assert events.of_type(AlarmUpdated) == []
 
 
 class TestPublishedEvents:
@@ -195,11 +325,11 @@ class TestPublishedEvents:
 
     async def test_announces_a_failure_with_its_reason(self) -> None:
         events = RecordingPublisher()
-        runner, occurrence, _, lights, _, _, _ = make_runner(events=events)
-        lights.activate_scene.side_effect = RuntimeError("bridge unreachable")
+        runner, occurrence, _, _, audio, _, _ = make_runner(events=events)
+        audio.play.side_effect = RuntimeError("speaker unreachable")
 
         with patch("asyncio.sleep"):
             await runner.run(occurrence)
 
         failed = events.only(OccurrenceFailed).occurrence
-        assert "bridge unreachable" in (failed.failure_reason or "")
+        assert "speaker unreachable" in (failed.failure_reason or "")
