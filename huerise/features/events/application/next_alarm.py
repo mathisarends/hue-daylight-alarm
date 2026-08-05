@@ -51,17 +51,17 @@ class NextAlarmTracker:
 
     async def start(self) -> None:
         """Take the baseline, so that the first change published is a real one."""
-        self._current = self._key(await self._earliest())
-        logger.info("Tracking next alarm from %s", self._describe(self._current))
+        self._current = _key(await self._earliest())
+        logger.info("Tracking next alarm from %s", _describe(self._current))
 
     async def _on_trigger(self, event: HueriseEvent) -> None:
         upcoming = await self._earliest()
-        key = self._key(upcoming)
+        key = _key(upcoming)
         if key == self._current:
             return
 
         self._current = key
-        logger.info("Next alarm is now %s", self._describe(key))
+        logger.info("Next alarm is now %s", _describe(key))
         self._bus.dispatch(
             NextAlarmChanged(
                 alarm=AlarmSnapshot.from_domain(upcoming[0]) if upcoming else None,
@@ -80,14 +80,14 @@ class NextAlarmTracker:
         ]
         return min(upcoming, key=lambda candidate: candidate[1], default=None)
 
-    @staticmethod
-    def _key(upcoming: Upcoming | None) -> tuple[UUID, datetime] | None:
-        """What counts as a change: which alarm is next, and when it fires."""
-        if upcoming is None:
-            return None
-        alarm, scheduled_for = upcoming
-        return alarm.id, scheduled_for
 
-    @staticmethod
-    def _describe(key: tuple[UUID, datetime] | None) -> str:
-        return key[1].isoformat() if key else "nothing"
+def _key(upcoming: Upcoming | None) -> tuple[UUID, datetime] | None:
+    """What counts as a change: which alarm is next, and when it fires."""
+    if upcoming is None:
+        return None
+    alarm, scheduled_for = upcoming
+    return alarm.id, scheduled_for
+
+
+def _describe(key: tuple[UUID, datetime] | None) -> str:
+    return key[1].isoformat() if key else "nothing"
