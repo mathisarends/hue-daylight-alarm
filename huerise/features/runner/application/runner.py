@@ -1,10 +1,13 @@
 import asyncio
 import logging
 from datetime import timedelta
+from time import monotonic
 from uuid import UUID
 
 from huerise.features.alarm.domain import (
     Alarm,
+    AlarmDefect,
+    AlarmField,
     AlarmOccurrence,
     AlarmProfile,
     AlarmUnitOfWorkFactory,
@@ -21,6 +24,8 @@ from huerise.features.devices.domain import (
 )
 from huerise.features.events.application import EventPublisher
 from huerise.features.events.domain import (
+    AlarmSnapshot,
+    AlarmUpdated,
     OccurrenceDismissed,
     OccurrenceFailed,
     OccurrenceProgress,
@@ -67,7 +72,8 @@ class AlarmRunner(AlarmRunnerPort):
                 return
             alarm, profile = context
 
-            await self._run_sunrise(occurrence, alarm, profile)
+            if not await self._light_up(occurrence, alarm, profile):
+                return
             if not await self._start_ringing(occurrence.id):
                 return
             await self._run_ringtone(occurrence, alarm, profile)
@@ -75,6 +81,67 @@ class AlarmRunner(AlarmRunnerPort):
         except Exception as error:
             logger.exception("Occurrence %s failed during execution", occurrence.id)
             await self._mark_failed(occurrence.id, repr(error))
+
+    async def _light_up(
+        self, occurrence: AlarmOccurrence, alarm: Alarm, profile: AlarmProfile
+    ) -> bool:
+        """Run the sunrise, and see the wake-up through when it cannot run.
+
+        The lights are what makes waking up gentle; the ringtone is what makes
+        this an alarm clock. A bridge that is down or a room somebody deleted
+        must not cost the user the ring, so the rest of the ramp is waited out
+        in the dark instead. Reports whether the ringtone is still to come.
+        """
+        started = monotonic()
+        try:
+            await self._run_sunrise(occurrence, alarm, profile)
+        except Exception as error:
+            logger.exception(
+                "Sunrise for %s failed, waking up without light", occurrence.id
+            )
+            await self._record_defect(alarm, error)
+            elapsed = monotonic() - started
+            return await self._wait_out_sunrise(
+                occurrence.id, profile.sunrise_config.duration.total_seconds() - elapsed
+            )
+        return True
+
+    async def _wait_out_sunrise(self, occurrence_id: UUID, seconds: float) -> bool:
+        """Sit out what is left of the ramp, so the ringtone keeps its time.
+
+        Polled rather than slept through in one go: a dismiss or snooze during
+        the dark stretch has to win just as it would during a real sunrise.
+        """
+        interval = self._step_interval.total_seconds()
+        while seconds > 0:
+            if not await self._still_in_state(occurrence_id, OccurrenceState.SUNRISE):
+                logger.info("Sunrise for %s interrupted", occurrence_id)
+                return False
+            await asyncio.sleep(min(interval, seconds))
+            seconds -= interval
+        return True
+
+    async def _record_defect(self, alarm: Alarm, error: Exception) -> None:
+        """Flag a room or scene that is not there, so it can be fixed by tomorrow.
+
+        Anything else -- an unreachable bridge, a scene too dim to ramp -- is
+        about this one run and says nothing about the rule.
+        """
+        defect = _defect_for(error)
+        if defect is None:
+            return
+
+        async with self._unit_of_work_factory.create() as uow:
+            stored = await uow.alarms.find_by_id(alarm.id)
+            if stored is None or not stored.set_defect(defect):
+                return
+            stored = await uow.alarms.save(stored)
+
+        self._events.publish(
+            AlarmUpdated(
+                alarm=AlarmSnapshot.from_domain(stored), changed=[AlarmField.DEFECT]
+            )
+        )
 
     async def _run_sunrise(
         self, occurrence: AlarmOccurrence, alarm: Alarm, profile: AlarmProfile
@@ -226,3 +293,13 @@ class AlarmRunner(AlarmRunnerPort):
         self._events.publish(
             OccurrenceFailed(occurrence=OccurrenceSnapshot.from_domain(occurrence))
         )
+
+
+def _defect_for(error: Exception) -> AlarmDefect | None:
+    match error:
+        case RoomNotFoundError():
+            return AlarmDefect.ROOM_MISSING
+        case SceneNotFoundError():
+            return AlarmDefect.SCENE_MISSING
+        case _:
+            return None
