@@ -266,6 +266,28 @@ class TestScene:
 
         assert harness.profile(profile).sunrise_config.scene_id == OTHER_SCENE_ID
 
+    async def test_a_scene_without_a_stored_brightness_still_qualifies(
+        self, paired: tuple[AlarmProfile, Alarm]
+    ) -> None:
+        """The runner drives such a scene to the profile's ceiling."""
+        profile, alarm = paired
+        harness = Harness(
+            [alarm],
+            [profile],
+            [
+                bedroom(
+                    sunrise_scene(id=uuid4(), name="Relax", brightness=40),
+                    sunrise_scene(
+                        id=OTHER_SCENE_ID, name="Concentrate", brightness=None
+                    ),
+                )
+            ],
+        )
+
+        await harness.receive(scene_change())
+
+        assert harness.profile(profile).sunrise_config.scene_id == OTHER_SCENE_ID
+
     async def test_scenes_too_dim_to_ramp_to_are_no_replacement(
         self, paired: tuple[AlarmProfile, Alarm]
     ) -> None:
