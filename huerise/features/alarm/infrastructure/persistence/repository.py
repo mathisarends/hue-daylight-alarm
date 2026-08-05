@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from huerise.features.alarm.domain import (
     Alarm,
+    AlarmDefect,
     AlarmOccurrence,
     AlarmOccurrenceRepository,
     AlarmProfile,
@@ -91,6 +92,7 @@ class SQLAlarmRepository(Repository[AlarmModel, Alarm], AlarmRepository):
             id=orm.id,
             label=orm.label,
             is_enabled=orm.is_enabled,
+            defect=AlarmDefect(orm.defect) if orm.defect else None,
             schedule=Schedule.from_mask(
                 hour=orm.hour,
                 minute=orm.minute,
@@ -108,6 +110,7 @@ class SQLAlarmRepository(Repository[AlarmModel, Alarm], AlarmRepository):
             id=domain.id,
             label=domain.label,
             is_enabled=domain.is_enabled,
+            defect=domain.defect.value if domain.defect else None,
             hour=domain.schedule.hour,
             minute=domain.schedule.minute,
             timezone=domain.schedule.tz_name,
