@@ -1,225 +1,252 @@
 # Huerise
 
-Sunrise alarm clock powered by Philips Hue. Gradually increases light brightness to simulate a sunrise, plays an intro ambient sound, then switches to a ringtone — all controlled via a REST API.
+![Huerise — daylight wake-up alarms for Philips Hue lamps](images/banner.png)
+
+Huerise is a sunrise alarm clock for Philips Hue. It gradually brightens a Hue
+scene, plays a calm intro sound during the sunrise, and starts a ringtone when
+it is time to wake up. Alarms can be managed through a REST API or the included
+Go CLI.
+
+## Table of contents
+
+- [How it works](#how-it-works)
+- [Features](#features)
+- [Quick start](#quick-start)
+- [API](#api)
+  - [Authentication and documentation](#authentication-and-documentation)
+  - [API capabilities](#api-capabilities)
+  - [Event stream](#event-stream)
+- [CLI](#cli)
+  - [Build and configure](#build-and-configure)
+  - [Command overview](#command-overview)
+  - [Command reference](#command-reference)
+  - [Automation and output](#automation-and-output)
+- [Audio output](#audio-output)
+  - [Local playback](#local-playback)
+  - [Sonos](#sonos)
+- [Configuration](#configuration)
+- [Local development](#local-development)
+- [Tech stack](#tech-stack)
+
+## How it works
+
+Huerise separates *when* an alarm runs from *how* it wakes you up:
+
+- An **alarm** selects a room, schedule, and alarm profile. A schedule without
+  weekdays runs once; a schedule with weekdays repeats in its configured IANA
+  timezone.
+- An **alarm profile** combines a Hue scene, sunrise duration and brightness
+  range, intro sound, ringtone, and ringtone volume. Profiles can be reused by
+  multiple alarms.
+- An **occurrence** records one execution of an alarm, including its state,
+  snooze count, timestamps, and any failure.
+
+```mermaid
+flowchart LR
+    Client["REST API or Go CLI"]
+    Alarm["Alarm<br/>Room + schedule + profile"]
+    Profile["Alarm profile<br/>Scene + sunrise + sounds"]
+    Scheduler["Scheduler"]
+    Occurrence["Occurrence<br/>One scheduled execution"]
+    Hue["Philips Hue<br/>Scene and brightness"]
+    Audio["Audio output<br/>Local or Sonos"]
+    Events["SSE event stream<br/>State and progress"]
+
+    Client -->|manages| Alarm
+    Client -->|manages| Profile
+    Client -->|snoozes or dismisses| Occurrence
+    Alarm -->|uses| Profile
+    Alarm --> Scheduler
+    Scheduler -->|creates and starts| Occurrence
+    Profile -->|configures| Occurrence
+    Occurrence -->|controls| Hue
+    Occurrence -->|plays| Audio
+    Occurrence -->|publishes| Events
+```
+
+At the scheduled time, Huerise recalls the selected scene at low brightness and
+raises the room brightness in steps. The intro sound plays during that ramp.
+When the sunrise finishes, Huerise restores the scene as stored in Hue and
+starts the ringtone. The active occurrence can be snoozed or dismissed through
+the API or CLI.
+
+The scheduler keeps running in the API process. Alarm state is persisted in
+SQLite, sound assets are stored in S3-compatible storage, and live changes are
+published through a server-sent events stream. If a Hue room or scene has been
+removed, the alarm is marked as defective while the ringtone still runs at the
+end of the configured sunrise interval.
 
 ## Features
 
-- **Sunrise simulation** — ramps Hue lights from dim to bright over a configurable duration
-- **Audio playback** — intro ambient sound during sunrise, followed by a ringtone alarm
-- **One-time & recurring alarms** — schedule single alarms or recurring series on specific weekdays
-- **Alarm lifecycle** — activate, deactivate, cancel, and delete alarms through the API
-- **Sound & scene browsing** — list the available sounds and Hue scenes and preview them before putting them into a profile
-- **Configurable audio output** — install local playback, Sonos playback, or both
+- Gradual sunrise simulation using Philips Hue rooms and scenes
+- Separate intro and ringtone audio with configurable volume
+- One-time and weekday-based recurring alarms with timezone support
+- Reusable alarm profiles
+- Enable, disable, update, snooze, dismiss, and delete operations
+- Hue scene preview and accelerated sunrise demo
+- Local and Sonos playback, switchable at runtime when both are configured
+- REST API with OpenAPI documentation and bearer-token authentication
+- Server-sent events for alarm and occurrence updates
+- Typed Go CLI with human-readable tables and stable JSON output
 
-## Tech Stack
+## Quick start
 
-Python 3.13+ · FastAPI · SQLite (aiosqlite) · SQLModel · Alembic · Dishka (DI) · [hueify](https://pypi.org/project/hueify/) ·
-[sonosify](https://pypi.org/project/sonosify/) · uv
+### Prerequisites
 
-## Prerequisites
+- Docker and Docker Compose
+- A Philips Hue Bridge reachable from the host
+- A Hue application key ([Philips Hue getting started guide](https://developers.meethue.com/develop/get-started-2/))
 
-- Docker & Docker Compose
-- A Philips Hue Bridge on your local network
-- A Hue API app key ([how to get one](https://developers.meethue.com/develop/get-started-2/))
+### 1. Configure the environment
 
-## Setup
+Copy the example file:
 
-1. **Configure environment variables**
+```bash
+cp .env.example .env
+```
 
-   ```bash
-   cp .env.example .env
-   ```
+Set at least these values in `.env`:
 
-   Edit `.env` and fill in your values:
+```dotenv
+API_ACCESS_TOKEN=replace-with-a-random-token
+HUE_APP_KEY=your-hue-application-key
+HUE_BRIDGE_IP=192.168.1.10
+```
 
-   ```
-   API_ACCESS_TOKEN=your-api-access-token
-   HUE_APP_KEY=your-hue-app-key
-   HUE_BRIDGE_IP=your-hue-bridge-ip
-   ```
+Huerise refuses to start without `API_ACCESS_TOKEN`. Generate a suitable token
+with:
 
-   `API_ACCESS_TOKEN` is required — the app refuses to start without it.
-   Generate one with:
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
 
-   ```bash
-   python -c "import secrets; print(secrets.token_urlsafe(32))"
-   ```
+### 2. Start Huerise
 
-2. **Start the stack**
+```bash
+docker compose up -d
+```
 
-   ```bash
-   docker compose up -d
-   ```
+Compose applies the database migrations, starts the API at
+`http://localhost:8000`, creates the MinIO asset bucket, uploads the bundled
+sounds, and exposes these supporting services:
 
-   This will:
-   - Run database migrations (Alembic)
-   - Start the API server on **port 8000**
-   - Start Adminer (DB browser) on **port 8080**
-   - Start MinIO on **port 9000** and its Console on **port 9001**
-   - Create the asset bucket and upload the bundled alarm sounds
+| Service | URL | Purpose |
+| --- | --- | --- |
+| Swagger UI | `http://localhost:8000/docs` | Explore and call the API |
+| Adminer | `http://localhost:8080` | Inspect the SQLite database |
+| MinIO | `http://localhost:9000` | S3-compatible sound storage |
+| MinIO Console | `http://localhost:9001` | Manage stored assets |
 
-   Sign in to the MinIO Console at `http://localhost:9001` with the
-   `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` values from `.env`.
+The MinIO Console uses `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` from `.env`.
+Run `./scripts/upload_assets.sh` after changing files in `assets/`. These files
+are seeds only; runtime playback reads the selected object from storage.
 
-   To upload the local assets again after changing them:
+### 3. Verify the API
 
-   ```bash
-   ./scripts/upload_assets.sh
-   ```
-
-   The files in `assets/` are only seeds for MinIO. Runtime audio playback
-   always reads the selected object through the configured storage backend.
-
-3. **Verify**
-
-   ```bash
-   curl -H "Authorization: Bearer $API_ACCESS_TOKEN" http://localhost:8000/alarms
-   ```
+```bash
+curl -H "Authorization: Bearer $API_ACCESS_TOKEN" \
+  http://localhost:8000/alarms
+```
 
 ## API
 
-### Authentication
+The API is available at `http://localhost:8000` by default. Resource IDs are
+UUIDs. Request and response schemas, validation constraints, and example
+responses are defined in the checked-in [`openapi.json`](openapi.json).
 
-Every endpoint is protected by a single static access token — there are no user
-accounts. Send it as a bearer token:
+### Authentication and documentation
 
-```bash
-curl -H "Authorization: Bearer $API_ACCESS_TOKEN" http://localhost:8000/alarms
+Every application route requires the same static bearer token:
+
+```http
+Authorization: Bearer <API_ACCESS_TOKEN>
 ```
 
-Requests with a missing, malformed, or wrong token get `401 Unauthorized` with a
-`WWW-Authenticate: Bearer` header.
+Missing, malformed, or incorrect credentials return `401 Unauthorized` with a
+`WWW-Authenticate: Bearer` header. There are no user accounts or token-creation
+routes.
 
-Interactive docs are available at `http://localhost:8000/docs` (Swagger UI) —
-click **Authorize** and paste the token to call endpoints from there.
+Interactive API documentation is available at `http://localhost:8000/docs`.
+Select **Authorize** and enter the configured token before making requests.
 
-### Alarms
+### API capabilities
 
-| Method | Path                               | Description                         |
-| ------ | ---------------------------------- | ----------------------------------- |
-| GET    | `/alarms`                          | List all alarms                     |
-| POST   | `/alarms`                          | Create an alarm                     |
-| GET    | `/alarms/{alarm_id}`               | Get an alarm                        |
-| POST   | `/alarms/{alarm_id}/enable`        | Enable an alarm                     |
-| POST   | `/alarms/{alarm_id}/disable`       | Disable an alarm                    |
-| POST   | `/alarms/{alarm_id}/snooze`        | Snooze an alarm occurrence          |
-| POST   | `/alarms/{alarm_id}/dismiss`       | Dismiss an alarm occurrence         |
-| GET    | `/alarms/{alarm_id}/occurrences`   | List recent alarm occurrences       |
-| DELETE | `/alarms/{alarm_id}`               | Delete an alarm                     |
+#### Alarms
 
-### Alarm profiles
+| Method | Route | Capability |
+| --- | --- | --- |
+| `GET` | `/alarms` | List all alarms |
+| `POST` | `/alarms` | Create an alarm |
+| `GET` | `/alarms/{alarm_id}` | Get one alarm |
+| `PATCH` | `/alarms/{alarm_id}` | Update an alarm's label, schedule, room, or profile |
+| `DELETE` | `/alarms/{alarm_id}` | Delete an alarm |
+| `POST` | `/alarms/{alarm_id}/enable` | Enable a disabled alarm |
+| `POST` | `/alarms/{alarm_id}/disable` | Disable an enabled alarm |
+| `POST` | `/alarms/{alarm_id}/snooze` | Snooze the active occurrence by 1-60 minutes |
+| `POST` | `/alarms/{alarm_id}/dismiss` | Dismiss the active occurrence |
+| `GET` | `/alarms/{alarm_id}/occurrences` | List recent occurrences; accepts `limit` |
 
-| Method | Path              | Description              |
-| ------ | ----------------- | ------------------------ |
-| GET    | `/alarm-profiles` | List all alarm profiles  |
-| POST   | `/alarm-profiles` | Create an alarm profile  |
-| DELETE | `/alarm-profiles/{profile_id}` | Delete an alarm profile |
+#### Alarm profiles
 
-### Rooms and scenes
+| Method | Route | Capability |
+| --- | --- | --- |
+| `GET` | `/alarm-profiles` | List reusable alarm profiles |
+| `POST` | `/alarm-profiles` | Create a profile from a scene, sounds, and sunrise settings |
+| `DELETE` | `/alarm-profiles/{profile_id}` | Delete an alarm profile |
 
-| Method | Path                                                   | Description                         |
-| ------ | ------------------------------------------------------ | ----------------------------------- |
-| GET    | `/rooms`                                               | List all Hue rooms                  |
-| GET    | `/rooms/{room_name}`                                   | Get a Hue room and its scenes       |
-| POST   | `/rooms/{room_name}/scenes/{scene_name}/activate`     | Activate a scene                    |
+#### Rooms and scenes
 
-### Sounds
+| Method | Route | Capability |
+| --- | --- | --- |
+| `GET` | `/rooms` | List Hue rooms and their scenes |
+| `GET` | `/rooms/{room_id}` | Get one room and its scenes |
+| `POST` | `/rooms/{room_id}/scenes/{scene_id}/activate` | Preview a scene, optionally at a chosen brightness |
+| `POST` | `/rooms/{room_id}/scenes/{scene_id}/demo` | Start an accelerated, lights-only sunrise demo |
+| `DELETE` | `/rooms/{room_id}/scenes/{scene_id}/demo` | Stop the running sunrise demo |
 
-| Method | Path              | Description                              |
-| ------ | ----------------- | ---------------------------------------- |
-| GET    | `/sounds`         | List available sounds, optionally filtered by category |
-| POST   | `/sounds/preview` | Preview a sound                           |
-| POST   | `/sounds/stop`    | Stop the current sound                    |
-| POST   | `/sounds/volume`  | Set playback volume                       |
+#### Sounds and audio output
 
-### Audio output
+| Method | Route | Capability |
+| --- | --- | --- |
+| `GET` | `/sounds` | List sounds; optionally filter by `wake_up` or `get_up` category |
+| `POST` | `/sounds/preview` | Start previewing a sound and return immediately |
+| `POST` | `/sounds/stop` | Stop the current playback |
+| `POST` | `/sounds/volume` | Change the current playback volume |
+| `GET` | `/audio-output` | Get the active and available audio outputs |
+| `PUT` | `/audio-output` | Select `local` or `sonos` output |
 
-Sounds play either through the machine running the API (`local`) or through a
-Sonos speaker on the same network (`sonos`). `AUDIO_BACKENDS` controls which
-optional backends exist:
+#### Events
 
-```dotenv
-AUDIO_BACKENDS=local       # only local playback
-AUDIO_BACKENDS=sonos       # only Sonos playback
-AUDIO_BACKENDS=all         # both, switchable at runtime
-AUDIO_DEFAULT_OUTPUT=local # initial output when both exist
-```
+| Method | Route | Capability |
+| --- | --- | --- |
+| `GET` | `/eventstream` | Subscribe to alarm and occurrence events over SSE |
 
-Both alarms and previews follow the active output. Switching stops whatever is
-currently playing. Selecting a backend that was not configured returns a
-readable `503 Audio output unavailable` response.
+### Event stream
 
-| Method | Path             | Description                          |
-| ------ | ---------------- | ------------------------------------ |
-| GET    | `/audio-output`  | Show the active output               |
-| PUT    | `/audio-output`  | Switch the output                    |
+`GET /eventstream` keeps displays and integrations synchronized without
+polling. Each server-sent event contains an ID, a typed event name, and a JSON
+payload. Idle connections receive keepalive comments.
 
 ```bash
-curl -X PUT http://localhost:8000/audio-output \
+curl -N \
   -H "Authorization: Bearer $API_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"output": "sonos"}'
+  http://localhost:8000/eventstream
 ```
 
-The selection lives in memory. With both backends configured, a restart falls
-back to `AUDIO_DEFAULT_OUTPUT`; a single backend selects itself.
+Reconnect with the last received ID in the `Last-Event-ID` header. If that ID
+has left the in-memory replay buffer, fetch `GET /alarms` first to resynchronize
+the client.
 
-For local ALSA playback on a Linux Docker host, pass `/dev/snd` through with
-the optional Compose override:
+## CLI
 
-```bash
-docker compose -f compose.yml -f compose.audio.yml up --build
-```
+The repository contains a typed Go CLI generated from the API's OpenAPI
+specification. It is designed for interactive terminal use as well as scripts:
+tables are the default for people, while JSON and field selection provide a
+stable automation interface.
 
-Convenience scripts select matching build and runtime backends. Any additional
-arguments are forwarded to `docker compose up`, for example `-d`:
+### Build and configure
 
-```bash
-./scripts/start_docker_local.sh -d
-./scripts/start_docker_sonos.sh -d
-./scripts/start_docker_all.sh -d
-```
-
-The `local` and `all` scripts include the Linux `/dev/snd` override; use the
-Sonos script on Docker Desktop for Windows or macOS.
-
-The regular `docker compose up --build` remains portable and is also the right
-choice when using Sonos. Docker Desktop on Windows and macOS cannot pass host
-audio through the Linux `/dev/snd` mapping.
-
-#### Sonos setup
-
-A Sonos speaker streams the sound itself instead of receiving audio from the
-API, so it needs two things:
-
-```
-SONOS_SPEAKER_NAME=Sonos Era 100
-SONOS_IP_ADDRESS=192.168.178.68
-MINIO_PUBLIC_ENDPOINT_URL=http://192.168.1.5:9000
-```
-
-- `SONOS_SPEAKER_NAME` — the speaker to play on. Left empty, discovery picks
-  the first group coordinator it finds.
-- `SONOS_IP_ADDRESS` — connects directly and skips SSDP discovery. This is the
-  recommended setting when Huerise runs in Docker, where multicast discovery
-  may not reach the local network.
-- `MINIO_PUBLIC_ENDPOINT_URL` — the address the **speaker** reaches MinIO
-  under. Sounds are handed over as presigned links, and a link is only valid
-  for the host it was signed for, so `localhost` does not work here.
-
-The Sonos client is connected during application startup, so invalid speaker
-configuration and discovery failures fail fast. A local-only process neither
-imports `sonosify` nor touches the network.
-
-## Go CLI
-
-The repository includes a typed, script-friendly Go CLI generated from the
-API's OpenAPI specification. It follows the same command and output conventions
-as [`go-withings`](https://github.com/mathisarends/go-withings): readable tables
-by default, stable JSON for automation, clean stdout, and actionable errors on
-stderr.
-
-Build it with Go 1.25 or newer:
+The CLI requires Go 1.25 or newer:
 
 ```bash
 make build
@@ -232,43 +259,217 @@ On Windows without `make`:
 go -C cli build -o ../bin/huerise.exe ./cmd/huerise
 ```
 
-The CLI reads `.env` by default. It uses `HUERISE_API_TOKEN`, falling back to
-the backend's `API_ACCESS_TOKEN`, and connects to `http://localhost:8000` unless
-`HUERISE_API_URL` is set.
+The CLI reads `.env` by default and connects to `http://localhost:8000`. It
+uses `HUERISE_API_TOKEN`, falling back to the backend's `API_ACCESS_TOKEN`.
+Use `HUERISE_API_URL` for a different server, or pass `--env-file` and
+`--api-url` explicitly.
+
+### Command overview
+
+```text
+huerise
+|-- alarms
+|   |-- list
+|   |-- create
+|   |-- get
+|   |-- enable
+|   |-- disable
+|   |-- snooze
+|   |-- dismiss
+|   |-- occurrences
+|   `-- delete
+|-- profiles
+|   |-- list
+|   |-- create
+|   `-- delete
+|-- rooms
+|   |-- list
+|   |-- get
+|   |-- activate-scene
+|   |-- demo
+|   `-- stop-demo
+|-- sounds
+|   |-- list
+|   |-- preview
+|   |-- stop
+|   `-- volume
+|-- audio-output
+|   |-- get
+|   `-- select
+`-- version
+```
+
+Run `huerise <command> --help` for all arguments and defaults. Typical calls:
 
 ```bash
-huerise alarms list
-huerise alarms list --json --compact
+huerise rooms list
+huerise sounds list --category wake_up
+huerise profiles list
 huerise alarms create "Weekday sunrise" --room Bedroom --hour 7 --minute 0 \
   --day mon --day tue --day wed --day thu --day fri
-huerise rooms get Bedroom
-huerise sounds list --fields=id,name --compact
+huerise alarms occurrences ALARM_ID --limit 10
+huerise rooms demo Bedroom Energize --duration-seconds 20
 huerise audio-output select sonos
 ```
 
-All data commands support `--json`, `--compact`, and `--fields`. Pass
-`--no-input` for unattended use; destructive commands then fail unless their
-explicit confirmation flag is present. See [docs/cli.md](docs/cli.md) for the
-complete command tree and scripting contract.
+The CLI resolves room and scene names case-insensitively and sends their UUIDs
+to the API.
 
-### Regenerating the Go client
+### Command reference
 
-The Go CLI lives in its own module under [`cli/`](cli/), isolated from the
-Python backend. The files in `cli/internal/client/` are generated by
-[`ogen`](https://github.com/ogen-go/ogen) from the checked-in `openapi.json`.
-After changing a FastAPI route or schema, regenerate and verify the client:
+Arguments in angle brackets are required. Options in square brackets are
+optional. UUIDs returned by list commands can be passed to commands that expect
+an ID.
+
+#### Alarms
+
+| Command | Purpose and options |
+| --- | --- |
+| `huerise alarms list` | List every alarm. |
+| `huerise alarms create <label> --room <name> --hour <0-23> --minute <0-59>` | Create an alarm. Optional: `--timezone <IANA>` (default `Europe/Berlin`), repeatable `--day <mon-sun>`, and `--profile-id <UUID>`. Without `--day`, the alarm runs once. |
+| `huerise alarms get <alarm-id>` | Show one alarm. |
+| `huerise alarms enable <alarm-id>` | Enable a disabled alarm. |
+| `huerise alarms disable <alarm-id>` | Disable an enabled alarm. |
+| `huerise alarms snooze <alarm-id> [--minutes <1-60>]` | Snooze the active occurrence; the default is 10 minutes. |
+| `huerise alarms dismiss <alarm-id>` | Dismiss the active occurrence. |
+| `huerise alarms occurrences <alarm-id> [--limit <number>]` | List recent occurrences; the default limit is 20. |
+| `huerise alarms delete <alarm-id> [--yes]` | Delete an alarm. `--yes` skips the confirmation prompt. |
+
+#### Profiles
+
+| Command | Purpose and options |
+| --- | --- |
+| `huerise profiles list` | List every alarm profile. |
+| `huerise profiles create <name> --room <name> --intro-sound-id <UUID> --ringtone-sound-id <UUID>` | Create a profile. Optional: `--scene-name <name>` (default `Tageslichtwecker`), `--duration-minutes <0-120>` (default `7`), `--brightness-start <1-99>` (default `1`), `--brightness-end <2-100>` (default `100`), and `--ringtone-volume <0-100>` (default `80`). |
+| `huerise profiles delete <profile-id> [--yes]` | Delete a profile. `--yes` skips the confirmation prompt. |
+
+#### Rooms and scenes
+
+| Command | Purpose and options |
+| --- | --- |
+| `huerise rooms list` | List all Hue rooms and their scenes. |
+| `huerise rooms get <room>` | Show a room and its available scenes. |
+| `huerise rooms activate-scene <room> <scene> [--brightness <0-100>]` | Preview a scene, optionally overriding its stored brightness. |
+| `huerise rooms demo <room> <scene>` | Run a lights-only sunrise demo. Optional: `--duration-seconds <seconds>` (greater than 0 and at most 300; default `20`), `--brightness-start <1-100>` (default `1`), and `--brightness-end <1-100>` (default `100`); the start must be below the end. |
+| `huerise rooms stop-demo <room> <scene>` | Stop the running sunrise demo. |
+
+#### Sounds and output
+
+| Command | Purpose and options |
+| --- | --- |
+| `huerise sounds list [--category <category>]` | List available sounds. The category may be `wake_up` or `get_up`. |
+| `huerise sounds preview <sound-id> [--volume <0-100>]` | Preview a sound; the default volume is 60. |
+| `huerise sounds stop` | Stop the current playback. |
+| `huerise sounds volume <0-100>` | Set the current playback volume. |
+| `huerise audio-output get` | Show the active and available outputs. |
+| `huerise audio-output select <output>` | Switch to `local` or `sonos`. The selected backend must be configured on the server. |
+| `huerise version` | Print the CLI version. |
+
+### Automation and output
+
+All data commands support these global flags:
+
+| Flag | Behavior |
+| --- | --- |
+| `--json` | Emit one JSON document on stdout and never prompt |
+| `--compact` | Remove JSON indentation |
+| `--fields=a,b` | Select top-level fields and imply JSON output |
+| `--no-input` | Disable interactive prompts |
+| `--env-file PATH` | Read configuration from a different dotenv file |
+| `--api-url URL` | Override `HUERISE_API_URL` |
+
+Prompts, hints, and errors go to stderr; stdout contains result data only.
+Destructive commands require `--yes` when used with `--no-input`.
 
 ```bash
-make generate
-make check-generated
+huerise --no-input alarms list \
+  --fields=id,label,next_occurrence --compact
+huerise --no-input alarms delete ALARM_ID --yes --json --compact
 ```
 
-Do not edit files in `cli/internal/client/` by hand.
+Exit code `0` means success, `1` represents transport, API, or I/O failures,
+`2` means invalid input or configuration, and `3` means authentication failed.
+See [`docs/cli.md`](docs/cli.md) for the full scripting contract.
 
-## Local Development
+## Audio output
 
-Requires [uv](https://docs.astral.sh/uv/) and Python 3.14+. Install only the
-backend you use, or both for runtime switching:
+Huerise can play sounds on the API host (`local`), a Sonos speaker (`sonos`),
+or make both available for runtime switching:
+
+```dotenv
+AUDIO_BACKENDS=all
+AUDIO_DEFAULT_OUTPUT=local
+```
+
+Both alarms and previews use the active output. Switching output stops current
+playback. The selection is stored in memory; after a restart Huerise uses
+`AUDIO_DEFAULT_OUTPUT`, or the only available backend. Selecting a backend that
+was not configured returns `503 Audio output unavailable`.
+
+### Local playback
+
+Linux hosts can pass ALSA through to the container with the audio override:
+
+```bash
+docker compose -f compose.yml -f compose.audio.yml up --build
+```
+
+The helper scripts select matching build and runtime backends and forward extra
+arguments to `docker compose up`:
+
+```bash
+./scripts/start_docker_local.sh -d
+./scripts/start_docker_sonos.sh -d
+./scripts/start_docker_all.sh -d
+```
+
+The `local` and `all` scripts include `/dev/snd`. Docker Desktop on Windows and
+macOS cannot pass through that Linux device, so use Sonos there.
+
+### Sonos
+
+For reliable Docker networking, configure the speaker directly and expose
+MinIO under an address the speaker can reach:
+
+```dotenv
+SONOS_SPEAKER_NAME=Sonos Era 100
+SONOS_IP_ADDRESS=192.168.1.20
+MINIO_PUBLIC_ENDPOINT_URL=http://192.168.1.5:9000
+```
+
+`SONOS_IP_ADDRESS` avoids SSDP discovery, which may not cross the Docker
+network. `MINIO_PUBLIC_ENDPOINT_URL` must be reachable by the speaker because
+Sonos streams a presigned asset URL directly; `localhost` therefore does not
+work. If neither speaker name nor IP is set, discovery selects the first group
+coordinator. Invalid Sonos configuration fails during application startup.
+
+## Configuration
+
+| Variable | Required | Description |
+| --- | --- | --- |
+| `API_ACCESS_TOKEN` | Yes | Static bearer token protecting application routes |
+| `HUE_APP_KEY` | Yes | Philips Hue application key |
+| `HUE_BRIDGE_IP` | Yes | Hue Bridge hostname or IP address |
+| `DATABASE_URL` | No | SQLAlchemy database URL; defaults to local SQLite |
+| `MINIO_ENDPOINT_URL` | No | Internal S3-compatible endpoint |
+| `MINIO_PUBLIC_ENDPOINT_URL` | Sonos only | Storage endpoint reachable by the speaker |
+| `MINIO_ACCESS_KEY` | No | Object-storage access key |
+| `MINIO_SECRET_KEY` | No | Object-storage secret key |
+| `MINIO_BUCKET_NAME` | No | Sound-asset bucket name |
+| `AUDIO_BACKENDS` | No | `local`, `sonos`, or `all`; defaults to `local` |
+| `AUDIO_DEFAULT_OUTPUT` | With `all` | Initial output when both backends are available |
+| `SONOS_SPEAKER_NAME` | No | Preferred Sonos speaker name |
+| `SONOS_IP_ADDRESS` | No | Direct Sonos address; skips discovery |
+| `HUERISE_API_TOKEN` | CLI only | CLI token; falls back to `API_ACCESS_TOKEN` |
+| `HUERISE_API_URL` | CLI only | CLI server URL; defaults to `http://localhost:8000` |
+
+Defaults suitable for local development are documented in [`.env.example`](.env.example).
+
+## Local development
+
+The backend requires Python 3.14+ and
+[`uv`](https://docs.astral.sh/uv/). Install the optional dependency set for the
+audio output you use:
 
 ```bash
 uv sync --extra local
@@ -277,10 +478,31 @@ uv sync --all-extras
 uv run python -m huerise.main
 ```
 
-Run tests:
+Run the backend and CLI checks with:
 
 ```bash
 uv run --all-extras pytest
+uvx ruff check .
 go -C cli test ./...
 go -C cli vet ./...
 ```
+
+The generated Go client lives in `cli/internal/client/`. After changing an API
+route or schema, regenerate the OpenAPI document and client, then verify that no
+generated changes remain:
+
+```bash
+make generate
+make check-generated
+```
+
+Do not edit generated client files by hand.
+
+## Tech stack
+
+- Python 3.14, FastAPI, Pydantic, and Dishka
+- SQLModel, SQLite, Alembic, and aiosqlite
+- Philips Hue integration through [hueify](https://pypi.org/project/hueify/)
+- Local audio through PortAudio and optional Sonos through [sonosify](https://pypi.org/project/sonosify/)
+- S3-compatible asset storage through MinIO and aioboto3
+- Go 1.25 CLI generated with [ogen](https://github.com/ogen-go/ogen)

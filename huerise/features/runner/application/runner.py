@@ -39,7 +39,7 @@ from huerise.features.runner.application.runner_port import (
 
 logger = logging.getLogger(__name__)
 
-INTRO_VOLUME = 50
+_INTRO_VOLUME = 50
 
 
 class AlarmRunner(AlarmRunnerPort):
@@ -157,7 +157,7 @@ class AlarmRunner(AlarmRunnerPort):
             )
         )
         intro_task = asyncio.create_task(
-            self._audio.play(profile.intro_config.sound_id, volume=INTRO_VOLUME)
+            self._audio.play(profile.intro_config.sound_id, volume=_INTRO_VOLUME)
         )
         self._intro_tasks.add(intro_task)
         intro_task.add_done_callback(self._intro_finished)
