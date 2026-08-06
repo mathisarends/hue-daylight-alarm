@@ -2,12 +2,12 @@ import logging
 from collections.abc import AsyncIterator
 
 from dishka import Provider, Scope, alias, provide
-from hueify import Hueify
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from huerise.features.devices.application import (
     AudioOutputService,
     AudioPlayer,
+    HueBridgeService,
     LightEvents,
     Lights,
     SceneService,
@@ -16,20 +16,26 @@ from huerise.features.devices.application import (
     SunriseDemoRunner,
     SwitchableAudioPlayer,
 )
+from huerise.features.devices.application.ports import HueOnboarding
 from huerise.features.devices.domain import (
     AudioOutput,
     AudioOutputUnavailableError,
+    HueBridgeRepository,
     SonosSpeakerRepository,
     SoundRepository,
 )
-from huerise.features.devices.infrastructure.hue import HueLightEvents, HueLights
+from huerise.features.devices.infrastructure.hue import (
+    ConfigurableHue,
+    HueifyOnboarding,
+)
 from huerise.features.devices.infrastructure.persistence import (
+    SQLHueBridgeRepository,
     SQLSonosSpeakerRepository,
     SQLSoundRepository,
 )
 from huerise.features.devices.infrastructure.settings import (
     AudioSettings,
-    HueCredentials,
+    HueEnvironment,
     SonosSettings,
 )
 from huerise.infrastructure.storage import StorageBackend
@@ -41,24 +47,45 @@ class DevicesProvider(Provider):
     scope = Scope.APP
 
     @provide
-    def hue_credentials(self) -> HueCredentials:
-        return HueCredentials()
+    def hue_environment(self) -> HueEnvironment:
+        return HueEnvironment()
 
     @provide
-    async def hue(self, credentials: HueCredentials) -> AsyncIterator[Hueify]:
-        """Connected client: its caches are only populated by ``connect()``."""
-        async with Hueify(
-            credentials.bridge_ip, credentials.app_key.get_secret_value()
-        ) as hue:
-            yield hue
+    def hue_bridge_repository(
+        self, session_factory: async_sessionmaker[AsyncSession]
+    ) -> HueBridgeRepository:
+        return SQLHueBridgeRepository(session_factory)
 
     @provide
-    def lights(self, hue: Hueify) -> Lights:
-        return HueLights(hue)
+    def configurable_hue(
+        self,
+        repository: HueBridgeRepository,
+        environment: HueEnvironment,
+        onboarding: HueOnboarding,
+    ) -> ConfigurableHue:
+        return ConfigurableHue(repository, environment, onboarding)
 
     @provide
-    def light_events(self, hue: Hueify) -> LightEvents:
-        return HueLightEvents(hue)
+    def hue_onboarding(self) -> HueOnboarding:
+        return HueifyOnboarding()
+
+    @provide
+    def lights(self, hue: ConfigurableHue) -> Lights:
+        return hue
+
+    @provide
+    def light_events(self, hue: ConfigurableHue) -> LightEvents:
+        return hue
+
+    @provide(scope=Scope.REQUEST)
+    def hue_bridge_service(
+        self,
+        repository: HueBridgeRepository,
+        connection: ConfigurableHue,
+        environment: HueEnvironment,
+        onboarding: HueOnboarding,
+    ) -> HueBridgeService:
+        return HueBridgeService(repository, connection, environment, onboarding)
 
     @provide
     def sound_repository(

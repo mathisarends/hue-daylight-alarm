@@ -5,6 +5,7 @@ from dishka import Provider, Scope, make_async_container, provide
 from huerise.features.devices.application import SwitchableAudioPlayer
 from huerise.features.devices.domain import (
     AudioOutput,
+    HueBridgeRepository,
     SonosSpeakerRepository,
     SoundRepository,
 )
@@ -26,6 +27,13 @@ class StorageStubProvider(Provider):
     @provide
     def sonos_speaker_repository(self) -> SonosSpeakerRepository:
         repository = MagicMock(spec=SonosSpeakerRepository)
+        repository.get_selected = AsyncMock(return_value=None)
+        repository.save_selected = AsyncMock()
+        return repository
+
+    @provide
+    def hue_bridge_repository(self) -> HueBridgeRepository:
+        repository = MagicMock(spec=HueBridgeRepository)
         repository.get_selected = AsyncMock(return_value=None)
         repository.save_selected = AsyncMock()
         return repository

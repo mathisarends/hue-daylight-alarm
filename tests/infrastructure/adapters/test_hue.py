@@ -2,6 +2,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 from uuid import UUID, uuid4
 
+import pytest
 from hueify.models import (
     DimmingState,
     LightUpdate,
@@ -15,7 +16,9 @@ from hueify.models import (
     Scene as HueScene,
 )
 
-from huerise.features.devices.infrastructure.hue import HueLights
+from huerise.features.devices.domain import HueUnavailableError
+from huerise.features.devices.infrastructure.hue import ConfigurableHue, HueLights
+from huerise.features.devices.infrastructure.settings import HueEnvironment
 
 ROOM_ID = UUID("11111111-1111-4111-8111-111111111111")
 SCENE_ID = UUID("22222222-2222-4222-8222-222222222222")
@@ -87,3 +90,19 @@ async def test_set_brightness_is_forwarded_to_hueify() -> None:
     await HueLights(hue).set_brightness(ROOM_ID, 80.5)
 
     hue.rooms.set_brightness.assert_awaited_once_with(ROOM_ID, 80.5)
+
+
+async def test_unconfigured_runtime_starts_but_hue_operations_are_unavailable() -> None:
+    repository = MagicMock()
+    repository.get_selected = AsyncMock(return_value=None)
+    onboarding = MagicMock()
+    runtime = ConfigurableHue(
+        repository, HueEnvironment(_env_file=None), onboarding
+    )
+
+    await runtime.start()
+
+    with pytest.raises(HueUnavailableError, match="not configured"):
+        await runtime.list_rooms()
+    onboarding.discover.assert_not_called()
+    await runtime.stop()
