@@ -34,6 +34,14 @@ class SwitchableAudioPlayer(AudioPlayer):
     def available(self) -> tuple[AudioOutput, ...]:
         return tuple(self._players)
 
+    def player_for(self, output: AudioOutput) -> AudioPlayer:
+        try:
+            return self._players[output]
+        except KeyError as error:
+            raise AudioOutputUnavailableError(
+                output, "no player is configured for it"
+            ) from error
+
     async def select(self, output: AudioOutput) -> None:
         """Stop whatever is playing and route further playback to ``output``."""
         if output not in self._players:

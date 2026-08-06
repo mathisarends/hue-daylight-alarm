@@ -51,6 +51,16 @@ class SoundModel(DatabaseEntity, table=True):
     created_at: datetime = Field(sa_column=Column(UtcDateTime, nullable=False))
 
 
+class SonosSpeakerSelectionModel(DatabaseEntity, table=True):
+    __tablename__ = "sonos_speaker_selection"
+
+    speaker_id: str = Field(unique=True)
+    speaker_name: str
+    ip_address: str
+    group_id: str | None = None
+    is_coordinator: bool = False
+
+
 class AlarmProfileModel(DatabaseEntity, table=True):
     """How an alarm behaves. Reusable across alarms."""
 

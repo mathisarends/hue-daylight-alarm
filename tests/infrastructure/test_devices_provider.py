@@ -3,7 +3,11 @@ from unittest.mock import AsyncMock, MagicMock
 from dishka import Provider, Scope, make_async_container, provide
 
 from huerise.features.devices.application import SwitchableAudioPlayer
-from huerise.features.devices.domain import AudioOutput, SoundRepository
+from huerise.features.devices.domain import (
+    AudioOutput,
+    SonosSpeakerRepository,
+    SoundRepository,
+)
 from huerise.features.devices.infrastructure.di import DevicesProvider
 from huerise.infrastructure.storage import StorageBackend
 
@@ -18,6 +22,13 @@ class StorageStubProvider(Provider):
     @provide
     def sounds(self) -> SoundRepository:
         return MagicMock(spec=SoundRepository)
+
+    @provide
+    def sonos_speaker_repository(self) -> SonosSpeakerRepository:
+        repository = MagicMock(spec=SonosSpeakerRepository)
+        repository.get_selected = AsyncMock(return_value=None)
+        repository.save_selected = AsyncMock()
+        return repository
 
 
 async def test_composition_root_keeps_sonos_unconfigured_without_legacy_selection(

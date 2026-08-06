@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field, model_validator
 from huerise.features.devices.application import (
     DEMO_DURATION,
     AudioOutputStatus,
+    SonosSpeakerStatus,
     SunriseDemo,
 )
 from huerise.features.devices.application.sound_service import PREVIEW_VOLUME
@@ -59,6 +60,31 @@ class AudioOutputRead(BaseModel):
 
 class AudioOutputRequest(BaseModel):
     output: AudioOutput = Field(description="The output to play on from now on.")
+
+
+class SonosSpeakerRead(BaseModel):
+    id: str = Field(description="Stable Sonos device UID used for selection.")
+    name: str
+    ip_address: str
+    group_id: str | None
+    is_coordinator: bool
+    selected: bool
+
+    @classmethod
+    def from_domain(cls, status: SonosSpeakerStatus) -> Self:
+        speaker = status.speaker
+        return cls(
+            id=speaker.id,
+            name=speaker.name,
+            ip_address=speaker.ip_address,
+            group_id=speaker.group_id,
+            is_coordinator=speaker.is_coordinator,
+            selected=status.selected,
+        )
+
+
+class SonosSpeakerRequest(BaseModel):
+    speaker_id: str = Field(min_length=1, description="Sonos device UID to select.")
 
 
 class SceneRead(BaseModel):

@@ -11,16 +11,22 @@ from huerise.features.devices.application import (
     LightEvents,
     Lights,
     SceneService,
+    SonosSpeakerService,
     SoundService,
     SunriseDemoRunner,
     SwitchableAudioPlayer,
 )
 from huerise.features.devices.domain import (
     AudioOutput,
+    AudioOutputUnavailableError,
+    SonosSpeakerRepository,
     SoundRepository,
 )
 from huerise.features.devices.infrastructure.hue import HueLightEvents, HueLights
-from huerise.features.devices.infrastructure.persistence import SQLSoundRepository
+from huerise.features.devices.infrastructure.persistence import (
+    SQLSonosSpeakerRepository,
+    SQLSoundRepository,
+)
 from huerise.features.devices.infrastructure.settings import (
     AudioSettings,
     HueCredentials,
@@ -61,6 +67,12 @@ class DevicesProvider(Provider):
         return SQLSoundRepository(session_factory)
 
     @provide
+    def sonos_speaker_repository(
+        self, session_factory: async_sessionmaker[AsyncSession]
+    ) -> SonosSpeakerRepository:
+        return SQLSonosSpeakerRepository(session_factory)
+
+    @provide
     def audio_settings(self) -> AudioSettings:
         return AudioSettings()
 
@@ -75,6 +87,7 @@ class DevicesProvider(Provider):
         storage: StorageBackend,
         settings: AudioSettings,
         sonos_settings: SonosSettings,
+        sonos_speaker_repository: SonosSpeakerRepository,
     ) -> AsyncIterator[SwitchableAudioPlayer]:
         """Build only configured adapters and own their app-scoped resources."""
         players: dict[AudioOutput, AudioPlayer] = {}
@@ -98,10 +111,23 @@ class DevicesProvider(Provider):
                 discovery_timeout=sonos_settings.discovery_timeout
             )
             sonos_player = SonosAudioPlayer(sounds, storage, controller)
-            if sonos_settings.speaker_name or sonos_settings.ip_address:
+            saved_speaker = await sonos_speaker_repository.get_selected()
+            if saved_speaker is not None:
+                try:
+                    speaker = await sonos_player.restore_speaker(saved_speaker)
+                except AudioOutputUnavailableError as error:
+                    logger.warning("Could not restore Sonos speaker: %s", error)
+                else:
+                    logger.info(
+                        "Restored Sonos speaker %s at %s",
+                        speaker.name,
+                        speaker.ip_address,
+                    )
+            elif sonos_settings.speaker_name or sonos_settings.ip_address:
                 speaker = await sonos_player.configure(
                     sonos_settings.speaker_name, sonos_settings.ip_address
                 )
+                await sonos_speaker_repository.save_selected(speaker)
                 logger.info(
                     "Connected to Sonos speaker %s at %s",
                     speaker.name,
@@ -135,3 +161,11 @@ class DevicesProvider(Provider):
     @provide(scope=Scope.REQUEST)
     def audio_output_service(self, player: SwitchableAudioPlayer) -> AudioOutputService:
         return AudioOutputService(player)
+
+    @provide(scope=Scope.REQUEST)
+    def sonos_speaker_service(
+        self,
+        player: SwitchableAudioPlayer,
+        sonos_speaker_repository: SonosSpeakerRepository,
+    ) -> SonosSpeakerService:
+        return SonosSpeakerService(player, sonos_speaker_repository)

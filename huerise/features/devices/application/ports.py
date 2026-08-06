@@ -36,6 +36,9 @@ class SonosSpeakerSelector(ABC):
     @abstractmethod
     async def select_speaker(self, speaker_id: str) -> SonosSpeaker: ...
 
+    @abstractmethod
+    async def restore_speaker(self, speaker: SonosSpeaker) -> SonosSpeaker: ...
+
 
 class Lights(ABC):
     @abstractmethod

@@ -9,6 +9,7 @@ from huerise.infrastructure.database.models import (
     AlarmModel,
     AlarmOccurrenceModel,
     AlarmProfileModel,
+    SonosSpeakerSelectionModel,
     SoundModel,
 )
 
@@ -16,6 +17,7 @@ __all__ = [
     "AlarmModel",
     "AlarmOccurrenceModel",
     "AlarmProfileModel",
+    "SonosSpeakerSelectionModel",
     "SoundModel",
 ]
 

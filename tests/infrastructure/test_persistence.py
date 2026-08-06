@@ -13,8 +13,11 @@ from huerise.features.alarm.infrastructure.persistence import (
     SQLAlarmRepository,
     SQLAlarmUnitOfWorkFactory,
 )
-from huerise.features.devices.domain import Sound, SoundCategory
-from huerise.features.devices.infrastructure.persistence import SQLSoundRepository
+from huerise.features.devices.domain import SonosSpeaker, Sound, SoundCategory
+from huerise.features.devices.infrastructure.persistence import (
+    SQLSonosSpeakerRepository,
+    SQLSoundRepository,
+)
 from huerise.infrastructure.database.models import ALARM_DEFECTS, OCCURRENCE_STATES
 from tests.application.conftest import make_alarm, make_occurrence, make_profile
 
@@ -39,6 +42,25 @@ def test_orm_defects_match_the_domain_enum() -> None:
 
 
 class TestRoundtrip:
+    async def test_sonos_selection_replaces_the_single_saved_speaker(
+        self, session_factory
+    ) -> None:
+        repository = SQLSonosSpeakerRepository(session_factory)
+        office = SonosSpeaker("RINCON_OFFICE", "Office", "192.168.1.41")
+        bedroom = SonosSpeaker(
+            "RINCON_BEDROOM",
+            "Bedroom",
+            "192.168.1.42",
+            group_id="GROUP_1",
+            is_coordinator=True,
+        )
+
+        assert await repository.get_selected() is None
+        await repository.save_selected(office)
+        await repository.save_selected(bedroom)
+
+        assert await repository.get_selected() == bedroom
+
     async def test_sound_keeps_its_explicit_storage_metadata(
         self, session_factory
     ) -> None:

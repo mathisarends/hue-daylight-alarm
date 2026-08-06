@@ -79,6 +79,20 @@ class SonosAudioPlayer(AudioPlayer, SonosSpeakerSelector):
             await self._replace_client(client, selected)
             return selected
 
+    async def restore_speaker(self, speaker: SonosSpeaker) -> SonosSpeaker:
+        async with self._lock, _translated_errors():
+            client = await self._controller.client(ip=speaker.ip_address)
+            name = await client.get_room_name()
+            restored = SonosSpeaker(
+                id=speaker.id,
+                name=name,
+                ip_address=speaker.ip_address,
+                group_id=speaker.group_id,
+                is_coordinator=speaker.is_coordinator,
+            )
+            await self._replace_client(client, restored)
+            return restored
+
     async def configure(self, room: str | None, ip: str | None) -> SonosSpeaker:
         async with self._lock, _translated_errors():
             if ip is None:
