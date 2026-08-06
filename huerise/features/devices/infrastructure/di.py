@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from huerise.features.devices.application import (
     AudioOutputService,
     AudioPlayer,
+    DoctorService,
     HueBridgeService,
     LightEvents,
     Lights,
@@ -86,6 +87,14 @@ class DevicesProvider(Provider):
         onboarding: HueOnboarding,
     ) -> HueBridgeService:
         return HueBridgeService(repository, connection, environment, onboarding)
+
+    @provide(scope=Scope.REQUEST)
+    def doctor_service(
+        self,
+        hue: HueBridgeService,
+        sonos_speakers: SonosSpeakerRepository,
+    ) -> DoctorService:
+        return DoctorService(hue, sonos_speakers)
 
     @provide
     def sound_repository(
