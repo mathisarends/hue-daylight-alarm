@@ -3,12 +3,16 @@ from unittest.mock import AsyncMock, MagicMock
 from uuid import UUID, uuid4
 
 import pytest
+from hueify import Hueify
 from hueify.models import (
     DimmingState,
+    GroupArchetype,
+    GroupMetadata,
     LightUpdate,
     OnState,
     ResourceReference,
     ResourceType,
+    RoomEvent,
     SceneActionTarget,
     SceneMetadata,
 )
@@ -16,8 +20,16 @@ from hueify.models import (
     Scene as HueScene,
 )
 
-from huerise.features.devices.domain import HueUnavailableError
-from huerise.features.devices.infrastructure.hue import ConfigurableHue, HueLights
+from huerise.features.devices.domain import (
+    HueUnavailableError,
+    LightChange,
+    LightResource,
+)
+from huerise.features.devices.infrastructure.hue import (
+    ConfigurableHue,
+    HueLightEvents,
+    HueLights,
+)
 from huerise.features.devices.infrastructure.settings import HueEnvironment
 
 ROOM_ID = UUID("11111111-1111-4111-8111-111111111111")
@@ -90,6 +102,55 @@ async def test_set_brightness_is_forwarded_to_hueify() -> None:
     await HueLights(hue).set_brightness(ROOM_ID, 80.5)
 
     hue.rooms.set_brightness.assert_awaited_once_with(ROOM_ID, 80.5)
+
+
+async def test_start_subscribes_to_rooms_and_scenes_and_opens_the_stream() -> None:
+    # Specced against Hueify so a renamed method on the library fails here
+    # rather than silently going unnoticed until the bridge is talked to.
+    hue = MagicMock(spec=Hueify)
+    events = HueLightEvents(hue)
+
+    await events.start()
+
+    hue.start_stream.assert_awaited_once()
+    assert {call.args[0] for call in hue.on.call_args_list} == {
+        ResourceType.ROOM,
+        ResourceType.SCENE,
+    }
+
+
+async def test_stop_unsubscribes_and_closes_the_stream() -> None:
+    hue = MagicMock(spec=Hueify)
+    events = HueLightEvents(hue)
+
+    await events.start()
+    await events.stop()
+
+    hue.stop_stream.assert_awaited_once()
+    assert {call.args[0] for call in hue.off.call_args_list} == {
+        ResourceType.ROOM,
+        ResourceType.SCENE,
+    }
+
+
+async def test_bridge_event_reaches_subscribers_as_a_light_change() -> None:
+    events = HueLightEvents(MagicMock(spec=Hueify))
+    received: list[LightChange] = []
+
+    async def record(change: LightChange) -> None:
+        received.append(change)
+
+    events.subscribe(record)
+    await events._on_event(
+        RoomEvent(
+            id=ROOM_ID,
+            metadata=GroupMetadata(name="Bedroom", archetype=GroupArchetype.BEDROOM),
+        )
+    )
+
+    assert received == [
+        LightChange(resource=LightResource.ROOM, id=ROOM_ID, name="Bedroom")
+    ]
 
 
 async def test_unconfigured_runtime_starts_but_hue_operations_are_unavailable() -> None:

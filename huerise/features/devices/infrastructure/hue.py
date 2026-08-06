@@ -209,7 +209,7 @@ class HueLightEvents(LightEvents):
         for resource_type in self._RESOURCES:
             self._hue.on(resource_type, self._on_event)
         try:
-            await self._hue.start_events()
+            await self._hue.start_stream()
         except BaseException:
             for resource_type in self._RESOURCES:
                 self._hue.off(resource_type, self._on_event)
@@ -218,7 +218,7 @@ class HueLightEvents(LightEvents):
     async def stop(self) -> None:
         for resource_type in self._RESOURCES:
             self._hue.off(resource_type, self._on_event)
-        await self._hue.stop_events()
+        await self._hue.stop_stream()
 
     async def _on_event(self, event: RoomEvent | SceneEvent) -> None:
         # Too chatty for INFO: every scene recall passes through here as well.
