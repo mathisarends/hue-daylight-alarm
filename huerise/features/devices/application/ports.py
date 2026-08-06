@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable
 from uuid import UUID
 
-from huerise.features.devices.domain import LightChange, Room
+from huerise.features.devices.domain import LightChange, Room, SonosSpeaker
 from huerise.lifecycle import Runnable
 
 type LightChangeHandler = Callable[[LightChange], Awaitable[None]]
@@ -23,6 +23,18 @@ class AudioPlayer(ABC):
 
     @abstractmethod
     async def set_volume(self, volume: int) -> None: ...
+
+
+class SonosSpeakerSelector(ABC):
+    @property
+    @abstractmethod
+    def selected_speaker(self) -> SonosSpeaker | None: ...
+
+    @abstractmethod
+    async def discover_speakers(self) -> tuple[SonosSpeaker, ...]: ...
+
+    @abstractmethod
+    async def select_speaker(self, speaker_id: str) -> SonosSpeaker: ...
 
 
 class Lights(ABC):

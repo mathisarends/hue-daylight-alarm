@@ -70,3 +70,8 @@ class SonosSettings(BaseSettings):
     """Skips SSDP discovery, which multicast-blocking networks may swallow."""
 
     discovery_timeout: float = Field(default=5.0, gt=0)
+
+    @field_validator("speaker_name", "ip_address", mode="before")
+    @classmethod
+    def empty_string_is_unset(cls, value: object) -> object:
+        return None if isinstance(value, str) and not value.strip() else value

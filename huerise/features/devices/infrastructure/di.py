@@ -17,7 +17,6 @@ from huerise.features.devices.application import (
 )
 from huerise.features.devices.domain import (
     AudioOutput,
-    AudioOutputUnavailableError,
     SoundRepository,
 )
 from huerise.features.devices.infrastructure.hue import HueLightEvents, HueLights
@@ -79,7 +78,7 @@ class DevicesProvider(Provider):
     ) -> AsyncIterator[SwitchableAudioPlayer]:
         """Build only configured adapters and own their app-scoped resources."""
         players: dict[AudioOutput, AudioPlayer] = {}
-        sonos_client = None
+        sonos_player = None
 
         if AudioOutput.LOCAL in settings.backends:
             # Optional audio libraries stay out of Sonos-only processes.
@@ -91,33 +90,30 @@ class DevicesProvider(Provider):
 
         if AudioOutput.SONOS in settings.backends:
             # sonosify and its UPnP stack stay out of local-only processes.
-            from sonosify import SonosController, SonosifyError
+            from sonosify import SonosController
 
             from huerise.features.devices.infrastructure.sonos import SonosAudioPlayer
 
             controller = SonosController(
                 discovery_timeout=sonos_settings.discovery_timeout
             )
-            try:
-                sonos_client = await controller.client(
-                    sonos_settings.speaker_name, ip=sonos_settings.ip_address
+            sonos_player = SonosAudioPlayer(sounds, storage, controller)
+            if sonos_settings.speaker_name or sonos_settings.ip_address:
+                speaker = await sonos_player.configure(
+                    sonos_settings.speaker_name, sonos_settings.ip_address
                 )
-            except SonosifyError as error:
-                raise AudioOutputUnavailableError(
-                    AudioOutput.SONOS, str(error)
-                ) from error
-            logger.info(
-                "Connected to Sonos speaker %s at %s",
-                await sonos_client.get_room_name(),
-                sonos_client.ip,
-            )
-            players[AudioOutput.SONOS] = SonosAudioPlayer(sounds, storage, sonos_client)
+                logger.info(
+                    "Connected to Sonos speaker %s at %s",
+                    speaker.name,
+                    speaker.ip_address,
+                )
+            players[AudioOutput.SONOS] = sonos_player
 
         try:
             yield SwitchableAudioPlayer(players, active=settings.initial_output)
         finally:
-            if sonos_client is not None:
-                await sonos_client.close()
+            if sonos_player is not None:
+                await sonos_player.close()
 
     audio = alias(source=SwitchableAudioPlayer, provides=AudioPlayer)
 

@@ -20,13 +20,35 @@ class StorageStubProvider(Provider):
         return MagicMock(spec=SoundRepository)
 
 
-async def test_composition_root_injects_an_eagerly_connected_sonos_client(
+async def test_composition_root_keeps_sonos_unconfigured_without_legacy_selection(
     monkeypatch,
 ) -> None:
     monkeypatch.setenv("AUDIO_BACKENDS", "sonos")
     monkeypatch.delenv("AUDIO_DEFAULT_OUTPUT", raising=False)
+    monkeypatch.setenv("SONOS_SPEAKER_NAME", "")
+    monkeypatch.setenv("SONOS_IP_ADDRESS", "")
+    controller_type = MagicMock()
+    monkeypatch.setattr("sonosify.SonosController", controller_type)
+    container = make_async_container(DevicesProvider(), StorageStubProvider())
+
+    player = await container.get(SwitchableAudioPlayer)
+
+    assert player.active is AudioOutput.SONOS
+    assert player.available == (AudioOutput.SONOS,)
+    controller_type.assert_called_once()
+    controller_type.return_value.client.assert_not_called()
+
+    await container.close()
+
+
+async def test_composition_root_supports_legacy_sonos_address(monkeypatch) -> None:
+    monkeypatch.setenv("AUDIO_BACKENDS", "sonos")
+    monkeypatch.delenv("AUDIO_DEFAULT_OUTPUT", raising=False)
+    monkeypatch.setenv("SONOS_IP_ADDRESS", "192.168.1.42")
+    monkeypatch.setenv("SONOS_SPEAKER_NAME", "")
     speaker = MagicMock()
     speaker.ip = "192.168.1.42"
+    speaker.uid = "RINCON_BEDROOM"
     speaker.get_room_name = AsyncMock(return_value="Bedroom")
     speaker.close = AsyncMock()
     controller = MagicMock()
@@ -40,7 +62,7 @@ async def test_composition_root_injects_an_eagerly_connected_sonos_client(
     assert player.active is AudioOutput.SONOS
     assert player.available == (AudioOutput.SONOS,)
     controller_type.assert_called_once()
-    controller.client.assert_awaited_once()
+    controller.client.assert_awaited_once_with(None, ip="192.168.1.42")
 
     await container.close()
     speaker.close.assert_awaited_once()
