@@ -306,6 +306,13 @@ huerise
 |-- audio-output
 |   |-- get
 |   `-- select
+|-- hue
+|   `-- bridge
+|       |-- list
+|       |-- status
+|       |-- select
+|       `-- register
+|-- doctor
 `-- version
 ```
 
@@ -320,6 +327,8 @@ huerise alarms create "Weekday sunrise" --room Bedroom --hour 7 --minute 0 \
 huerise alarms occurrences ALARM_ID --limit 10
 huerise rooms demo Bedroom Energize --duration-seconds 20
 huerise audio-output select sonos
+huerise hue bridge list
+huerise doctor
 ```
 
 The CLI resolves room and scene names case-insensitively and sends their UUIDs
@@ -352,6 +361,16 @@ an ID.
 | `huerise profiles list`                                                                           | List every alarm profile.                                                                                                                                                                                                                                          |
 | `huerise profiles create <name> --room <name> --intro-sound-id <UUID> --ringtone-sound-id <UUID>` | Create a profile. Optional: `--scene-name <name>` (default `Tageslichtwecker`), `--duration-minutes <0-120>` (default `7`), `--brightness-start <1-99>` (default `1`), `--brightness-end <2-100>` (default `100`), and `--ringtone-volume <0-100>` (default `80`). |
 | `huerise profiles delete <profile-id> [--yes]`                                                    | Delete a profile. `--yes` skips the confirmation prompt.                                                                                                                                                                                                           |
+
+#### Hue setup and diagnostics
+
+| Command                                          | Purpose and options                                                                                          |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| `huerise hue bridge list`                        | Discover Hue Bridges and show their stable IDs, IP addresses, and selection state.                           |
+| `huerise hue bridge status`                      | Show the effective Hue Bridge configuration and whether it comes from the environment or database.          |
+| `huerise hue bridge select <bridge-id>`          | Persist a discovered bridge as the selected bridge.                                                         |
+| `huerise hue bridge register`                    | Register the selected bridge after pressing its physical link button. The request may take up to 60 seconds. |
+| `huerise doctor`                                 | Check whether the Hue Bridge and Sonos speaker are configured.                                              |
 
 #### Rooms and scenes
 

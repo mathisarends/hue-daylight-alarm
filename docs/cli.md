@@ -24,7 +24,9 @@ huerise
 ├── rooms
 │   ├── list
 │   ├── get
-│   └── activate-scene
+│   ├── activate-scene
+│   ├── demo
+│   └── stop-demo
 ├── sounds
 │   ├── list
 │   ├── preview
@@ -33,11 +35,27 @@ huerise
 ├── audio-output
 │   ├── get
 │   └── select
+├── hue
+│   └── bridge
+│       ├── list
+│       ├── status
+│       ├── select
+│       └── register
+├── doctor
 └── version
 ```
 
 Run `huerise --help` or `huerise <command> --help` for arguments, flags, and
 defaults.
+
+## Hue setup and diagnostics
+
+`huerise hue bridge list` discovers bridges, and `huerise hue bridge select
+<bridge-id>` persists the selected bridge. Press its physical link button, then
+run `huerise hue bridge register`; registration may take up to 60 seconds.
+`huerise hue bridge status` shows the effective bridge configuration and its
+source. `huerise doctor` reports whether the Hue Bridge and Sonos speaker are
+configured.
 
 ## Streams and JSON
 
