@@ -10,13 +10,13 @@ from huerise.features.devices.presentation.schemas import (
     SunriseDemoRead,
     SunriseDemoRequest,
 )
-from huerise.presentation import require_access_token
+from huerise.presentation import get_current_user
 
 scene_router = APIRouter(
     prefix="/rooms",
     tags=["scenes"],
     route_class=DishkaRoute,
-    dependencies=[Depends(require_access_token)],
+    dependencies=[Depends(get_current_user)],
 )
 
 

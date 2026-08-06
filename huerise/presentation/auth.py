@@ -1,28 +1,21 @@
-import secrets
+from dataclasses import dataclass
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from pydantic import SecretStr
-from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from huerise.infrastructure.auth import (
+    AuthSettings,
+    InvalidAccessTokenError,
+    decode_access_token,
+)
 
-class ApiSettings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        env_prefix="API_",
-        extra="ignore",
-    )
-
-    access_token: SecretStr
-
-
-_settings = ApiSettings()
+_settings = AuthSettings()
 
 _bearer_scheme = HTTPBearer(
     scheme_name="AccessToken",
-    description="Send the API access token as `Authorization: Bearer <token>`.",
+    description="Send the /auth/login access token as `Authorization: Bearer <token>`.",
     auto_error=False,
 )
 
@@ -33,14 +26,23 @@ _UNAUTHORIZED = HTTPException(
 )
 
 
-async def require_access_token(
+@dataclass(frozen=True, slots=True)
+class CurrentUser:
+    id: UUID
+    tenant_id: UUID
+
+
+async def get_current_user(
     credentials: Annotated[
         HTTPAuthorizationCredentials | None, Depends(_bearer_scheme)
     ],
-) -> None:
+) -> CurrentUser:
     if credentials is None:
         raise _UNAUTHORIZED
-
-    expected = _settings.access_token.get_secret_value()
-    if not secrets.compare_digest(credentials.credentials, expected):
-        raise _UNAUTHORIZED
+    try:
+        user_id, tenant_id = decode_access_token(
+            credentials.credentials, _settings.jwt_secret.get_secret_value()
+        )
+    except InvalidAccessTokenError as error:
+        raise _UNAUTHORIZED from error
+    return CurrentUser(id=user_id, tenant_id=tenant_id)

@@ -3,12 +3,12 @@ from fastapi import APIRouter, Depends
 
 from huerise.features.devices.application import DoctorService
 from huerise.features.devices.presentation.doctor_schemas import DoctorRead
-from huerise.presentation import require_access_token
+from huerise.presentation import get_current_user
 
 doctor_router = APIRouter(
     tags=["health"],
     route_class=DishkaRoute,
-    dependencies=[Depends(require_access_token)],
+    dependencies=[Depends(get_current_user)],
 )
 
 

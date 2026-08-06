@@ -14,6 +14,7 @@ from huerise.features.alarm.presentation import (
     alarm_router,
     register_alarm_exception_handlers,
 )
+from huerise.infrastructure.auth import encode_access_token
 from huerise.presentation import auth
 from tests.application.conftest import (
     ROOM_ID,
@@ -24,7 +25,10 @@ from tests.application.conftest import (
     make_occurrence,
 )
 
-TOKEN = "test-access-token"
+SECRET = "test-jwt-secret"
+TOKEN = encode_access_token(
+    user_id=uuid4(), tenant_id=uuid4(), secret=SECRET, ttl_minutes=15
+)
 AUTH = {"Authorization": f"Bearer {TOKEN}"}
 
 
@@ -42,7 +46,7 @@ class StubProvider(Provider):
 
 @pytest.fixture
 def client(monkeypatch: pytest.MonkeyPatch) -> TestClient:
-    monkeypatch.setattr(auth._settings, "access_token", SecretStr(TOKEN))
+    monkeypatch.setattr(auth._settings, "jwt_secret", SecretStr(SECRET))
 
     app = FastAPI()
     app.include_router(alarm_router)
@@ -148,7 +152,7 @@ def test_snoozing_without_an_active_occurrence_returns_409(client: TestClient) -
 
 @pytest.fixture
 def ringing_alarm_client(monkeypatch: pytest.MonkeyPatch) -> tuple[TestClient, str]:
-    monkeypatch.setattr(auth._settings, "access_token", SecretStr(TOKEN))
+    monkeypatch.setattr(auth._settings, "jwt_secret", SecretStr(SECRET))
     alarm = make_alarm()
     occurrence = make_occurrence(
         alarm.id, datetime.now(UTC), state=OccurrenceState.RINGING

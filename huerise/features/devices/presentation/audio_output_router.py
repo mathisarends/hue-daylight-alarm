@@ -8,13 +8,13 @@ from huerise.features.devices.presentation.schemas import (
     SonosSpeakerRead,
     SonosSpeakerRequest,
 )
-from huerise.presentation import require_access_token
+from huerise.presentation import get_current_user
 
 audio_output_router = APIRouter(
     prefix="/audio-output",
     tags=["audio-output"],
     route_class=DishkaRoute,
-    dependencies=[Depends(require_access_token)],
+    dependencies=[Depends(get_current_user)],
 )
 
 

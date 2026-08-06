@@ -1,5 +1,6 @@
 from collections.abc import AsyncGenerator, AsyncIterator, Sequence
 from contextlib import asynccontextmanager
+from uuid import uuid4
 
 import pytest
 from dishka import Provider, Scope, make_async_container, provide
@@ -12,10 +13,14 @@ from huerise.features.events.application import EventStreamHub
 from huerise.features.events.domain import HueriseEvent
 from huerise.features.events.presentation import event_stream_router
 from huerise.features.events.presentation.sse import format_frame
+from huerise.infrastructure.auth import encode_access_token
 from huerise.presentation import auth
 from tests.events.conftest import make_created
 
-TOKEN = "test-access-token"
+SECRET = "test-jwt-secret"
+TOKEN = encode_access_token(
+    user_id=uuid4(), tenant_id=uuid4(), secret=SECRET, ttl_minutes=15
+)
 AUTH = {"Authorization": f"Bearer {TOKEN}"}
 
 
@@ -58,7 +63,7 @@ def hub() -> FiniteHub:
 
 @pytest.fixture
 def client(hub: FiniteHub, monkeypatch: pytest.MonkeyPatch) -> TestClient:
-    monkeypatch.setattr(auth._settings, "access_token", SecretStr(TOKEN))
+    monkeypatch.setattr(auth._settings, "jwt_secret", SecretStr(SECRET))
 
     app = FastAPI()
     app.include_router(event_stream_router)

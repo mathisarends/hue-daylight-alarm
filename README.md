@@ -106,11 +106,11 @@ cp .env.example .env
 Set at least these values in `.env`:
 
 ```dotenv
-API_ACCESS_TOKEN=replace-with-a-random-token
+AUTH_JWT_SECRET=replace-with-a-long-random-secret
 ```
 
-Huerise refuses to start without `API_ACCESS_TOKEN`. Generate a suitable token
-with:
+Huerise refuses to start without `AUTH_JWT_SECRET` -- it signs the access
+tokens issued at login. Generate a suitable secret with:
 
 ```bash
 python -c "import secrets; print(secrets.token_urlsafe(32))"
@@ -144,7 +144,11 @@ are seeds only; runtime playback reads the selected object from storage.
 ### 3. Verify the API
 
 ```bash
-curl -H "Authorization: Bearer $API_ACCESS_TOKEN" \
+ACCESS_TOKEN=$(curl -s -X POST http://localhost:8000/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"username": "you", "password": "a-strong-passphrase"}' | jq -r .access_token)
+
+curl -H "Authorization: Bearer $ACCESS_TOKEN" \
   http://localhost:8000/alarms
 ```
 
@@ -156,11 +160,16 @@ responses are defined in the checked-in [`openapi.json`](openapi.json).
 
 ### Authentication and documentation
 
-Every application route requires the same static bearer token:
+Register or log in via `/auth/register` or `/auth/login` to receive a
+short-lived access token and a longer-lived refresh token. Every other route
+requires the access token:
 
 ```http
-Authorization: Bearer <API_ACCESS_TOKEN>
+Authorization: Bearer <access_token>
 ```
+
+Access tokens expire quickly; call `/auth/refresh` with the refresh token to
+get a new pair before that happens.
 
 Missing, malformed, or incorrect credentials return `401 Unauthorized` with a
 `WWW-Authenticate: Bearer` header. There are no user accounts or token-creation
@@ -239,7 +248,7 @@ payload. Idle connections receive keepalive comments.
 
 ```bash
 curl -N \
-  -H "Authorization: Bearer $API_ACCESS_TOKEN" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
   http://localhost:8000/eventstream
 ```
 
@@ -476,7 +485,7 @@ coordinator. Invalid Sonos configuration fails during application startup.
 
 | Variable                    | Required   | Description                                         |
 | --------------------------- | ---------- | --------------------------------------------------- |
-| `API_ACCESS_TOKEN`          | Yes        | Static bearer token protecting application routes   |
+| `AUTH_JWT_SECRET`           | Yes        | Signs access tokens issued by `/auth/login`          |
 | `HUE_APP_KEY`               | Paired     | Optional operator override; set with bridge IP      |
 | `HUE_BRIDGE_IP`             | Paired     | Optional operator override; set with app key        |
 | `DATABASE_URL`              | No         | SQLAlchemy database URL; defaults to local SQLite   |

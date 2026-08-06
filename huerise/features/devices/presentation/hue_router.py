@@ -7,13 +7,13 @@ from huerise.features.devices.presentation.hue_schemas import (
     HueBridgeSelectionRequest,
     HueBridgeStatusRead,
 )
-from huerise.presentation import require_access_token
+from huerise.presentation import get_current_user
 
 hue_router = APIRouter(
     prefix="/hue",
     tags=["hue-setup"],
     route_class=DishkaRoute,
-    dependencies=[Depends(require_access_token)],
+    dependencies=[Depends(get_current_user)],
 )
 
 @hue_router.get(

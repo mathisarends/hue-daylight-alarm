@@ -9,12 +9,12 @@ from pydantic import TypeAdapter
 from huerise.features.events.application import EventStreamHub
 from huerise.features.events.domain import AnyHueriseEvent
 from huerise.features.events.presentation.sse import frames
-from huerise.presentation import require_access_token
+from huerise.presentation import get_current_user
 
 event_stream_router = APIRouter(
     tags=["events"],
     route_class=DishkaRoute,
-    dependencies=[Depends(require_access_token)],
+    dependencies=[Depends(get_current_user)],
 )
 
 _STREAM_HEADERS = {

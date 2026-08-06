@@ -8,13 +8,13 @@ from huerise.features.devices.presentation.schemas import (
     SoundRead,
     VolumeRequest,
 )
-from huerise.presentation import require_access_token
+from huerise.presentation import get_current_user
 
 sound_router = APIRouter(
     prefix="/sounds",
     tags=["sounds"],
     route_class=DishkaRoute,
-    dependencies=[Depends(require_access_token)],
+    dependencies=[Depends(get_current_user)],
 )
 
 

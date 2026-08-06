@@ -1,4 +1,4 @@
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import pytest
 from dishka import Provider, Scope, make_async_container, provide
@@ -17,10 +17,14 @@ from huerise.features.devices.presentation import (
     register_device_exception_handlers,
     scene_router,
 )
+from huerise.infrastructure.auth import encode_access_token
 from huerise.presentation import auth
 from tests.application.conftest import make_lights
 
-TOKEN = "test-access-token"
+SECRET = "test-jwt-secret"
+TOKEN = encode_access_token(
+    user_id=uuid4(), tenant_id=uuid4(), secret=SECRET, ttl_minutes=15
+)
 AUTH = {"Authorization": f"Bearer {TOKEN}"}
 ROOM_ID = UUID("11111111-1111-4111-8111-111111111111")
 SCENE_ID = UUID("22222222-2222-4222-8222-222222222222")
@@ -45,7 +49,7 @@ class StubProvider(Provider):
 
 @pytest.fixture
 def client(monkeypatch: pytest.MonkeyPatch) -> TestClient:
-    monkeypatch.setattr(auth._settings, "access_token", SecretStr(TOKEN))
+    monkeypatch.setattr(auth._settings, "jwt_secret", SecretStr(SECRET))
     lights = make_lights()
     lights.list_rooms.return_value = [BEDROOM]
     service = SceneService(lights, SunriseDemoRunner(lights))

@@ -1,4 +1,4 @@
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import pytest
 from dishka import Provider, Scope, make_async_container, provide
@@ -12,10 +12,14 @@ from huerise.features.devices.presentation import (
     register_device_exception_handlers,
     sound_router,
 )
+from huerise.infrastructure.auth import encode_access_token
 from huerise.presentation import auth
 from tests.application.conftest import InMemorySoundRepository, make_audio, make_sounds
 
-TOKEN = "test-access-token"
+SECRET = "test-jwt-secret"
+TOKEN = encode_access_token(
+    user_id=uuid4(), tenant_id=uuid4(), secret=SECRET, ttl_minutes=15
+)
 AUTH = {"Authorization": f"Bearer {TOKEN}"}
 KNOWN_SOUND_ID = UUID("1693baba-146e-5b14-acf2-6f76554f36e9")
 
@@ -34,7 +38,7 @@ class StubProvider(Provider):
 
 @pytest.fixture
 def client(monkeypatch: pytest.MonkeyPatch) -> TestClient:
-    monkeypatch.setattr(auth._settings, "access_token", SecretStr(TOKEN))
+    monkeypatch.setattr(auth._settings, "jwt_secret", SecretStr(SECRET))
     service = SoundService(InMemorySoundRepository(make_sounds()), make_audio())
 
     app = FastAPI()

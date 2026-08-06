@@ -17,7 +17,8 @@ _TITLE = "Huerise Alarm API"
 _VERSION = "1.0.0"
 _DESCRIPTION = (
     "API for managing sunrise alarms with Philips Hue. "
-    "Every endpoint requires an `Authorization: Bearer <token>` header."
+    "Register or log in via `/auth`, then send the returned access token as "
+    "`Authorization: Bearer <token>`."
 )
 
 

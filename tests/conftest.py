@@ -1,4 +1,4 @@
 import os
 
-# Importing the API modules requires a configured access token.
-os.environ.setdefault("API_ACCESS_TOKEN", "test-access-token")
+# Importing the API modules requires a configured JWT signing secret.
+os.environ.setdefault("AUTH_JWT_SECRET", "test-jwt-secret")

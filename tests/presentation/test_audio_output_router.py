@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 import pytest
 from dishka import Provider, Scope, make_async_container, provide
 from dishka.integrations.fastapi import setup_dishka
@@ -14,10 +16,14 @@ from huerise.features.devices.presentation import (
     audio_output_router,
     register_device_exception_handlers,
 )
+from huerise.infrastructure.auth import encode_access_token
 from huerise.presentation import auth
 from tests.application.conftest import make_audio
 
-TOKEN = "test-access-token"
+SECRET = "test-jwt-secret"
+TOKEN = encode_access_token(
+    user_id=uuid4(), tenant_id=uuid4(), secret=SECRET, ttl_minutes=15
+)
 AUTH = {"Authorization": f"Bearer {TOKEN}"}
 
 
@@ -45,7 +51,7 @@ def player() -> SwitchableAudioPlayer:
 def client(
     player: SwitchableAudioPlayer, monkeypatch: pytest.MonkeyPatch
 ) -> TestClient:
-    monkeypatch.setattr(auth._settings, "access_token", SecretStr(TOKEN))
+    monkeypatch.setattr(auth._settings, "jwt_secret", SecretStr(SECRET))
 
     app = FastAPI()
     app.include_router(audio_output_router)
@@ -77,7 +83,7 @@ def test_rejects_an_unknown_output(client: TestClient) -> None:
 def test_reports_an_unconfigured_output_readably(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(auth._settings, "access_token", SecretStr(TOKEN))
+    monkeypatch.setattr(auth._settings, "jwt_secret", SecretStr(SECRET))
     player = SwitchableAudioPlayer(
         {AudioOutput.LOCAL: make_audio()}, active=AudioOutput.LOCAL
     )

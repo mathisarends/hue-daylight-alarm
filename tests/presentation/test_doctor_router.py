@@ -1,4 +1,5 @@
 from unittest.mock import AsyncMock, MagicMock
+from uuid import uuid4
 
 import pytest
 from dishka import Provider, Scope, make_async_container, provide
@@ -13,9 +14,13 @@ from huerise.features.devices.application import (
     SetupCheck,
 )
 from huerise.features.devices.presentation import doctor_router
+from huerise.infrastructure.auth import encode_access_token
 from huerise.presentation import auth
 
-TOKEN = "test-access-token"
+SECRET = "test-jwt-secret"
+TOKEN = encode_access_token(
+    user_id=uuid4(), tenant_id=uuid4(), secret=SECRET, ttl_minutes=15
+)
 AUTH = {"Authorization": f"Bearer {TOKEN}"}
 
 
@@ -33,7 +38,7 @@ class StubProvider(Provider):
 
 @pytest.fixture
 def client(monkeypatch: pytest.MonkeyPatch) -> TestClient:
-    monkeypatch.setattr(auth._settings, "access_token", SecretStr(TOKEN))
+    monkeypatch.setattr(auth._settings, "jwt_secret", SecretStr(SECRET))
     service = MagicMock(spec=DoctorService)
     service.check = AsyncMock(
         return_value=DoctorStatus(

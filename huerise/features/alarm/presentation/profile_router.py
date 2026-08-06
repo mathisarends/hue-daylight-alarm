@@ -8,13 +8,13 @@ from huerise.features.alarm.presentation.profile_schemas import (
     ProfileCreate,
     ProfileRead,
 )
-from huerise.presentation import require_access_token
+from huerise.presentation import get_current_user
 
 profile_router = APIRouter(
     prefix="/alarm-profiles",
     tags=["alarm-profiles"],
     route_class=DishkaRoute,
-    dependencies=[Depends(require_access_token)],
+    dependencies=[Depends(get_current_user)],
 )
 
 

@@ -11,13 +11,13 @@ from huerise.features.alarm.presentation.alarm_schemas import (
     OccurrenceRead,
     SnoozeRequest,
 )
-from huerise.presentation import require_access_token
+from huerise.presentation import get_current_user
 
 alarm_router = APIRouter(
     prefix="/alarms",
     tags=["alarms"],
     route_class=DishkaRoute,
-    dependencies=[Depends(require_access_token)],
+    dependencies=[Depends(get_current_user)],
 )
 
 

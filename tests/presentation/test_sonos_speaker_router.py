@@ -1,4 +1,5 @@
 from unittest.mock import AsyncMock, MagicMock
+from uuid import uuid4
 
 import pytest
 from dishka import Provider, Scope, make_async_container, provide
@@ -13,9 +14,13 @@ from huerise.features.devices.application import (
 )
 from huerise.features.devices.domain import SonosSpeaker
 from huerise.features.devices.presentation import audio_output_router
+from huerise.infrastructure.auth import encode_access_token
 from huerise.presentation import auth
 
-TOKEN = "test-access-token"
+SECRET = "test-jwt-secret"
+TOKEN = encode_access_token(
+    user_id=uuid4(), tenant_id=uuid4(), secret=SECRET, ttl_minutes=15
+)
 AUTH = {"Authorization": f"Bearer {TOKEN}"}
 
 
@@ -52,7 +57,7 @@ def service() -> MagicMock:
 
 @pytest.fixture
 def client(service: SonosSpeakerService, monkeypatch: pytest.MonkeyPatch) -> TestClient:
-    monkeypatch.setattr(auth._settings, "access_token", SecretStr(TOKEN))
+    monkeypatch.setattr(auth._settings, "jwt_secret", SecretStr(SECRET))
     app = FastAPI()
     app.include_router(audio_output_router)
     setup_dishka(make_async_container(StubProvider(service)), app=app)

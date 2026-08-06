@@ -12,10 +12,14 @@ from huerise.features.alarm.presentation import (
     profile_router,
     register_alarm_exception_handlers,
 )
+from huerise.infrastructure.auth import encode_access_token
 from huerise.presentation import auth
 from tests.application.conftest import SCENE_ID, InMemoryProfileRepository, make_profile
 
-TOKEN = "test-access-token"
+SECRET = "test-jwt-secret"
+TOKEN = encode_access_token(
+    user_id=uuid4(), tenant_id=uuid4(), secret=SECRET, ttl_minutes=15
+)
 AUTH = {"Authorization": f"Bearer {TOKEN}"}
 
 
@@ -33,7 +37,7 @@ class StubProvider(Provider):
 
 @pytest.fixture
 def client(monkeypatch: pytest.MonkeyPatch) -> TestClient:
-    monkeypatch.setattr(auth._settings, "access_token", SecretStr(TOKEN))
+    monkeypatch.setattr(auth._settings, "jwt_secret", SecretStr(SECRET))
     service = AlarmProfileService(InMemoryProfileRepository([make_profile()]))
 
     app = FastAPI()
