@@ -58,4 +58,3 @@ async def register_hue_bridge(
     """Wait up to 60 seconds for the selected bridge's link button."""
     status = await service.register()
     return HueBridgeStatusRead.from_domain(status)
-

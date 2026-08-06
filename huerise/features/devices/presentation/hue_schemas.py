@@ -41,4 +41,3 @@ class HueBridgeStatusRead(BaseModel):
             configured=status.configured,
             source=status.source,
         )
-
