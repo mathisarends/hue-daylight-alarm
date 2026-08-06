@@ -1220,6 +1220,159 @@
         ]
       }
     },
+    "/hue/bridges": {
+      "get": {
+        "tags": [
+          "hue-setup"
+        ],
+        "summary": "List Hue Bridges",
+        "operationId": "list_hue_bridges",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/HueBridgeRead"
+                  },
+                  "type": "array",
+                  "title": "Response List Hue Bridges"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
+    },
+    "/hue/bridge": {
+      "get": {
+        "tags": [
+          "hue-setup"
+        ],
+        "summary": "Get Hue Bridge",
+        "operationId": "get_hue_bridge",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HueBridgeStatusRead"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "hue-setup"
+        ],
+        "summary": "Select Hue Bridge",
+        "operationId": "select_hue_bridge",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HueBridgeSelectionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HueBridgeStatusRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
+    },
+    "/hue/bridge/register": {
+      "post": {
+        "tags": [
+          "hue-setup"
+        ],
+        "summary": "Register Hue Bridge",
+        "description": "Wait up to 60 seconds for the selected bridge's link button.",
+        "operationId": "register_hue_bridge",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HueBridgeStatusRead"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
+    },
+    "/doctor": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Doctor",
+        "operationId": "doctor",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DoctorRead"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
+    },
     "/eventstream": {
       "get": {
         "tags": [
@@ -1827,6 +1980,40 @@
         ],
         "title": "AudioOutputRequest"
       },
+      "DoctorCheckRead": {
+        "properties": {
+          "configured": {
+            "type": "boolean",
+            "title": "Configured"
+          }
+        },
+        "type": "object",
+        "required": [
+          "configured"
+        ],
+        "title": "DoctorCheckRead"
+      },
+      "DoctorRead": {
+        "properties": {
+          "configured": {
+            "type": "boolean",
+            "title": "Configured"
+          },
+          "sonos_speaker": {
+            "$ref": "#/components/schemas/DoctorCheckRead"
+          },
+          "hue_bridge": {
+            "$ref": "#/components/schemas/DoctorCheckRead"
+          }
+        },
+        "type": "object",
+        "required": [
+          "configured",
+          "sonos_speaker",
+          "hue_bridge"
+        ],
+        "title": "DoctorRead"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1851,6 +2038,102 @@
         },
         "type": "object",
         "title": "HealthResponse"
+      },
+      "HueBridgeRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Stable Philips Hue Bridge ID."
+          },
+          "ip_address": {
+            "type": "string",
+            "title": "Ip Address",
+            "description": "Current, replaceable network address."
+          },
+          "selected": {
+            "type": "boolean",
+            "title": "Selected"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "ip_address",
+          "selected"
+        ],
+        "title": "HueBridgeRead"
+      },
+      "HueBridgeSelectionRequest": {
+        "properties": {
+          "bridge_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Bridge Id",
+            "description": "Stable discovered bridge ID."
+          }
+        },
+        "type": "object",
+        "required": [
+          "bridge_id"
+        ],
+        "title": "HueBridgeSelectionRequest"
+      },
+      "HueBridgeStatusRead": {
+        "properties": {
+          "bridge_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bridge Id"
+          },
+          "ip_address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ip Address"
+          },
+          "configured": {
+            "type": "boolean",
+            "title": "Configured"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HueConfigurationSource"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "bridge_id",
+          "ip_address",
+          "configured",
+          "source"
+        ],
+        "title": "HueBridgeStatusRead"
+      },
+      "HueConfigurationSource": {
+        "type": "string",
+        "enum": [
+          "environment",
+          "database"
+        ],
+        "title": "HueConfigurationSource"
       },
       "IntroSchema": {
         "properties": {

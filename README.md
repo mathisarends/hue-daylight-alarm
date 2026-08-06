@@ -94,7 +94,6 @@ end of the configured sunrise interval.
 
 - Docker and Docker Compose
 - A Philips Hue Bridge reachable from the host
-- A Hue application key ([Philips Hue getting started guide](https://developers.meethue.com/develop/get-started-2/))
 
 ### 1. Configure the environment
 
@@ -108,8 +107,6 @@ Set at least these values in `.env`:
 
 ```dotenv
 API_ACCESS_TOKEN=replace-with-a-random-token
-HUE_APP_KEY=your-hue-application-key
-HUE_BRIDGE_IP=192.168.1.10
 ```
 
 Huerise refuses to start without `API_ACCESS_TOKEN`. Generate a suitable token
@@ -118,6 +115,10 @@ with:
 ```bash
 python -c "import secrets; print(secrets.token_urlsafe(32))"
 ```
+
+After startup, discover and register a Hue Bridge through the `/hue` setup
+routes. `HUE_BRIDGE_IP` and `HUE_APP_KEY` may instead be set together as an
+operator-controlled deployment override.
 
 ### 2. Start Huerise
 
@@ -192,6 +193,16 @@ Select **Authorize** and enter the configured token before making requests.
 | `GET`    | `/alarm-profiles`              | List reusable alarm profiles                                |
 | `POST`   | `/alarm-profiles`              | Create a profile from a scene, sounds, and sunrise settings |
 | `DELETE` | `/alarm-profiles/{profile_id}` | Delete an alarm profile                                     |
+
+#### Hue setup and diagnostics
+
+| Method | Route                  | Capability                                       |
+| ------ | ---------------------- | ------------------------------------------------ |
+| `GET`  | `/hue/bridges`         | Discover available Hue Bridges                   |
+| `GET`  | `/hue/bridge`          | Get effective Hue configuration status           |
+| `PUT`  | `/hue/bridge`          | Select a bridge by its stable bridge ID           |
+| `POST` | `/hue/bridge/register` | Register after pressing the bridge link button   |
+| `GET`  | `/doctor`              | Check Hue Bridge and Sonos speaker configuration |
 
 #### Rooms and scenes
 
@@ -447,8 +458,8 @@ coordinator. Invalid Sonos configuration fails during application startup.
 | Variable                    | Required   | Description                                         |
 | --------------------------- | ---------- | --------------------------------------------------- |
 | `API_ACCESS_TOKEN`          | Yes        | Static bearer token protecting application routes   |
-| `HUE_APP_KEY`               | Yes        | Philips Hue application key                         |
-| `HUE_BRIDGE_IP`             | Yes        | Hue Bridge hostname or IP address                   |
+| `HUE_APP_KEY`               | Paired     | Optional operator override; set with bridge IP      |
+| `HUE_BRIDGE_IP`             | Paired     | Optional operator override; set with app key        |
 | `DATABASE_URL`              | No         | SQLAlchemy database URL; defaults to local SQLite   |
 | `MINIO_ENDPOINT_URL`        | No         | Internal S3-compatible endpoint                     |
 | `MINIO_PUBLIC_ENDPOINT_URL` | Sonos only | Storage endpoint reachable by the speaker           |

@@ -4,7 +4,7 @@ Hue setup will follow the Sonos selection work, but it must support an
 unconfigured first start rather than requiring `HUE_BRIDGE_IP` and
 `HUE_APP_KEY` during dependency construction.
 
-## Intended flow
+## Implemented flow
 
 1. Discover available bridges and expose their bridge IDs and current IP
    addresses through a setup endpoint.
@@ -16,20 +16,37 @@ unconfigured first start rather than requiring `HUE_BRIDGE_IP` and
 5. Re-resolve the address during startup or reconnection so DHCP changes do
    not require user configuration.
 
-## Architectural constraint
+The backend exposes the onboarding flow through authenticated REST endpoints:
 
-The current app-scoped `Hueify` dependency and the Hue event-driven lifecycle
-require credentials at application startup. Before adding setup routes, these
-must be replaced by a configurable Hue connection that can report an
-unconfigured state. Hue-dependent operations should then fail with a clear
-service-unavailable response without preventing the setup API from starting.
+- `GET /hue/bridges` discovers bridges and marks the selected one.
+- `PUT /hue/bridge` selects a discovered bridge by stable ID.
+- `POST /hue/bridge/register` polls for the bridge link button for up to 60
+  seconds, persists the returned application key, and activates Hue without a
+  process restart.
+- `GET /hue/bridge` reports the effective configuration source and status.
+- `GET /doctor` reports Hue Bridge and Sonos speaker configuration separately.
 
-The existing environment variables remain useful as an operator-controlled
-bootstrap or deployment override:
+## Architecture
+
+Hue selection has separate domain, application, persistence, adapter, and
+presentation layers. The app-scoped configurable Hue runtime can start without
+credentials. Hue-dependent operations return `503 Service Unavailable` until
+onboarding completes, while setup and non-Hue APIs remain available.
+
+The database stores one selection containing the stable bridge ID, its last
+known IP address, and the application key. Startup discovery refreshes the IP
+for the stored ID; the last address remains a fallback if discovery is
+temporarily unavailable.
+
+The existing environment variables are an operator-controlled deployment
+override:
 
 - `HUE_BRIDGE_IP`
 - `HUE_APP_KEY`
 
-API responses must never return the application key. The later persistence
-design must also define whether environment values override stored values or
-only seed an empty installation.
+Both variables must be set together. A complete pair takes precedence over the
+stored selection and makes the selection and registration endpoints return a
+conflict instead of silently changing an ineffective database value.
+Environment values are not copied into the database.
+
+API responses never return the application key.
