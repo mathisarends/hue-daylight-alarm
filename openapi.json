@@ -1144,6 +1144,82 @@
         ]
       }
     },
+    "/audio-output/sonos/speakers": {
+      "get": {
+        "tags": [
+          "audio-output"
+        ],
+        "summary": "List Sonos Speakers",
+        "operationId": "list_sonos_speakers",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SonosSpeakerRead"
+                  },
+                  "type": "array",
+                  "title": "Response List Sonos Speakers"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
+    },
+    "/audio-output/sonos/speaker": {
+      "put": {
+        "tags": [
+          "audio-output"
+        ],
+        "summary": "Select Sonos Speaker",
+        "operationId": "select_sonos_speaker",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SonosSpeakerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SonosSpeakerRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
+    },
     "/eventstream": {
       "get": {
         "tags": [
@@ -2713,6 +2789,67 @@
         },
         "type": "object",
         "title": "SnoozeRequest"
+      },
+      "SonosSpeakerRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Stable Sonos device UID used for selection."
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "ip_address": {
+            "type": "string",
+            "title": "Ip Address"
+          },
+          "group_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Id"
+          },
+          "is_coordinator": {
+            "type": "boolean",
+            "title": "Is Coordinator"
+          },
+          "selected": {
+            "type": "boolean",
+            "title": "Selected"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "ip_address",
+          "group_id",
+          "is_coordinator",
+          "selected"
+        ],
+        "title": "SonosSpeakerRead"
+      },
+      "SonosSpeakerRequest": {
+        "properties": {
+          "speaker_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Speaker Id",
+            "description": "Sonos device UID to select."
+          }
+        },
+        "type": "object",
+        "required": [
+          "speaker_id"
+        ],
+        "title": "SonosSpeakerRequest"
       },
       "SoundCategory": {
         "type": "string",

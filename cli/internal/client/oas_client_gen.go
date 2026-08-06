@@ -125,6 +125,12 @@ type Invoker interface {
 	//
 	// GET /rooms
 	ListRooms(ctx context.Context) ([]RoomRead, error)
+	// ListSonosSpeakers invokes list_sonos_speakers operation.
+	//
+	// List Sonos Speakers.
+	//
+	// GET /audio-output/sonos/speakers
+	ListSonosSpeakers(ctx context.Context) ([]SonosSpeakerRead, error)
 	// ListSounds invokes list_sounds operation.
 	//
 	// List Sounds.
@@ -149,6 +155,12 @@ type Invoker interface {
 	//
 	// PUT /audio-output
 	SelectAudioOutput(ctx context.Context, request *AudioOutputRequest) (SelectAudioOutputRes, error)
+	// SelectSonosSpeaker invokes select_sonos_speaker operation.
+	//
+	// Select Sonos Speaker.
+	//
+	// PUT /audio-output/sonos/speaker
+	SelectSonosSpeaker(ctx context.Context, request *SonosSpeakerRequest) (SelectSonosSpeakerRes, error)
 	// SetVolume invokes set_volume operation.
 	//
 	// Set Volume.
@@ -1649,6 +1661,76 @@ func (c *Client) sendListRooms(ctx context.Context) (res []RoomRead, err error) 
 	return result, nil
 }
 
+// ListSonosSpeakers invokes list_sonos_speakers operation.
+//
+// List Sonos Speakers.
+//
+// GET /audio-output/sonos/speakers
+func (c *Client) ListSonosSpeakers(ctx context.Context) ([]SonosSpeakerRead, error) {
+	res, err := c.sendListSonosSpeakers(ctx)
+	return res, err
+}
+
+func (c *Client) sendListSonosSpeakers(ctx context.Context) (res []SonosSpeakerRead, err error) {
+
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/audio-output/sonos/speakers"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+
+			switch err := c.securityAccessToken(ctx, ListSonosSpeakersOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"AccessToken\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer body.Close()
+
+	result, err := decodeListSonosSpeakersResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
 // ListSounds invokes list_sounds operation.
 //
 // List Sounds.
@@ -1915,6 +1997,79 @@ func (c *Client) sendSelectAudioOutput(ctx context.Context, request *AudioOutput
 	defer body.Close()
 
 	result, err := decodeSelectAudioOutputResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// SelectSonosSpeaker invokes select_sonos_speaker operation.
+//
+// Select Sonos Speaker.
+//
+// PUT /audio-output/sonos/speaker
+func (c *Client) SelectSonosSpeaker(ctx context.Context, request *SonosSpeakerRequest) (SelectSonosSpeakerRes, error) {
+	res, err := c.sendSelectSonosSpeaker(ctx, request)
+	return res, err
+}
+
+func (c *Client) sendSelectSonosSpeaker(ctx context.Context, request *SonosSpeakerRequest) (res SelectSonosSpeakerRes, err error) {
+
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/audio-output/sonos/speaker"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	r, err := ht.NewRequest(ctx, "PUT", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodeSelectSonosSpeakerRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+
+			switch err := c.securityAccessToken(ctx, SelectSonosSpeakerOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"AccessToken\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer body.Close()
+
+	result, err := decodeSelectSonosSpeakerResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

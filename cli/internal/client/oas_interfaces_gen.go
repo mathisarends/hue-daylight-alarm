@@ -61,6 +61,10 @@ type SelectAudioOutputRes interface {
 	selectAudioOutputRes()
 }
 
+type SelectSonosSpeakerRes interface {
+	selectSonosSpeakerRes()
+}
+
 type SetVolumeRes interface {
 	setVolumeRes()
 }

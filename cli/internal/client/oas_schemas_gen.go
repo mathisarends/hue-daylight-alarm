@@ -440,26 +440,27 @@ func (s *HTTPValidationError) SetDetail(val []ValidationError) {
 	s.Detail = val
 }
 
-func (*HTTPValidationError) activateSceneRes()     {}
-func (*HTTPValidationError) createAlarmRes()       {}
-func (*HTTPValidationError) createProfileRes()     {}
-func (*HTTPValidationError) deleteAlarmRes()       {}
-func (*HTTPValidationError) deleteProfileRes()     {}
-func (*HTTPValidationError) demoSceneRes()         {}
-func (*HTTPValidationError) disableAlarmRes()      {}
-func (*HTTPValidationError) dismissAlarmRes()      {}
-func (*HTTPValidationError) enableAlarmRes()       {}
-func (*HTTPValidationError) getAlarmRes()          {}
-func (*HTTPValidationError) getRoomRes()           {}
-func (*HTTPValidationError) listOccurrencesRes()   {}
-func (*HTTPValidationError) listSoundsRes()        {}
-func (*HTTPValidationError) previewSoundRes()      {}
-func (*HTTPValidationError) selectAudioOutputRes() {}
-func (*HTTPValidationError) setVolumeRes()         {}
-func (*HTTPValidationError) snoozeAlarmRes()       {}
-func (*HTTPValidationError) stopSceneDemoRes()     {}
-func (*HTTPValidationError) streamEventsRes()      {}
-func (*HTTPValidationError) updateAlarmRes()       {}
+func (*HTTPValidationError) activateSceneRes()      {}
+func (*HTTPValidationError) createAlarmRes()        {}
+func (*HTTPValidationError) createProfileRes()      {}
+func (*HTTPValidationError) deleteAlarmRes()        {}
+func (*HTTPValidationError) deleteProfileRes()      {}
+func (*HTTPValidationError) demoSceneRes()          {}
+func (*HTTPValidationError) disableAlarmRes()       {}
+func (*HTTPValidationError) dismissAlarmRes()       {}
+func (*HTTPValidationError) enableAlarmRes()        {}
+func (*HTTPValidationError) getAlarmRes()           {}
+func (*HTTPValidationError) getRoomRes()            {}
+func (*HTTPValidationError) listOccurrencesRes()    {}
+func (*HTTPValidationError) listSoundsRes()         {}
+func (*HTTPValidationError) previewSoundRes()       {}
+func (*HTTPValidationError) selectAudioOutputRes()  {}
+func (*HTTPValidationError) selectSonosSpeakerRes() {}
+func (*HTTPValidationError) setVolumeRes()          {}
+func (*HTTPValidationError) snoozeAlarmRes()        {}
+func (*HTTPValidationError) stopSceneDemoRes()      {}
+func (*HTTPValidationError) streamEventsRes()       {}
+func (*HTTPValidationError) updateAlarmRes()        {}
 
 // Ref: #/components/schemas/HealthResponse
 type HealthResponse struct {
@@ -1684,6 +1685,95 @@ func (s *SnoozeRequest) GetMinutes() OptInt {
 // SetMinutes sets the value of Minutes.
 func (s *SnoozeRequest) SetMinutes(val OptInt) {
 	s.Minutes = val
+}
+
+// Ref: #/components/schemas/SonosSpeakerRead
+type SonosSpeakerRead struct {
+	// Stable Sonos device UID used for selection.
+	ID            string    `json:"id"`
+	Name          string    `json:"name"`
+	IPAddress     string    `json:"ip_address"`
+	GroupID       NilString `json:"group_id"`
+	IsCoordinator bool      `json:"is_coordinator"`
+	Selected      bool      `json:"selected"`
+}
+
+// GetID returns the value of ID.
+func (s *SonosSpeakerRead) GetID() string {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *SonosSpeakerRead) GetName() string {
+	return s.Name
+}
+
+// GetIPAddress returns the value of IPAddress.
+func (s *SonosSpeakerRead) GetIPAddress() string {
+	return s.IPAddress
+}
+
+// GetGroupID returns the value of GroupID.
+func (s *SonosSpeakerRead) GetGroupID() NilString {
+	return s.GroupID
+}
+
+// GetIsCoordinator returns the value of IsCoordinator.
+func (s *SonosSpeakerRead) GetIsCoordinator() bool {
+	return s.IsCoordinator
+}
+
+// GetSelected returns the value of Selected.
+func (s *SonosSpeakerRead) GetSelected() bool {
+	return s.Selected
+}
+
+// SetID sets the value of ID.
+func (s *SonosSpeakerRead) SetID(val string) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *SonosSpeakerRead) SetName(val string) {
+	s.Name = val
+}
+
+// SetIPAddress sets the value of IPAddress.
+func (s *SonosSpeakerRead) SetIPAddress(val string) {
+	s.IPAddress = val
+}
+
+// SetGroupID sets the value of GroupID.
+func (s *SonosSpeakerRead) SetGroupID(val NilString) {
+	s.GroupID = val
+}
+
+// SetIsCoordinator sets the value of IsCoordinator.
+func (s *SonosSpeakerRead) SetIsCoordinator(val bool) {
+	s.IsCoordinator = val
+}
+
+// SetSelected sets the value of Selected.
+func (s *SonosSpeakerRead) SetSelected(val bool) {
+	s.Selected = val
+}
+
+func (*SonosSpeakerRead) selectSonosSpeakerRes() {}
+
+// Ref: #/components/schemas/SonosSpeakerRequest
+type SonosSpeakerRequest struct {
+	// Sonos device UID to select.
+	SpeakerID string `json:"speaker_id"`
+}
+
+// GetSpeakerID returns the value of SpeakerID.
+func (s *SonosSpeakerRequest) GetSpeakerID() string {
+	return s.SpeakerID
+}
+
+// SetSpeakerID sets the value of SpeakerID.
+func (s *SonosSpeakerRequest) SetSpeakerID(val string) {
+	s.SpeakerID = val
 }
 
 // Ref: #/components/schemas/SoundCategory
