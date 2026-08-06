@@ -505,7 +505,11 @@ func (*HTTPValidationError) getAlarmRes()           {}
 func (*HTTPValidationError) getRoomRes()            {}
 func (*HTTPValidationError) listOccurrencesRes()    {}
 func (*HTTPValidationError) listSoundsRes()         {}
+func (*HTTPValidationError) loginRes()              {}
+func (*HTTPValidationError) logoutRes()             {}
 func (*HTTPValidationError) previewSoundRes()       {}
+func (*HTTPValidationError) refreshRes()            {}
+func (*HTTPValidationError) registerRes()           {}
 func (*HTTPValidationError) selectAudioOutputRes()  {}
 func (*HTTPValidationError) selectHueBridgeRes()    {}
 func (*HTTPValidationError) selectSonosSpeakerRes() {}
@@ -700,6 +704,52 @@ func (*ListOccurrencesOKApplicationJSON) listOccurrencesRes() {}
 type ListSoundsOKApplicationJSON []SoundRead
 
 func (*ListSoundsOKApplicationJSON) listSoundsRes() {}
+
+// Ref: #/components/schemas/LoginRequest
+type LoginRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+// GetUsername returns the value of Username.
+func (s *LoginRequest) GetUsername() string {
+	return s.Username
+}
+
+// GetPassword returns the value of Password.
+func (s *LoginRequest) GetPassword() string {
+	return s.Password
+}
+
+// SetUsername sets the value of Username.
+func (s *LoginRequest) SetUsername(val string) {
+	s.Username = val
+}
+
+// SetPassword sets the value of Password.
+func (s *LoginRequest) SetPassword(val string) {
+	s.Password = val
+}
+
+// LogoutNoContent is response for Logout operation.
+type LogoutNoContent struct{}
+
+func (*LogoutNoContent) logoutRes() {}
+
+// Ref: #/components/schemas/LogoutRequest
+type LogoutRequest struct {
+	RefreshToken string `json:"refresh_token"`
+}
+
+// GetRefreshToken returns the value of RefreshToken.
+func (s *LogoutRequest) GetRefreshToken() string {
+	return s.RefreshToken
+}
+
+// SetRefreshToken sets the value of RefreshToken.
+func (s *LogoutRequest) SetRefreshToken(val string) {
+	s.RefreshToken = val
+}
 
 // NewNilDateTime returns new NilDateTime with value set to v.
 func NewNilDateTime(v time.Time) NilDateTime {
@@ -1754,6 +1804,47 @@ func (s *ProfileRead) SetIsDefault(val bool) {
 
 func (*ProfileRead) createProfileRes() {}
 
+// Ref: #/components/schemas/RefreshRequest
+type RefreshRequest struct {
+	RefreshToken string `json:"refresh_token"`
+}
+
+// GetRefreshToken returns the value of RefreshToken.
+func (s *RefreshRequest) GetRefreshToken() string {
+	return s.RefreshToken
+}
+
+// SetRefreshToken sets the value of RefreshToken.
+func (s *RefreshRequest) SetRefreshToken(val string) {
+	s.RefreshToken = val
+}
+
+// Ref: #/components/schemas/RegisterRequest
+type RegisterRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+// GetUsername returns the value of Username.
+func (s *RegisterRequest) GetUsername() string {
+	return s.Username
+}
+
+// GetPassword returns the value of Password.
+func (s *RegisterRequest) GetPassword() string {
+	return s.Password
+}
+
+// SetUsername sets the value of Username.
+func (s *RegisterRequest) SetUsername(val string) {
+	s.Username = val
+}
+
+// SetPassword sets the value of Password.
+func (s *RegisterRequest) SetPassword(val string) {
+	s.Password = val
+}
+
 // Ref: #/components/schemas/RingtoneSchema
 type RingtoneSchema struct {
 	// UUID of a sound returned by GET /sounds, e.g. '5c0806e7-7162-5be7-948e-33d349bde4a8'.
@@ -2371,6 +2462,58 @@ func (s *SunriseSchema) SetBrightnessStart(val OptInt) {
 func (s *SunriseSchema) SetBrightnessEnd(val OptInt) {
 	s.BrightnessEnd = val
 }
+
+// Ref: #/components/schemas/TokenResponse
+type TokenResponse struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	TokenType    string `json:"token_type"`
+	ExpiresIn    int    `json:"expires_in"`
+}
+
+// GetAccessToken returns the value of AccessToken.
+func (s *TokenResponse) GetAccessToken() string {
+	return s.AccessToken
+}
+
+// GetRefreshToken returns the value of RefreshToken.
+func (s *TokenResponse) GetRefreshToken() string {
+	return s.RefreshToken
+}
+
+// GetTokenType returns the value of TokenType.
+func (s *TokenResponse) GetTokenType() string {
+	return s.TokenType
+}
+
+// GetExpiresIn returns the value of ExpiresIn.
+func (s *TokenResponse) GetExpiresIn() int {
+	return s.ExpiresIn
+}
+
+// SetAccessToken sets the value of AccessToken.
+func (s *TokenResponse) SetAccessToken(val string) {
+	s.AccessToken = val
+}
+
+// SetRefreshToken sets the value of RefreshToken.
+func (s *TokenResponse) SetRefreshToken(val string) {
+	s.RefreshToken = val
+}
+
+// SetTokenType sets the value of TokenType.
+func (s *TokenResponse) SetTokenType(val string) {
+	s.TokenType = val
+}
+
+// SetExpiresIn sets the value of ExpiresIn.
+func (s *TokenResponse) SetExpiresIn(val int) {
+	s.ExpiresIn = val
+}
+
+func (*TokenResponse) loginRes()    {}
+func (*TokenResponse) refreshRes()  {}
+func (*TokenResponse) registerRes() {}
 
 // Ref: #/components/schemas/ValidationError
 type ValidationError struct {

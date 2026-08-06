@@ -155,6 +155,18 @@ type Invoker interface {
 	//
 	// GET /sounds
 	ListSounds(ctx context.Context, params ListSoundsParams) (ListSoundsRes, error)
+	// Login invokes login operation.
+	//
+	// Login.
+	//
+	// POST /auth/login
+	Login(ctx context.Context, request *LoginRequest) (LoginRes, error)
+	// Logout invokes logout operation.
+	//
+	// Logout.
+	//
+	// POST /auth/logout
+	Logout(ctx context.Context, request *LogoutRequest) (LogoutRes, error)
 	// PreviewSound invokes preview_sound operation.
 	//
 	// Start playback and return immediately -- the sound keeps playing.
@@ -167,6 +179,18 @@ type Invoker interface {
 	//
 	// GET /ready
 	Readiness(ctx context.Context) (*HealthResponse, error)
+	// Refresh invokes refresh operation.
+	//
+	// Refresh.
+	//
+	// POST /auth/refresh
+	Refresh(ctx context.Context, request *RefreshRequest) (RefreshRes, error)
+	// Register invokes register operation.
+	//
+	// Register.
+	//
+	// POST /auth/register
+	Register(ctx context.Context, request *RegisterRequest) (RegisterRes, error)
 	// RegisterHueBridge invokes register_hue_bridge operation.
 	//
 	// Wait up to 60 seconds for the selected bridge's link button.
@@ -2061,6 +2085,86 @@ func (c *Client) sendListSounds(ctx context.Context, params ListSoundsParams) (r
 	return result, nil
 }
 
+// Login invokes login operation.
+//
+// Login.
+//
+// POST /auth/login
+func (c *Client) Login(ctx context.Context, request *LoginRequest) (LoginRes, error) {
+	res, err := c.sendLogin(ctx, request)
+	return res, err
+}
+
+func (c *Client) sendLogin(ctx context.Context, request *LoginRequest) (res LoginRes, err error) {
+
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/auth/login"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	r, err := ht.NewRequest(ctx, "POST", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodeLoginRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer body.Close()
+
+	result, err := decodeLoginResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// Logout invokes logout operation.
+//
+// Logout.
+//
+// POST /auth/logout
+func (c *Client) Logout(ctx context.Context, request *LogoutRequest) (LogoutRes, error) {
+	res, err := c.sendLogout(ctx, request)
+	return res, err
+}
+
+func (c *Client) sendLogout(ctx context.Context, request *LogoutRequest) (res LogoutRes, err error) {
+
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/auth/logout"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	r, err := ht.NewRequest(ctx, "POST", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodeLogoutRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer body.Close()
+
+	result, err := decodeLogoutResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
 // PreviewSound invokes preview_sound operation.
 //
 // Start playback and return immediately -- the sound keeps playing.
@@ -2164,6 +2268,86 @@ func (c *Client) sendReadiness(ctx context.Context) (res *HealthResponse, err er
 	defer body.Close()
 
 	result, err := decodeReadinessResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// Refresh invokes refresh operation.
+//
+// Refresh.
+//
+// POST /auth/refresh
+func (c *Client) Refresh(ctx context.Context, request *RefreshRequest) (RefreshRes, error) {
+	res, err := c.sendRefresh(ctx, request)
+	return res, err
+}
+
+func (c *Client) sendRefresh(ctx context.Context, request *RefreshRequest) (res RefreshRes, err error) {
+
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/auth/refresh"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	r, err := ht.NewRequest(ctx, "POST", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodeRefreshRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer body.Close()
+
+	result, err := decodeRefreshResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// Register invokes register operation.
+//
+// Register.
+//
+// POST /auth/register
+func (c *Client) Register(ctx context.Context, request *RegisterRequest) (RegisterRes, error) {
+	res, err := c.sendRegister(ctx, request)
+	return res, err
+}
+
+func (c *Client) sendRegister(ctx context.Context, request *RegisterRequest) (res RegisterRes, err error) {
+
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/auth/register"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	r, err := ht.NewRequest(ctx, "POST", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodeRegisterRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer body.Close()
+
+	result, err := decodeRegisterResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

@@ -12,7 +12,7 @@ import (
 // SecuritySource is provider of security values (tokens, passwords, etc.).
 type SecuritySource interface {
 	// AccessToken provides AccessToken security value.
-	// Send the API access token as `Authorization: Bearer <token>`.
+	// Send the /auth/login access token as `Authorization: Bearer <token>`.
 	AccessToken(ctx context.Context, operationName OperationName) (AccessToken, error)
 }
 

@@ -53,8 +53,24 @@ type ListSoundsRes interface {
 	listSoundsRes()
 }
 
+type LoginRes interface {
+	loginRes()
+}
+
+type LogoutRes interface {
+	logoutRes()
+}
+
 type PreviewSoundRes interface {
 	previewSoundRes()
+}
+
+type RefreshRes interface {
+	refreshRes()
+}
+
+type RegisterRes interface {
+	registerRes()
 }
 
 type SelectAudioOutputRes interface {
