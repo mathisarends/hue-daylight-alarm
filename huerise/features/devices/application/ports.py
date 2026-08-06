@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable
-from typing import Protocol
 from uuid import UUID
 
 from huerise.features.devices.domain import (
@@ -15,20 +14,24 @@ from huerise.lifecycle import Runnable
 type LightChangeHandler = Callable[[LightChange], Awaitable[None]]
 
 
-class HueConfigurator(Protocol):
+class HueConfigurator(ABC):
+    @abstractmethod
     async def configure(self, selection: HueBridgeSelection) -> None: ...
 
 
-class HueEnvironmentOverride(Protocol):
+class HueEnvironmentOverride(ABC):
     bridge_ip: str | None
 
     @property
+    @abstractmethod
     def configured(self) -> bool: ...
 
 
-class HueOnboarding(Protocol):
+class HueOnboarding(ABC):
+    @abstractmethod
     async def discover(self) -> tuple[HueBridge, ...]: ...
 
+    @abstractmethod
     async def register(self, bridge_ip: str) -> str: ...
 
 
