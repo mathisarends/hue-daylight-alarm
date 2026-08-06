@@ -7,6 +7,10 @@ the same command tree.
 
 ```text
 huerise
+├── auth
+│   ├── register
+│   ├── login
+│   └── logout
 ├── alarms
 │   ├── list
 │   ├── create
@@ -48,6 +52,17 @@ huerise
 Run `huerise --help` or `huerise <command> --help` for arguments, flags, and
 defaults.
 
+## Authentication
+
+`huerise auth register --username <name>` creates the first account on a
+fresh install; `huerise auth login --username <name>` authenticates on any
+later machine. Both prompt for a password if `--password` is omitted and the
+terminal is interactive; pass `--no-input` to require flags instead. The
+resulting access/refresh token pair is stored per-machine at
+`~/.huerise/credentials.json` and used automatically by every other command
+— the access token refreshes transparently as it nears expiry. `huerise auth
+logout` revokes the refresh token server-side and forgets the local file.
+
 ## Hue setup and diagnostics
 
 `huerise hue bridge list` discovers bridges, and `huerise hue bridge select
@@ -86,7 +101,7 @@ mode the same failure is a single object:
   "error": {
     "code": "auth",
     "message": "Invalid access token",
-    "hint": "Check HUERISE_API_TOKEN and try again.",
+    "hint": "Run `huerise auth login`, or check HUERISE_API_TOKEN.",
     "status": 401
   }
 }
@@ -101,12 +116,18 @@ mode the same failure is a single object:
 
 ## Configuration precedence
 
-Configuration is resolved in this order:
+The server URL is resolved in this order:
 
-1. Explicit `--api-url` and hidden `--token` overrides
-2. Environment variables
+1. Explicit `--api-url` override
+2. `HUERISE_API_URL` environment variable
 3. The file selected by `--env-file` (default `.env`)
 4. The default API URL `http://localhost:8000`
 
-`HUERISE_API_TOKEN` falls back to `API_ACCESS_TOKEN`, allowing the backend and
-CLI to share one local `.env` file. `HUERISE_API_URL` selects a remote backend.
+Authentication is resolved in this order:
+
+1. Explicit hidden `--token` override
+2. `HUERISE_API_TOKEN` environment variable or `--env-file` entry
+3. The credentials `huerise auth login`/`auth register` stored at
+   `~/.huerise/credentials.json`, refreshed automatically as they expire
+
+Run `huerise auth logout` to revoke and forget stored credentials.

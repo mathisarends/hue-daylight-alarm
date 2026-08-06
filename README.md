@@ -278,8 +278,17 @@ On Windows without `make`:
 go -C cli build -o ../bin/huerise.exe ./cmd/huerise
 ```
 
-The CLI reads `.env` by default and connects to `http://localhost:8000`. It
-uses `HUERISE_API_TOKEN`, falling back to the backend's `API_ACCESS_TOKEN`.
+The CLI reads `.env` by default and connects to `http://localhost:8000`. Log
+in once and it stores a token pair per-machine at `~/.huerise/credentials.json`,
+refreshing it automatically as it expires:
+
+```bash
+huerise auth register --username alice   # first account on a fresh install
+huerise auth login --username alice      # on any later machine
+```
+
+An explicit `HUERISE_API_TOKEN` (or hidden `--token`) still overrides stored
+credentials, which is useful for scripting with a long-lived access token.
 Use `HUERISE_API_URL` for a different server, or pass `--env-file` and
 `--api-url` explicitly.
 
@@ -287,6 +296,10 @@ Use `HUERISE_API_URL` for a different server, or pass `--env-file` and
 
 ```text
 huerise
+|-- auth
+|   |-- register
+|   |-- login
+|   `-- logout
 |-- alarms
 |   |-- list
 |   |-- create
@@ -498,7 +511,7 @@ coordinator. Invalid Sonos configuration fails during application startup.
 | `AUDIO_DEFAULT_OUTPUT`      | With `all` | Initial output when both backends are available     |
 | `SONOS_SPEAKER_NAME`        | No         | Preferred Sonos speaker name                        |
 | `SONOS_IP_ADDRESS`          | No         | Direct Sonos address; skips discovery               |
-| `HUERISE_API_TOKEN`         | CLI only   | CLI token; falls back to `API_ACCESS_TOKEN`         |
+| `HUERISE_API_TOKEN`         | CLI only   | Overrides the stored `huerise auth login` credentials |
 | `HUERISE_API_URL`           | CLI only   | CLI server URL; defaults to `http://localhost:8000` |
 
 Defaults suitable for local development are documented in [`.env.example`](.env.example).
