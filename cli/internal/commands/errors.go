@@ -59,7 +59,7 @@ func normalizeError(err error) error {
 	code, exitCode, hint := "api", 1, ""
 	if statusErr.StatusCode == http.StatusUnauthorized || statusErr.StatusCode == http.StatusForbidden {
 		code, exitCode = "auth", 3
-		hint = "Check HUERISE_API_TOKEN and try again."
+		hint = "Run `huerise auth login`, or check HUERISE_API_TOKEN."
 	}
 	return &commandError{Code: code, Message: message, Hint: hint, Status: statusErr.StatusCode, ExitCode: exitCode}
 }
@@ -77,7 +77,10 @@ func writeError(writer io.Writer, outputJSON bool, err error) int {
 		}
 	case errors.As(err, &configErr):
 		code, message, exitCode = "missing_config", configErr.Message, 2
-		hint = "Set HUERISE_API_TOKEN in the environment or dotenv file."
+		hint = configErr.Hint
+		if hint == "" {
+			hint = "Set HUERISE_API_TOKEN in the environment or dotenv file."
+		}
 	}
 	if outputJSON {
 		details := map[string]any{"code": code, "message": message}
