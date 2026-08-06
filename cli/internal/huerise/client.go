@@ -10,7 +10,7 @@ import (
 	"github.com/mathisarends/huerise/cli/internal/client"
 )
 
-const defaultTimeout = 30 * time.Second
+const defaultTimeout = 65 * time.Second
 
 type ConfigError struct {
 	Message string
