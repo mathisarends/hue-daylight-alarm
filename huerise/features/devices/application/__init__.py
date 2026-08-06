@@ -1,4 +1,5 @@
 from .audio_output import AudioOutputService, AudioOutputStatus, SwitchableAudioPlayer
+from .doctor_service import DoctorService, DoctorStatus, SetupCheck
 from .hue_bridge_service import (
     DiscoveredHueBridge,
     HueBridgeService,
@@ -24,6 +25,8 @@ __all__ = [
     "AudioOutputStatus",
     "AudioPlayer",
     "DiscoveredHueBridge",
+    "DoctorService",
+    "DoctorStatus",
     "HueBridgeService",
     "HueBridgeStatus",
     "HueConfigurationSource",
@@ -38,4 +41,5 @@ __all__ = [
     "SunriseDemo",
     "SunriseDemoRunner",
     "SwitchableAudioPlayer",
+    "SetupCheck",
 ]
