@@ -1,0 +1,62 @@
+from unittest.mock import AsyncMock, MagicMock
+
+import pytest
+from dishka import Provider, Scope, make_async_container, provide
+from dishka.integrations.fastapi import setup_dishka
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+from pydantic import SecretStr
+
+from huerise.features.devices.application import (
+    DoctorService,
+    DoctorStatus,
+    SetupCheck,
+)
+from huerise.features.devices.presentation import doctor_router
+from huerise.presentation import auth
+
+TOKEN = "test-access-token"
+AUTH = {"Authorization": f"Bearer {TOKEN}"}
+
+
+class StubProvider(Provider):
+    scope = Scope.REQUEST
+
+    def __init__(self, service: DoctorService) -> None:
+        super().__init__()
+        self._service = service
+
+    @provide
+    def doctor_service(self) -> DoctorService:
+        return self._service
+
+
+@pytest.fixture
+def client(monkeypatch: pytest.MonkeyPatch) -> TestClient:
+    monkeypatch.setattr(auth._settings, "access_token", SecretStr(TOKEN))
+    service = MagicMock(spec=DoctorService)
+    service.check = AsyncMock(
+        return_value=DoctorStatus(
+            sonos_speaker=SetupCheck(configured=False),
+            hue_bridge=SetupCheck(configured=True),
+        )
+    )
+    app = FastAPI()
+    app.include_router(doctor_router)
+    setup_dishka(make_async_container(StubProvider(service)), app=app)
+    return TestClient(app)
+
+
+def test_reports_sonos_and_hue_configuration_separately(client: TestClient) -> None:
+    response = client.get("/doctor", headers=AUTH)
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "configured": False,
+        "sonos_speaker": {"configured": False},
+        "hue_bridge": {"configured": True},
+    }
+
+
+def test_doctor_requires_api_authentication(client: TestClient) -> None:
+    assert client.get("/doctor").status_code == 401
