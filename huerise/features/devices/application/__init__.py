@@ -34,6 +34,7 @@ __all__ = [
     "LightEvents",
     "Lights",
     "SceneService",
+    "SetupCheck",
     "SonosSpeakerSelector",
     "SonosSpeakerService",
     "SonosSpeakerStatus",
@@ -41,5 +42,4 @@ __all__ = [
     "SunriseDemo",
     "SunriseDemoRunner",
     "SwitchableAudioPlayer",
-    "SetupCheck",
 ]
