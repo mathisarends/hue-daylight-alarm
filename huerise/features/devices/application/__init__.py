@@ -1,4 +1,10 @@
 from .audio_output import AudioOutputService, AudioOutputStatus, SwitchableAudioPlayer
+from .hue_bridge_service import (
+    DiscoveredHueBridge,
+    HueBridgeService,
+    HueBridgeStatus,
+    HueConfigurationSource,
+)
 from .ports import (
     AudioPlayer,
     LightChangeHandler,
@@ -17,6 +23,10 @@ __all__ = [
     "AudioOutputService",
     "AudioOutputStatus",
     "AudioPlayer",
+    "DiscoveredHueBridge",
+    "HueBridgeService",
+    "HueBridgeStatus",
+    "HueConfigurationSource",
     "LightChangeHandler",
     "LightEvents",
     "Lights",
