@@ -47,6 +47,16 @@ class UserModel(DatabaseEntity, table=True):
     created_at: datetime = Field(sa_column=Column(UtcDateTime, nullable=False))
 
 
+class RefreshTokenModel(DatabaseEntity, table=True):
+    __tablename__ = "refresh_tokens"
+
+    user_id: UUID = Field(foreign_key="users.id", index=True)
+    token_hash: str = Field(unique=True, index=True)
+    created_at: datetime = Field(sa_column=Column(UtcDateTime, nullable=False))
+    expires_at: datetime = Field(sa_column=Column(UtcDateTime, nullable=False))
+    revoked_at: datetime | None = Field(default=None, sa_column=Column(UtcDateTime))
+
+
 class SoundModel(DatabaseEntity, table=True):
     __tablename__ = "sounds"
     __table_args__ = (
