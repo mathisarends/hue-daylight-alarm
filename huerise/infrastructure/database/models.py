@@ -61,6 +61,14 @@ class SonosSpeakerSelectionModel(DatabaseEntity, table=True):
     is_coordinator: bool = False
 
 
+class HueBridgeSelectionModel(DatabaseEntity, table=True):
+    __tablename__ = "hue_bridge_selection"
+
+    bridge_id: str = Field(unique=True)
+    ip_address: str
+    app_key: str | None = None
+
+
 class AlarmProfileModel(DatabaseEntity, table=True):
     """How an alarm behaves. Reusable across alarms."""
 

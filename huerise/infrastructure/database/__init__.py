@@ -3,6 +3,7 @@ from .models import (
     AlarmOccurrenceModel,
     AlarmProfileModel,
     DatabaseEntity,
+    HueBridgeSelectionModel,
     SonosSpeakerSelectionModel,
     SoundModel,
 )
@@ -15,6 +16,7 @@ __all__ = [
     "AlarmProfileModel",
     "DatabaseEntity",
     "DatabaseSettings",
+    "HueBridgeSelectionModel",
     "Repository",
     "SonosSpeakerSelectionModel",
     "SoundModel",

@@ -13,8 +13,14 @@ from huerise.features.alarm.infrastructure.persistence import (
     SQLAlarmRepository,
     SQLAlarmUnitOfWorkFactory,
 )
-from huerise.features.devices.domain import SonosSpeaker, Sound, SoundCategory
+from huerise.features.devices.domain import (
+    HueBridgeSelection,
+    SonosSpeaker,
+    Sound,
+    SoundCategory,
+)
 from huerise.features.devices.infrastructure.persistence import (
+    SQLHueBridgeRepository,
     SQLSonosSpeakerRepository,
     SQLSoundRepository,
 )
@@ -42,6 +48,22 @@ def test_orm_defects_match_the_domain_enum() -> None:
 
 
 class TestRoundtrip:
+    async def test_hue_selection_keeps_credentials_and_replaces_address(
+        self, session_factory
+    ) -> None:
+        repository = SQLHueBridgeRepository(session_factory)
+        selected = HueBridgeSelection("bridge-1", "192.168.1.10", "secret-key")
+
+        assert await repository.get_selected() is None
+        await repository.save_selected(selected)
+        await repository.save_selected(
+            HueBridgeSelection("bridge-1", "192.168.1.11", "secret-key")
+        )
+
+        assert await repository.get_selected() == HueBridgeSelection(
+            "bridge-1", "192.168.1.11", "secret-key"
+        )
+
     async def test_sonos_selection_replaces_the_single_saved_speaker(
         self, session_factory
     ) -> None:
