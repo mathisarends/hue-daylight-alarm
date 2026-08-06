@@ -39,6 +39,14 @@ class DatabaseEntity(SQLModel):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
 
 
+class UserModel(DatabaseEntity, table=True):
+    __tablename__ = "users"
+
+    username: str = Field(unique=True, index=True)
+    password_hash: str
+    created_at: datetime = Field(sa_column=Column(UtcDateTime, nullable=False))
+
+
 class SoundModel(DatabaseEntity, table=True):
     __tablename__ = "sounds"
     __table_args__ = (

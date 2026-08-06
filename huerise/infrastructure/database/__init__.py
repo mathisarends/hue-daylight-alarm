@@ -6,6 +6,7 @@ from .models import (
     HueBridgeSelectionModel,
     SonosSpeakerSelectionModel,
     SoundModel,
+    UserModel,
 )
 from .repository import Repository
 from .settings import DatabaseSettings
@@ -20,4 +21,5 @@ __all__ = [
     "Repository",
     "SonosSpeakerSelectionModel",
     "SoundModel",
+    "UserModel",
 ]

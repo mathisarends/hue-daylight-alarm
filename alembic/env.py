@@ -12,6 +12,7 @@ from huerise.infrastructure.database.models import (
     HueBridgeSelectionModel,
     SonosSpeakerSelectionModel,
     SoundModel,
+    UserModel,
 )
 
 __all__ = [
@@ -21,6 +22,7 @@ __all__ = [
     "HueBridgeSelectionModel",
     "SonosSpeakerSelectionModel",
     "SoundModel",
+    "UserModel",
 ]
 
 config = context.config
