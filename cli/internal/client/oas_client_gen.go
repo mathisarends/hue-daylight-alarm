@@ -71,6 +71,12 @@ type Invoker interface {
 	//
 	// POST /alarms/{alarm_id}/dismiss
 	DismissAlarm(ctx context.Context, params DismissAlarmParams) (DismissAlarmRes, error)
+	// Doctor invokes doctor operation.
+	//
+	// Doctor.
+	//
+	// GET /doctor
+	Doctor(ctx context.Context) (*DoctorRead, error)
 	// EnableAlarm invokes enableAlarm operation.
 	//
 	// Enable Alarm.
@@ -89,6 +95,12 @@ type Invoker interface {
 	//
 	// GET /audio-output
 	GetAudioOutput(ctx context.Context) (*AudioOutputRead, error)
+	// GetHueBridge invokes get_hue_bridge operation.
+	//
+	// Get Hue Bridge.
+	//
+	// GET /hue/bridge
+	GetHueBridge(ctx context.Context) (*HueBridgeStatusRead, error)
 	// GetRoom invokes get_room operation.
 	//
 	// Get Room.
@@ -107,6 +119,12 @@ type Invoker interface {
 	//
 	// GET /alarms
 	ListAlarms(ctx context.Context) ([]AlarmRead, error)
+	// ListHueBridges invokes list_hue_bridges operation.
+	//
+	// List Hue Bridges.
+	//
+	// GET /hue/bridges
+	ListHueBridges(ctx context.Context) ([]HueBridgeRead, error)
 	// ListOccurrences invokes listOccurrences operation.
 	//
 	// List Occurrences.
@@ -149,12 +167,24 @@ type Invoker interface {
 	//
 	// GET /ready
 	Readiness(ctx context.Context) (*HealthResponse, error)
+	// RegisterHueBridge invokes register_hue_bridge operation.
+	//
+	// Wait up to 60 seconds for the selected bridge's link button.
+	//
+	// POST /hue/bridge/register
+	RegisterHueBridge(ctx context.Context) (*HueBridgeStatusRead, error)
 	// SelectAudioOutput invokes select_audio_output operation.
 	//
 	// Switch the output. Anything currently playing is stopped first.
 	//
 	// PUT /audio-output
 	SelectAudioOutput(ctx context.Context, request *AudioOutputRequest) (SelectAudioOutputRes, error)
+	// SelectHueBridge invokes select_hue_bridge operation.
+	//
+	// Select Hue Bridge.
+	//
+	// PUT /hue/bridge
+	SelectHueBridge(ctx context.Context, request *HueBridgeSelectionRequest) (SelectHueBridgeRes, error)
 	// SelectSonosSpeaker invokes select_sonos_speaker operation.
 	//
 	// Select Sonos Speaker.
@@ -970,6 +1000,76 @@ func (c *Client) sendDismissAlarm(ctx context.Context, params DismissAlarmParams
 	return result, nil
 }
 
+// Doctor invokes doctor operation.
+//
+// Doctor.
+//
+// GET /doctor
+func (c *Client) Doctor(ctx context.Context) (*DoctorRead, error) {
+	res, err := c.sendDoctor(ctx)
+	return res, err
+}
+
+func (c *Client) sendDoctor(ctx context.Context) (res *DoctorRead, err error) {
+
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/doctor"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+
+			switch err := c.securityAccessToken(ctx, DoctorOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"AccessToken\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer body.Close()
+
+	result, err := decodeDoctorResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
 // EnableAlarm invokes enableAlarm operation.
 //
 // Enable Alarm.
@@ -1217,6 +1317,76 @@ func (c *Client) sendGetAudioOutput(ctx context.Context) (res *AudioOutputRead, 
 	return result, nil
 }
 
+// GetHueBridge invokes get_hue_bridge operation.
+//
+// Get Hue Bridge.
+//
+// GET /hue/bridge
+func (c *Client) GetHueBridge(ctx context.Context) (*HueBridgeStatusRead, error) {
+	res, err := c.sendGetHueBridge(ctx)
+	return res, err
+}
+
+func (c *Client) sendGetHueBridge(ctx context.Context) (res *HueBridgeStatusRead, err error) {
+
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/hue/bridge"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+
+			switch err := c.securityAccessToken(ctx, GetHueBridgeOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"AccessToken\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer body.Close()
+
+	result, err := decodeGetHueBridgeResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
 // GetRoom invokes get_room operation.
 //
 // Get Room.
@@ -1405,6 +1575,76 @@ func (c *Client) sendListAlarms(ctx context.Context) (res []AlarmRead, err error
 	defer body.Close()
 
 	result, err := decodeListAlarmsResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// ListHueBridges invokes list_hue_bridges operation.
+//
+// List Hue Bridges.
+//
+// GET /hue/bridges
+func (c *Client) ListHueBridges(ctx context.Context) ([]HueBridgeRead, error) {
+	res, err := c.sendListHueBridges(ctx)
+	return res, err
+}
+
+func (c *Client) sendListHueBridges(ctx context.Context) (res []HueBridgeRead, err error) {
+
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/hue/bridges"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+
+			switch err := c.securityAccessToken(ctx, ListHueBridgesOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"AccessToken\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer body.Close()
+
+	result, err := decodeListHueBridgesResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -1931,6 +2171,76 @@ func (c *Client) sendReadiness(ctx context.Context) (res *HealthResponse, err er
 	return result, nil
 }
 
+// RegisterHueBridge invokes register_hue_bridge operation.
+//
+// Wait up to 60 seconds for the selected bridge's link button.
+//
+// POST /hue/bridge/register
+func (c *Client) RegisterHueBridge(ctx context.Context) (*HueBridgeStatusRead, error) {
+	res, err := c.sendRegisterHueBridge(ctx)
+	return res, err
+}
+
+func (c *Client) sendRegisterHueBridge(ctx context.Context) (res *HueBridgeStatusRead, err error) {
+
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/hue/bridge/register"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	r, err := ht.NewRequest(ctx, "POST", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+
+			switch err := c.securityAccessToken(ctx, RegisterHueBridgeOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"AccessToken\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer body.Close()
+
+	result, err := decodeRegisterHueBridgeResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
 // SelectAudioOutput invokes select_audio_output operation.
 //
 // Switch the output. Anything currently playing is stopped first.
@@ -1997,6 +2307,79 @@ func (c *Client) sendSelectAudioOutput(ctx context.Context, request *AudioOutput
 	defer body.Close()
 
 	result, err := decodeSelectAudioOutputResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// SelectHueBridge invokes select_hue_bridge operation.
+//
+// Select Hue Bridge.
+//
+// PUT /hue/bridge
+func (c *Client) SelectHueBridge(ctx context.Context, request *HueBridgeSelectionRequest) (SelectHueBridgeRes, error) {
+	res, err := c.sendSelectHueBridge(ctx, request)
+	return res, err
+}
+
+func (c *Client) sendSelectHueBridge(ctx context.Context, request *HueBridgeSelectionRequest) (res SelectHueBridgeRes, err error) {
+
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/hue/bridge"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	r, err := ht.NewRequest(ctx, "PUT", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodeSelectHueBridgeRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+
+			switch err := c.securityAccessToken(ctx, SelectHueBridgeOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"AccessToken\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer body.Close()
+
+	result, err := decodeSelectHueBridgeResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

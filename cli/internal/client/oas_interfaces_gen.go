@@ -61,6 +61,10 @@ type SelectAudioOutputRes interface {
 	selectAudioOutputRes()
 }
 
+type SelectHueBridgeRes interface {
+	selectHueBridgeRes()
+}
+
 type SelectSonosSpeakerRes interface {
 	selectSonosSpeakerRes()
 }

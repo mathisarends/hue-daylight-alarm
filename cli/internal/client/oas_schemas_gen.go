@@ -425,6 +425,58 @@ type DeleteProfileNoContent struct{}
 
 func (*DeleteProfileNoContent) deleteProfileRes() {}
 
+// Ref: #/components/schemas/DoctorCheckRead
+type DoctorCheckRead struct {
+	Configured bool `json:"configured"`
+}
+
+// GetConfigured returns the value of Configured.
+func (s *DoctorCheckRead) GetConfigured() bool {
+	return s.Configured
+}
+
+// SetConfigured sets the value of Configured.
+func (s *DoctorCheckRead) SetConfigured(val bool) {
+	s.Configured = val
+}
+
+// Ref: #/components/schemas/DoctorRead
+type DoctorRead struct {
+	Configured   bool            `json:"configured"`
+	SonosSpeaker DoctorCheckRead `json:"sonos_speaker"`
+	HueBridge    DoctorCheckRead `json:"hue_bridge"`
+}
+
+// GetConfigured returns the value of Configured.
+func (s *DoctorRead) GetConfigured() bool {
+	return s.Configured
+}
+
+// GetSonosSpeaker returns the value of SonosSpeaker.
+func (s *DoctorRead) GetSonosSpeaker() DoctorCheckRead {
+	return s.SonosSpeaker
+}
+
+// GetHueBridge returns the value of HueBridge.
+func (s *DoctorRead) GetHueBridge() DoctorCheckRead {
+	return s.HueBridge
+}
+
+// SetConfigured sets the value of Configured.
+func (s *DoctorRead) SetConfigured(val bool) {
+	s.Configured = val
+}
+
+// SetSonosSpeaker sets the value of SonosSpeaker.
+func (s *DoctorRead) SetSonosSpeaker(val DoctorCheckRead) {
+	s.SonosSpeaker = val
+}
+
+// SetHueBridge sets the value of HueBridge.
+func (s *DoctorRead) SetHueBridge(val DoctorCheckRead) {
+	s.HueBridge = val
+}
+
 // Ref: #/components/schemas/HTTPValidationError
 type HTTPValidationError struct {
 	Detail []ValidationError `json:"detail"`
@@ -455,6 +507,7 @@ func (*HTTPValidationError) listOccurrencesRes()    {}
 func (*HTTPValidationError) listSoundsRes()         {}
 func (*HTTPValidationError) previewSoundRes()       {}
 func (*HTTPValidationError) selectAudioOutputRes()  {}
+func (*HTTPValidationError) selectHueBridgeRes()    {}
 func (*HTTPValidationError) selectSonosSpeakerRes() {}
 func (*HTTPValidationError) setVolumeRes()          {}
 func (*HTTPValidationError) snoozeAlarmRes()        {}
@@ -475,6 +528,153 @@ func (s *HealthResponse) GetStatus() OptString {
 // SetStatus sets the value of Status.
 func (s *HealthResponse) SetStatus(val OptString) {
 	s.Status = val
+}
+
+// Ref: #/components/schemas/HueBridgeRead
+type HueBridgeRead struct {
+	// Stable Philips Hue Bridge ID.
+	ID string `json:"id"`
+	// Current, replaceable network address.
+	IPAddress string `json:"ip_address"`
+	Selected  bool   `json:"selected"`
+}
+
+// GetID returns the value of ID.
+func (s *HueBridgeRead) GetID() string {
+	return s.ID
+}
+
+// GetIPAddress returns the value of IPAddress.
+func (s *HueBridgeRead) GetIPAddress() string {
+	return s.IPAddress
+}
+
+// GetSelected returns the value of Selected.
+func (s *HueBridgeRead) GetSelected() bool {
+	return s.Selected
+}
+
+// SetID sets the value of ID.
+func (s *HueBridgeRead) SetID(val string) {
+	s.ID = val
+}
+
+// SetIPAddress sets the value of IPAddress.
+func (s *HueBridgeRead) SetIPAddress(val string) {
+	s.IPAddress = val
+}
+
+// SetSelected sets the value of Selected.
+func (s *HueBridgeRead) SetSelected(val bool) {
+	s.Selected = val
+}
+
+// Ref: #/components/schemas/HueBridgeSelectionRequest
+type HueBridgeSelectionRequest struct {
+	// Stable discovered bridge ID.
+	BridgeID string `json:"bridge_id"`
+}
+
+// GetBridgeID returns the value of BridgeID.
+func (s *HueBridgeSelectionRequest) GetBridgeID() string {
+	return s.BridgeID
+}
+
+// SetBridgeID sets the value of BridgeID.
+func (s *HueBridgeSelectionRequest) SetBridgeID(val string) {
+	s.BridgeID = val
+}
+
+// Ref: #/components/schemas/HueBridgeStatusRead
+type HueBridgeStatusRead struct {
+	BridgeID   NilString                 `json:"bridge_id"`
+	IPAddress  NilString                 `json:"ip_address"`
+	Configured bool                      `json:"configured"`
+	Source     NilHueConfigurationSource `json:"source"`
+}
+
+// GetBridgeID returns the value of BridgeID.
+func (s *HueBridgeStatusRead) GetBridgeID() NilString {
+	return s.BridgeID
+}
+
+// GetIPAddress returns the value of IPAddress.
+func (s *HueBridgeStatusRead) GetIPAddress() NilString {
+	return s.IPAddress
+}
+
+// GetConfigured returns the value of Configured.
+func (s *HueBridgeStatusRead) GetConfigured() bool {
+	return s.Configured
+}
+
+// GetSource returns the value of Source.
+func (s *HueBridgeStatusRead) GetSource() NilHueConfigurationSource {
+	return s.Source
+}
+
+// SetBridgeID sets the value of BridgeID.
+func (s *HueBridgeStatusRead) SetBridgeID(val NilString) {
+	s.BridgeID = val
+}
+
+// SetIPAddress sets the value of IPAddress.
+func (s *HueBridgeStatusRead) SetIPAddress(val NilString) {
+	s.IPAddress = val
+}
+
+// SetConfigured sets the value of Configured.
+func (s *HueBridgeStatusRead) SetConfigured(val bool) {
+	s.Configured = val
+}
+
+// SetSource sets the value of Source.
+func (s *HueBridgeStatusRead) SetSource(val NilHueConfigurationSource) {
+	s.Source = val
+}
+
+func (*HueBridgeStatusRead) selectHueBridgeRes() {}
+
+// Ref: #/components/schemas/HueConfigurationSource
+type HueConfigurationSource string
+
+const (
+	HueConfigurationSourceEnvironment HueConfigurationSource = "environment"
+	HueConfigurationSourceDatabase    HueConfigurationSource = "database"
+)
+
+// AllValues returns all HueConfigurationSource values.
+func (HueConfigurationSource) AllValues() []HueConfigurationSource {
+	return []HueConfigurationSource{
+		HueConfigurationSourceEnvironment,
+		HueConfigurationSourceDatabase,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s HueConfigurationSource) MarshalText() ([]byte, error) {
+	switch s {
+	case HueConfigurationSourceEnvironment:
+		return []byte(s), nil
+	case HueConfigurationSourceDatabase:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *HueConfigurationSource) UnmarshalText(data []byte) error {
+	switch HueConfigurationSource(data) {
+	case HueConfigurationSourceEnvironment:
+		*s = HueConfigurationSourceEnvironment
+		return nil
+	case HueConfigurationSourceDatabase:
+		*s = HueConfigurationSourceDatabase
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // Ref: #/components/schemas/IntroSchema
@@ -540,6 +740,51 @@ func (o NilDateTime) Get() (v time.Time, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o NilDateTime) Or(d time.Time) time.Time {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewNilHueConfigurationSource returns new NilHueConfigurationSource with value set to v.
+func NewNilHueConfigurationSource(v HueConfigurationSource) NilHueConfigurationSource {
+	return NilHueConfigurationSource{
+		Value: v,
+	}
+}
+
+// NilHueConfigurationSource is nullable HueConfigurationSource.
+type NilHueConfigurationSource struct {
+	Value HueConfigurationSource
+	Null  bool
+}
+
+// SetTo sets value to v.
+func (o *NilHueConfigurationSource) SetTo(v HueConfigurationSource) {
+	o.Null = false
+	o.Value = v
+}
+
+// IsNull returns true if value is Null.
+func (o NilHueConfigurationSource) IsNull() bool { return o.Null }
+
+// SetToNull sets value to null.
+func (o *NilHueConfigurationSource) SetToNull() {
+	o.Null = true
+	var v HueConfigurationSource
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o NilHueConfigurationSource) Get() (v HueConfigurationSource, ok bool) {
+	if o.Null {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o NilHueConfigurationSource) Or(d HueConfigurationSource) HueConfigurationSource {
 	if v, ok := o.Get(); ok {
 		return v
 	}
