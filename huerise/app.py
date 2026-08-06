@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from huerise.features import FEATURES
 from huerise.infrastructure.di import DatabaseProvider, StorageProvider
 from huerise.lifespan import LifecycleProvider, lifespan
+from huerise.presentation import health_router
 
 INFRASTRUCTURE_PROVIDERS: tuple[type[Provider], ...] = (
     DatabaseProvider,
@@ -37,6 +38,7 @@ def create_app() -> FastAPI:
     )
 
     setup_dishka(_create_container(), app=app)
+    app.include_router(health_router)
     for feature in FEATURES:
         feature.install(app)
 

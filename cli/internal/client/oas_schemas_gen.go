@@ -461,6 +461,21 @@ func (*HTTPValidationError) stopSceneDemoRes()     {}
 func (*HTTPValidationError) streamEventsRes()      {}
 func (*HTTPValidationError) updateAlarmRes()       {}
 
+// Ref: #/components/schemas/HealthResponse
+type HealthResponse struct {
+	Status OptString `json:"status"`
+}
+
+// GetStatus returns the value of Status.
+func (s *HealthResponse) GetStatus() OptString {
+	return s.Status
+}
+
+// SetStatus sets the value of Status.
+func (s *HealthResponse) SetStatus(val OptString) {
+	s.Status = val
+}
+
 // Ref: #/components/schemas/IntroSchema
 type IntroSchema struct {
 	// UUID of a sound returned by GET /sounds, e.g. '5c0806e7-7162-5be7-948e-33d349bde4a8'.

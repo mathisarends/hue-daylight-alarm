@@ -3,6 +3,14 @@
 package client
 
 // setDefaults set default value of fields.
+func (s *HealthResponse) setDefaults() {
+	{
+		val := string("ok")
+		s.Status.SetTo(val)
+	}
+}
+
+// setDefaults set default value of fields.
 func (s *RingtoneSchema) setDefaults() {
 	{
 		val := int(80)

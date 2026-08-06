@@ -95,6 +95,12 @@ type Invoker interface {
 	//
 	// GET /rooms/{room_id}
 	GetRoom(ctx context.Context, params GetRoomParams) (GetRoomRes, error)
+	// Health invokes health operation.
+	//
+	// Health.
+	//
+	// GET /health
+	Health(ctx context.Context) (*HealthResponse, error)
 	// ListAlarms invokes listAlarms operation.
 	//
 	// List Alarms.
@@ -131,6 +137,12 @@ type Invoker interface {
 	//
 	// POST /sounds/preview
 	PreviewSound(ctx context.Context, request *SoundPreviewRequest) (PreviewSoundRes, error)
+	// Readiness invokes readiness operation.
+	//
+	// Readiness.
+	//
+	// GET /ready
+	Readiness(ctx context.Context) (*HealthResponse, error)
 	// SelectAudioOutput invokes select_audio_output operation.
 	//
 	// Switch the output. Anything currently playing is stopped first.
@@ -1281,6 +1293,43 @@ func (c *Client) sendGetRoom(ctx context.Context, params GetRoomParams) (res Get
 	return result, nil
 }
 
+// Health invokes health operation.
+//
+// Health.
+//
+// GET /health
+func (c *Client) Health(ctx context.Context) (*HealthResponse, error) {
+	res, err := c.sendHealth(ctx)
+	return res, err
+}
+
+func (c *Client) sendHealth(ctx context.Context) (res *HealthResponse, err error) {
+
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/health"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer body.Close()
+
+	result, err := decodeHealthResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
 // ListAlarms invokes listAlarms operation.
 //
 // List Alarms.
@@ -1756,6 +1805,43 @@ func (c *Client) sendPreviewSound(ctx context.Context, request *SoundPreviewRequ
 	defer body.Close()
 
 	result, err := decodePreviewSoundResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// Readiness invokes readiness operation.
+//
+// Readiness.
+//
+// GET /ready
+func (c *Client) Readiness(ctx context.Context) (*HealthResponse, error) {
+	res, err := c.sendReadiness(ctx)
+	return res, err
+}
+
+func (c *Client) sendReadiness(ctx context.Context) (res *HealthResponse, err error) {
+
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/ready"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer body.Close()
+
+	result, err := decodeReadinessResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

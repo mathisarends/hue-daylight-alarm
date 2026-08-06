@@ -84,6 +84,12 @@ services:
         condition: service_completed_successfully
       minio-init:
         condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/ready')"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
 
   adminer:
     image: adminer
