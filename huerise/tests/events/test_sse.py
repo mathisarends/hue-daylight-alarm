@@ -7,7 +7,7 @@ from huerise.features.events.presentation.sse import (
     format_frame,
     frames,
 )
-from tests.events.conftest import make_created, make_hub
+from huerise.tests.events.conftest import make_created, make_hub
 
 
 def test_frame_carries_id_type_and_payload() -> None:

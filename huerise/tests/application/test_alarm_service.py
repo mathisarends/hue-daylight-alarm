@@ -21,7 +21,7 @@ from huerise.features.events.domain import (
     OccurrenceSkipped,
 )
 from huerise.features.lighting.domain import Room, SceneNotFoundError
-from tests.application.conftest import (
+from huerise.tests.application.conftest import (
     ROOM_ID,
     InMemoryAlarmRepository,
     InMemoryOccurrenceRepository,

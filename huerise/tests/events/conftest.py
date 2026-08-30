@@ -4,7 +4,7 @@ from transitbus import EventBus
 
 from huerise.features.events.application import EventStreamHub
 from huerise.features.events.domain import AlarmCreated, AlarmSnapshot, HueriseEvent
-from tests.application.conftest import make_alarm
+from huerise.tests.application.conftest import make_alarm
 
 
 def make_hub(max_pending: int = 10) -> tuple[EventBus, EventStreamHub]:

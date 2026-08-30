@@ -16,7 +16,7 @@ from huerise.features.alarm.presentation import (
 )
 from huerise.infrastructure.auth import encode_access_token
 from huerise.presentation import auth
-from tests.application.conftest import (
+from huerise.tests.application.conftest import (
     ROOM_ID,
     InMemoryAlarmRepository,
     InMemoryOccurrenceRepository,

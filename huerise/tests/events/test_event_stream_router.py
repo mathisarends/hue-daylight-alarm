@@ -15,7 +15,7 @@ from huerise.features.events.presentation import event_stream_router
 from huerise.features.events.presentation.sse import format_frame
 from huerise.infrastructure.auth import encode_access_token
 from huerise.presentation import auth
-from tests.events.conftest import make_created
+from huerise.tests.events.conftest import make_created
 
 SECRET = "test-jwt-secret"
 TOKEN = encode_access_token(

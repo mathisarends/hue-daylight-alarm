@@ -4,7 +4,7 @@ import pytest
 
 from huerise.features.alarm.application import AlarmProfileService
 from huerise.features.alarm.domain import AlarmProfileNotFoundError, SunriseConfig
-from tests.application.conftest import (
+from huerise.tests.application.conftest import (
     SCENE_ID,
     InMemoryProfileRepository,
     make_profile,

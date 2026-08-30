@@ -32,10 +32,12 @@ dev = [
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+testpaths = ["huerise/tests"]
 addopts = "--cov=huerise --cov-report=term-missing"
 
 [tool.coverage.run]
 omit = [
+    "huerise/tests/*",
     "huerise/app.py",
     "huerise/main.py",
     "huerise/lifespan.py",
@@ -68,7 +70,7 @@ select = [
 "huerise/alembic/versions/*" = ["E501"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["huerise", "tests"]
+known-first-party = ["huerise"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -85,4 +87,7 @@ build-backend = "hatchling.build"
 include = [
     "huerise/**/*.py",
     "huerise/alembic/script.py.mako",
+]
+exclude = [
+    "huerise/tests",
 ]

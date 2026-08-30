@@ -19,7 +19,7 @@ from huerise.features.lighting.presentation import (
 )
 from huerise.infrastructure.auth import encode_access_token
 from huerise.presentation import auth
-from tests.application.conftest import make_lights
+from huerise.tests.application.conftest import make_lights
 
 SECRET = "test-jwt-secret"
 TOKEN = encode_access_token(

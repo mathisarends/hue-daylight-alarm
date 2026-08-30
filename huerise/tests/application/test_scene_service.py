@@ -18,7 +18,7 @@ from huerise.features.lighting.domain import (
     SunriseRamp,
     sunrise_steps,
 )
-from tests.application.conftest import ROOM_ID, SCENE_ID, make_lights
+from huerise.tests.application.conftest import ROOM_ID, SCENE_ID, make_lights
 
 RELAX_ID = SCENE_ID
 BEDROOM = Room(

@@ -14,7 +14,11 @@ from huerise.features.alarm.presentation import (
 )
 from huerise.infrastructure.auth import encode_access_token
 from huerise.presentation import auth
-from tests.application.conftest import SCENE_ID, InMemoryProfileRepository, make_profile
+from huerise.tests.application.conftest import (
+    SCENE_ID,
+    InMemoryProfileRepository,
+    make_profile,
+)
 
 SECRET = "test-jwt-secret"
 TOKEN = encode_access_token(

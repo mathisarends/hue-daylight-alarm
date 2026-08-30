@@ -16,7 +16,7 @@ from huerise.features.events.domain import (
     OccurrenceSnapshot,
     OccurrenceStarted,
 )
-from tests.application.conftest import (
+from huerise.tests.application.conftest import (
     FakeUnitOfWork,
     FakeUnitOfWorkFactory,
     InMemoryAlarmRepository,

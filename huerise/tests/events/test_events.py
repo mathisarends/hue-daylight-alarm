@@ -16,7 +16,7 @@ from huerise.features.events.domain import (
     OccurrenceSnapshot,
     OccurrenceStarted,
 )
-from tests.application.conftest import make_alarm, make_occurrence
+from huerise.tests.application.conftest import make_alarm, make_occurrence
 
 events = TypeAdapter[HueriseEvent](AnyHueriseEvent)
 

@@ -11,7 +11,7 @@ from huerise.features.events.domain import (
 )
 from huerise.features.lighting.domain import Room, Scene, SunriseRamp, sunrise_steps
 from huerise.features.runner.application import AlarmRunner
-from tests.application.conftest import (
+from huerise.tests.application.conftest import (
     ROOM_ID,
     SCENE_ID,
     FakeUnitOfWork,

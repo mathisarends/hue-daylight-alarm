@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
       # testcontainers spins up postgres:17-alpine; the runner ships Docker.
-      - run: uv run --group dev pytest tests/
+      - run: uv run --group dev pytest huerise/tests/
 
   go:
     runs-on: ubuntu-latest

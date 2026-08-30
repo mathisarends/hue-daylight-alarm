@@ -8,7 +8,7 @@ from huerise.features.alarm.domain import Alarm, AlarmDefect, AlarmField, AlarmP
 from huerise.features.events.domain import AlarmUpdated, ProfileUpdated
 from huerise.features.lighting.application import LightEvents, Lights
 from huerise.features.lighting.domain import LightChange, LightResource, Room, Scene
-from tests.application.conftest import (
+from huerise.tests.application.conftest import (
     ROOM_ID,
     SCENE_ID,
     FakeUnitOfWork,

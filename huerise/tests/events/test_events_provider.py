@@ -8,7 +8,7 @@ from huerise.features.events.application import (
 )
 from huerise.features.events.domain import NextAlarmChanged
 from huerise.features.events.infrastructure import EventsProvider
-from tests.application.conftest import (
+from huerise.tests.application.conftest import (
     FakeUnitOfWork,
     FakeUnitOfWorkFactory,
     InMemoryAlarmRepository,
@@ -16,7 +16,7 @@ from tests.application.conftest import (
     InMemoryProfileRepository,
     make_alarm,
 )
-from tests.events.conftest import make_created
+from huerise.tests.events.conftest import make_created
 
 
 class StubUnitOfWorkProvider(Provider):

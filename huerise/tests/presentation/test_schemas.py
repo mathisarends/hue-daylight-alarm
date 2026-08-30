@@ -13,7 +13,7 @@ from huerise.features.alarm.presentation.profile_schemas import (
     ProfileRead,
     SunriseSchema,
 )
-from tests.application.conftest import ROOM_ID, SCENE_ID, make_profile
+from huerise.tests.application.conftest import ROOM_ID, SCENE_ID, make_profile
 
 
 class TestScheduleSchema:

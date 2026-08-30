@@ -1,6 +1,6 @@
 import pytest
 
-from tests.events.conftest import make_created, make_hub, take
+from huerise.tests.events.conftest import make_created, make_hub, take
 
 
 async def test_publish_reaches_an_attached_client() -> None:

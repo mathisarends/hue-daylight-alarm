@@ -12,7 +12,7 @@ from huerise.features.alarm.infrastructure.persistence import (
 from huerise.features.lighting.domain import HueBridgeSelection
 from huerise.features.lighting.infrastructure.persistence import SQLHueBridgeRepository
 from huerise.infrastructure.database.models import ALARM_DEFECTS, OCCURRENCE_STATES
-from tests.application.conftest import make_alarm, make_occurrence, make_profile
+from huerise.tests.application.conftest import make_alarm, make_occurrence, make_profile
 
 NOW = datetime(2026, 8, 3, 5, 0, tzinfo=UTC)
 

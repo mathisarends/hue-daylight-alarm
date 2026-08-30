@@ -6,7 +6,7 @@ from huerise.features.alarm.domain import OccurrenceState, Weekday
 from huerise.features.events.domain import OccurrenceScheduled, OccurrenceSkipped
 from huerise.features.runner.application.runner_port import AlarmRunner
 from huerise.features.scheduler.application import AlarmScheduler
-from tests.application.conftest import (
+from huerise.tests.application.conftest import (
     FakeUnitOfWork,
     FakeUnitOfWorkFactory,
     InMemoryAlarmRepository,
