@@ -7,7 +7,6 @@ from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
 
 from huerise.env import AppSettings
-from huerise.exception_handlers import install_exception_handlers
 from huerise.features import FEATURES
 from huerise.features.daylight_alarm.application import DaylightAlarm
 from huerise.shared import CoreProvider
@@ -44,7 +43,6 @@ def create_app(container: AsyncContainer | None = None) -> FastAPI:
         lifespan=lifespan,
     )
     setup_dishka(container, app=app)
-    install_exception_handlers(app)
     for feature in FEATURES:
         feature.install(app)
     return app

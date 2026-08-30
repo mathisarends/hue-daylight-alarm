@@ -23,6 +23,44 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "The configured Hue scene does not exist.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The YAML configuration is missing or invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ConfigurationErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  ],
+                  "title": "Response 422 Doctor"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The Hue Bridge is not configured, reachable, or authenticated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -50,6 +88,34 @@
                   },
                   "type": "array",
                   "title": "Response Listrooms"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The YAML configuration is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ConfigurationErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  ],
+                  "title": "Response 422 Listrooms"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The Hue Bridge is not configured, reachable, or authenticated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -83,6 +149,34 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "The YAML configuration is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ConfigurationErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  ],
+                  "title": "Response 422 Listscenes"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The Hue Bridge is not configured, reachable, or authenticated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -113,6 +207,34 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "The stored Hue configuration is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ConfigurationErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  ],
+                  "title": "Response 422 Listhuebridges"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Hue Bridge discovery is unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -136,6 +258,24 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/OnboardingStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The stored Hue configuration is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ConfigurationErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  ],
+                  "title": "Response 422 Gethuebridge"
                 }
               }
             }
@@ -174,12 +314,50 @@
               }
             }
           },
-          "422": {
-            "description": "Validation Error",
+          "404": {
+            "description": "The selected Hue Bridge was not discovered.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Environment overrides make Hue onboarding read-only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The stored Hue configuration is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ConfigurationErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  ],
+                  "title": "Response 422 Selecthuebridge"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Hue Bridge discovery is unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -206,6 +384,44 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/OnboardingStatusResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "A Hue Bridge must be selected before registration.\n\nThe Hue Bridge link button was not pressed in time.\n\nEnvironment overrides make Hue onboarding read-only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The stored Hue configuration is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ConfigurationErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  ],
+                  "title": "Response 422 Registerhuebridge"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Hue Bridge registration is unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -253,12 +469,50 @@
               }
             }
           },
-          "422": {
-            "description": "Validation Error",
+          "409": {
+            "description": "A daylight alarm is already running.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The configured Hue scene does not exist.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The YAML configuration is missing or invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ConfigurationErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  ],
+                  "title": "Response 422 Startdaylightalarm"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The Hue Bridge is not configured, reachable, or authenticated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -379,6 +633,50 @@
         ],
         "title": "BridgeSelectionRequest"
       },
+      "ConfigurationErrorResponse": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "issues": {
+            "items": {
+              "$ref": "#/components/schemas/ConfigurationIssue"
+            },
+            "type": "array",
+            "title": "Issues"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail",
+          "issues"
+        ],
+        "title": "ConfigurationErrorResponse"
+      },
+      "ConfigurationIssue": {
+        "properties": {
+          "location": {
+            "type": "string",
+            "title": "Location"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "location",
+          "message",
+          "type"
+        ],
+        "title": "ConfigurationIssue"
+      },
       "DoctorCheckResponse": {
         "properties": {
           "name": {
@@ -419,6 +717,19 @@
           "checks"
         ],
         "title": "DoctorResponse"
+      },
+      "ErrorResponse": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "ErrorResponse"
       },
       "HTTPValidationError": {
         "properties": {
@@ -533,7 +844,7 @@
         "properties": {
           "duration_seconds": {
             "type": "integer",
-            "exclusiveMinimum": 0.0,
+            "minimum": 1.0,
             "title": "Duration Seconds"
           }
         },

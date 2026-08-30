@@ -142,6 +142,23 @@ def test_operation_ids_are_explicit_and_stable(client: TestClient) -> None:
     }
 
 
+def test_errors_are_documented_on_their_routes(client: TestClient) -> None:
+    responses = client.app.openapi()["paths"]["/daylight-alarm/start"]["post"][
+        "responses"
+    ]
+
+    assert responses["404"]["description"] == (
+        "The configured Hue scene does not exist."
+    )
+    assert responses["409"]["description"] == ("A daylight alarm is already running.")
+    assert responses["422"]["description"] == (
+        "The YAML configuration is missing or invalid."
+    )
+    assert responses["503"]["description"] == (
+        "The Hue Bridge is not configured, reachable, or authenticated."
+    )
+
+
 @pytest.mark.parametrize("headers", [{}, {"X-API-Key": "wrong"}])
 def test_protected_routes_require_api_key(
     client: TestClient, headers: dict[str, str]
@@ -204,6 +221,16 @@ def test_overrides_duration_for_one_run(client: TestClient) -> None:
     assert started.status_code == 202
     assert started.json() == {"status": "started", "duration_seconds": 10}
     assert stopped.status_code == 204
+
+
+def test_rejects_a_second_alarm_with_the_documented_error(client: TestClient) -> None:
+    first = client.post("/daylight-alarm/start", headers=AUTH)
+    second = client.post("/daylight-alarm/start", headers=AUTH)
+    client.post("/daylight-alarm/stop", headers=AUTH)
+
+    assert first.status_code == 202
+    assert second.status_code == 409
+    assert second.json() == {"detail": "Daylight alarm is already running"}
 
 
 def test_exposes_onboarding_state(client: TestClient) -> None:

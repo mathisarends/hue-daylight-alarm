@@ -1,8 +1,10 @@
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
-from fastapi import APIRouter, Depends
+from fastapi import Depends
 
 from huerise.authentication import require_api_key
+from huerise.exception_handlers import ExceptionRouter
 from huerise.features.lighting.application import SceneService
+from huerise.features.lighting.presentation.errors import scene_errors
 from huerise.features.lighting.presentation.mappers import (
     to_available_scene_response,
     to_room_response,
@@ -12,7 +14,7 @@ from huerise.features.lighting.presentation.schemas import (
     RoomResponse,
 )
 
-scene_router = APIRouter(
+scene_router = ExceptionRouter(
     tags=["lighting"],
     route_class=DishkaRoute,
     dependencies=[Depends(require_api_key)],
@@ -23,6 +25,7 @@ scene_router = APIRouter(
     "/rooms",
     response_model=list[RoomResponse],
     operation_id="listRooms",
+    errors=scene_errors,
 )
 async def rooms(
     service: FromDishka[SceneService],
@@ -35,6 +38,7 @@ async def rooms(
     "/scenes",
     response_model=list[AvailableSceneResponse],
     operation_id="listScenes",
+    errors=scene_errors,
 )
 async def scenes(
     service: FromDishka[SceneService],
