@@ -39,15 +39,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/ConfigurationErrorResponse"
-                    },
-                    {
-                      "$ref": "#/components/schemas/HTTPValidationError"
-                    }
-                  ],
-                  "title": "Response 422 Doctor"
+                  "$ref": "#/components/schemas/ConfigurationErrorResponse"
                 }
               }
             }
@@ -97,15 +89,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/ConfigurationErrorResponse"
-                    },
-                    {
-                      "$ref": "#/components/schemas/HTTPValidationError"
-                    }
-                  ],
-                  "title": "Response 422 Listrooms"
+                  "$ref": "#/components/schemas/ConfigurationErrorResponse"
                 }
               }
             }
@@ -155,15 +139,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/ConfigurationErrorResponse"
-                    },
-                    {
-                      "$ref": "#/components/schemas/HTTPValidationError"
-                    }
-                  ],
-                  "title": "Response 422 Listscenes"
+                  "$ref": "#/components/schemas/ConfigurationErrorResponse"
                 }
               }
             }
@@ -213,15 +189,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/ConfigurationErrorResponse"
-                    },
-                    {
-                      "$ref": "#/components/schemas/HTTPValidationError"
-                    }
-                  ],
-                  "title": "Response 422 Listhuebridges"
+                  "$ref": "#/components/schemas/ConfigurationErrorResponse"
                 }
               }
             }
@@ -267,15 +235,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/ConfigurationErrorResponse"
-                    },
-                    {
-                      "$ref": "#/components/schemas/HTTPValidationError"
-                    }
-                  ],
-                  "title": "Response 422 Gethuebridge"
+                  "$ref": "#/components/schemas/ConfigurationErrorResponse"
                 }
               }
             }
@@ -339,15 +299,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/ConfigurationErrorResponse"
-                    },
-                    {
-                      "$ref": "#/components/schemas/HTTPValidationError"
-                    }
-                  ],
-                  "title": "Response 422 Selecthuebridge"
+                  "$ref": "#/components/schemas/ConfigurationErrorResponse"
                 }
               }
             }
@@ -403,15 +355,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/ConfigurationErrorResponse"
-                    },
-                    {
-                      "$ref": "#/components/schemas/HTTPValidationError"
-                    }
-                  ],
-                  "title": "Response 422 Registerhuebridge"
+                  "$ref": "#/components/schemas/ConfigurationErrorResponse"
                 }
               }
             }
@@ -494,15 +438,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/ConfigurationErrorResponse"
-                    },
-                    {
-                      "$ref": "#/components/schemas/HTTPValidationError"
-                    }
-                  ],
-                  "title": "Response 422 Startdaylightalarm"
+                  "$ref": "#/components/schemas/ConfigurationErrorResponse"
                 }
               }
             }
@@ -731,19 +667,6 @@
         ],
         "title": "ErrorResponse"
       },
-      "HTTPValidationError": {
-        "properties": {
-          "detail": {
-            "items": {
-              "$ref": "#/components/schemas/ValidationError"
-            },
-            "type": "array",
-            "title": "Detail"
-          }
-        },
-        "type": "object",
-        "title": "HTTPValidationError"
-      },
       "OnboardingState": {
         "type": "string",
         "enum": [
@@ -853,39 +776,6 @@
           "duration_seconds"
         ],
         "title": "StartRequest"
-      },
-      "ValidationError": {
-        "properties": {
-          "loc": {
-            "items": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "integer"
-                }
-              ]
-            },
-            "type": "array",
-            "title": "Location"
-          },
-          "msg": {
-            "type": "string",
-            "title": "Message"
-          },
-          "type": {
-            "type": "string",
-            "title": "Error Type"
-          }
-        },
-        "type": "object",
-        "required": [
-          "loc",
-          "msg",
-          "type"
-        ],
-        "title": "ValidationError"
       }
     },
     "securitySchemes": {

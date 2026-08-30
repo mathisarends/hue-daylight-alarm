@@ -5,7 +5,7 @@ from typing import Any
 
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from huerise.configuration import ConfigurationError, ConfigurationIssue
 
@@ -16,16 +16,6 @@ class ErrorResponse(BaseModel):
 
 class ConfigurationErrorResponse(ErrorResponse):
     issues: list[ConfigurationIssue]
-
-
-class ValidationError(BaseModel):
-    loc: list[str | int] = Field(title="Location")
-    msg: str = Field(title="Message")
-    type: str = Field(title="Error Type")
-
-
-class HTTPValidationError(BaseModel):
-    detail: list[ValidationError] = Field(default_factory=list)
 
 
 @dataclass(frozen=True, slots=True)
@@ -112,7 +102,7 @@ def _responses(
 
 def _response_model(exception_type: type[Exception]) -> Any:
     if issubclass(exception_type, ConfigurationError):
-        return ConfigurationErrorResponse | HTTPValidationError
+        return ConfigurationErrorResponse
     return ErrorResponse
 
 

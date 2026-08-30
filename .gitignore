@@ -103,6 +103,3 @@ data/
 
 # Claude Code local settings
 .claude/settings.local.json
-
-# Go CLI module: openapi.json is copied from the repo root for `go generate`
-cli/openapi.json

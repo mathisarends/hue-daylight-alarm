@@ -3,7 +3,7 @@ from pathlib import Path
 
 from huerise.main import app
 
-OUTPUT = Path(__file__).resolve().parent.parent / "openapi.json"
+OUTPUT = Path(__file__).resolve().parent.parent / "specs" / "openapi.json"
 
 
 def main() -> None:
