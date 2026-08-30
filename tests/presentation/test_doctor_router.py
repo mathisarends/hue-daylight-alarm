@@ -41,10 +41,7 @@ def client(monkeypatch: pytest.MonkeyPatch) -> TestClient:
     monkeypatch.setattr(auth._settings, "jwt_secret", SecretStr(SECRET))
     service = MagicMock(spec=DoctorService)
     service.check = AsyncMock(
-        return_value=DoctorStatus(
-            sonos_speaker=SetupCheck(configured=False),
-            hue_bridge=SetupCheck(configured=True),
-        )
+        return_value=DoctorStatus(hue_bridge=SetupCheck(configured=True))
     )
     app = FastAPI()
     app.include_router(doctor_router)
@@ -52,13 +49,12 @@ def client(monkeypatch: pytest.MonkeyPatch) -> TestClient:
     return TestClient(app)
 
 
-def test_reports_sonos_and_hue_configuration_separately(client: TestClient) -> None:
+def test_reports_hue_configuration(client: TestClient) -> None:
     response = client.get("/doctor", headers=AUTH)
 
     assert response.status_code == 200
     assert response.json() == {
-        "configured": False,
-        "sonos_speaker": {"configured": False},
+        "configured": True,
         "hue_bridge": {"configured": True},
     }
 

@@ -137,25 +137,12 @@ def test_enabling_an_already_enabled_alarm_returns_409(client: TestClient) -> No
     assert response.json() == {"detail": f"Alarm {alarm['id']} is already enabled"}
 
 
-def test_snoozing_without_an_active_occurrence_returns_409(client: TestClient) -> None:
-    alarm = _create_alarm(client)
-
-    response = client.post(
-        f"/alarms/{alarm['id']}/snooze", headers=AUTH, json={"minutes": 5}
-    )
-
-    assert response.status_code == 409
-    assert response.json() == {
-        "detail": f"Alarm {alarm['id']} has no active occurrence"
-    }
-
-
 @pytest.fixture
-def ringing_alarm_client(monkeypatch: pytest.MonkeyPatch) -> tuple[TestClient, str]:
+def sunrise_alarm_client(monkeypatch: pytest.MonkeyPatch) -> tuple[TestClient, str]:
     monkeypatch.setattr(auth._settings, "jwt_secret", SecretStr(SECRET))
     alarm = make_alarm()
     occurrence = make_occurrence(
-        alarm.id, datetime.now(UTC), state=OccurrenceState.RINGING
+        alarm.id, datetime.now(UTC), state=OccurrenceState.SUNRISE
     )
     service = make_alarm_service(
         alarms=InMemoryAlarmRepository([alarm]),
@@ -169,23 +156,10 @@ def ringing_alarm_client(monkeypatch: pytest.MonkeyPatch) -> tuple[TestClient, s
     return TestClient(app), str(alarm.id)
 
 
-def test_snoozing_a_ringing_alarm_reschedules_it(
-    ringing_alarm_client: tuple[TestClient, str],
+def test_dismissing_a_running_alarm_stops_it(
+    sunrise_alarm_client: tuple[TestClient, str],
 ) -> None:
-    client, alarm_id = ringing_alarm_client
-
-    response = client.post(
-        f"/alarms/{alarm_id}/snooze", headers=AUTH, json={"minutes": 5}
-    )
-
-    assert response.status_code == 200
-    assert response.json()["state"] == "snoozed"
-
-
-def test_dismissing_a_ringing_alarm_stops_it(
-    ringing_alarm_client: tuple[TestClient, str],
-) -> None:
-    client, alarm_id = ringing_alarm_client
+    client, alarm_id = sunrise_alarm_client
 
     response = client.post(f"/alarms/{alarm_id}/dismiss", headers=AUTH)
 
@@ -194,12 +168,12 @@ def test_dismissing_a_ringing_alarm_stops_it(
 
 
 def test_lists_the_occurrences_for_an_alarm(
-    ringing_alarm_client: tuple[TestClient, str],
+    sunrise_alarm_client: tuple[TestClient, str],
 ) -> None:
-    client, alarm_id = ringing_alarm_client
+    client, alarm_id = sunrise_alarm_client
 
     response = client.get(f"/alarms/{alarm_id}/occurrences", headers=AUTH)
 
     assert response.status_code == 200
     [occurrence] = response.json()
-    assert occurrence["state"] == "ringing"
+    assert occurrence["state"] == "sunrise"

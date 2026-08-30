@@ -61,8 +61,6 @@ def test_lists_the_existing_profile(client: TestClient) -> None:
 def test_creates_a_profile(client: TestClient) -> None:
     body = {
         "name": "Weekend",
-        "intro": {"sound_id": str(uuid4())},
-        "ringtone": {"sound_id": str(uuid4())},
         "sunrise": {
             "scene_id": str(SCENE_ID),
             "scene_name": "Tageslichtwecker",

@@ -1,9 +1,9 @@
 from datetime import timedelta
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 
-from huerise.features.alarm.domain import RingtoneConfig, SunriseConfig
+from huerise.features.alarm.domain import SunriseConfig
 
 SCENE_ID = UUID("22222222-2222-4222-8222-222222222222")
 
@@ -31,10 +31,3 @@ class TestSunriseConfigValidation:
                 scene_name="Sunrise",
                 duration=timedelta(minutes=-1),
             )
-
-
-class TestRingtoneConfigValidation:
-    @pytest.mark.parametrize("volume", [-1, 101])
-    def test_rejects_volume_out_of_range(self, volume: int) -> None:
-        with pytest.raises(ValueError, match="volume must be 0-100"):
-            RingtoneConfig(sound_id=uuid4(), volume=volume)

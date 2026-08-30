@@ -1,4 +1,4 @@
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
@@ -6,7 +6,6 @@ import pytest
 from huerise.features.alarm.domain import (
     AlarmOccurrence,
     InvalidOccurrenceTransitionError,
-    OccurrenceNotRunningError,
     OccurrenceState,
 )
 
@@ -37,21 +36,8 @@ class TestLifecycle:
         assert occurrence.state is OccurrenceState.SUNRISE
         assert occurrence.triggered_at == NOW
 
-    def test_ring_follows_sunrise(self) -> None:
-        occurrence = make_occurrence(OccurrenceState.SUNRISE)
-
-        occurrence.ring()
-
-        assert occurrence.state is OccurrenceState.RINGING
-
-    def test_ring_requires_sunrise(self) -> None:
-        occurrence = make_occurrence(OccurrenceState.PENDING)
-
-        with pytest.raises(InvalidOccurrenceTransitionError):
-            occurrence.ring()
-
     def test_dismiss_finishes_the_run(self) -> None:
-        occurrence = make_occurrence(OccurrenceState.RINGING)
+        occurrence = make_occurrence(OccurrenceState.SUNRISE)
 
         occurrence.dismiss(NOW)
 
@@ -74,40 +60,6 @@ class TestLifecycle:
         assert occurrence.failure_reason == "bridge unreachable"
 
 
-class TestSnooze:
-    def test_moves_the_scheduled_time_forward(self) -> None:
-        occurrence = make_occurrence(OccurrenceState.RINGING)
-
-        occurrence.snooze(minutes=9, now=NOW)
-
-        assert occurrence.state is OccurrenceState.SNOOZED
-        assert occurrence.scheduled_for == NOW + timedelta(minutes=9)
-        assert occurrence.snooze_count == 1
-
-    def test_counts_repeated_snoozes(self) -> None:
-        occurrence = make_occurrence(OccurrenceState.RINGING)
-
-        occurrence.snooze(minutes=5, now=NOW)
-        occurrence.start_sunrise(NOW)
-        occurrence.snooze(minutes=5, now=NOW)
-
-        assert occurrence.snooze_count == 2
-
-    def test_requires_a_running_occurrence(self) -> None:
-        occurrence = make_occurrence(OccurrenceState.PENDING)
-
-        with pytest.raises(OccurrenceNotRunningError):
-            occurrence.snooze(now=NOW)
-
-    def test_snoozed_occurrence_becomes_due_again(self) -> None:
-        occurrence = make_occurrence(OccurrenceState.RINGING)
-
-        occurrence.snooze(minutes=10, now=NOW)
-
-        assert occurrence.is_due(NOW) is False
-        assert occurrence.is_due(NOW + timedelta(minutes=10)) is True
-
-
 class TestSkip:
     def test_skips_a_waiting_occurrence(self) -> None:
         occurrence = make_occurrence(OccurrenceState.PENDING)
@@ -118,7 +70,7 @@ class TestSkip:
         assert occurrence.is_finished
 
     def test_cannot_skip_a_running_occurrence(self) -> None:
-        occurrence = make_occurrence(OccurrenceState.RINGING)
+        occurrence = make_occurrence(OccurrenceState.SUNRISE)
 
         with pytest.raises(InvalidOccurrenceTransitionError):
             occurrence.skip(NOW)

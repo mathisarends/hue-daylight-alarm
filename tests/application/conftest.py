@@ -14,68 +14,19 @@ from huerise.features.alarm.domain import (
     AlarmRepository,
     AlarmUnitOfWork,
     AlarmUnitOfWorkFactory,
-    IntroConfig,
     OccurrenceState,
-    RingtoneConfig,
     Schedule,
     SunriseConfig,
     Weekday,
 )
-from huerise.features.devices.application import AudioPlayer, Lights
-from huerise.features.devices.domain import (
-    Room,
-    Scene,
-    Sound,
-    SoundCategory,
-    SoundRepository,
-)
+from huerise.features.devices.application import Lights
+from huerise.features.devices.domain import Room, Scene
 from huerise.features.events.application import EventPublisher
 from huerise.features.events.domain import HueriseEvent
 
 BERLIN = ZoneInfo("Europe/Berlin")
 ROOM_ID = UUID("11111111-1111-4111-8111-111111111111")
 SCENE_ID = UUID("22222222-2222-4222-8222-222222222222")
-
-
-def make_sounds() -> list[Sound]:
-    return [
-        Sound(
-            id=UUID("1693baba-146e-5b14-acf2-6f76554f36e9"),
-            name="bowls",
-            category=SoundCategory.WAKE_UP,
-            storage_path="wake_up_sounds/wake-up-bowls.mp3",
-        ),
-        Sound(
-            id=UUID("bb804011-6bb8-5b4e-9d90-ebe5e11becb0"),
-            name="mist",
-            category=SoundCategory.WAKE_UP,
-            storage_path="wake_up_sounds/wake-up-mist.mp3",
-        ),
-        Sound(
-            id=UUID("5c0806e7-7162-5be7-948e-33d349bde4a8"),
-            name="aurora",
-            category=SoundCategory.GET_UP,
-            storage_path="get_up_sounds/get-up-aurora.mp3",
-        ),
-    ]
-
-
-class InMemorySoundRepository(SoundRepository):
-    def __init__(self, sounds: list[Sound] | None = None) -> None:
-        self.items = {sound.id: sound for sound in sounds or []}
-
-    async def find_by_id(self, sound_id: UUID) -> Sound | None:
-        return self.items.get(sound_id)
-
-    async def find_all(self, category: SoundCategory | None = None) -> list[Sound]:
-        sounds = self.items.values()
-        if category is not None:
-            sounds = (sound for sound in sounds if sound.category is category)
-        return sorted(sounds, key=lambda sound: (sound.category, sound.name))
-
-    async def save(self, sound: Sound) -> Sound:
-        self.items[sound.id] = sound
-        return sound
 
 
 class InMemoryAlarmRepository(AlarmRepository):
@@ -204,14 +155,10 @@ def make_profile(
     return AlarmProfile(
         name=name,
         is_default=is_default,
-        intro_config=IntroConfig(sound_id=UUID("1693baba-146e-5b14-acf2-6f76554f36e9")),
         sunrise_config=SunriseConfig(
             scene_id=SCENE_ID,
             scene_name="Tageslichtwecker",
             duration=sunrise_duration,
-        ),
-        ringtone_config=RingtoneConfig(
-            sound_id=UUID("5c0806e7-7162-5be7-948e-33d349bde4a8")
         ),
     )
 
@@ -240,14 +187,6 @@ def make_occurrence(
     state: OccurrenceState = OccurrenceState.PENDING,
 ) -> AlarmOccurrence:
     return AlarmOccurrence(alarm_id=alarm_id, scheduled_for=scheduled_for, state=state)
-
-
-def make_audio() -> AudioPlayer:
-    audio = MagicMock(spec=AudioPlayer)
-    audio.play = AsyncMock()
-    audio.stop = AsyncMock()
-    audio.set_volume = AsyncMock()
-    return audio
 
 
 def make_lights() -> Lights:
@@ -296,7 +235,6 @@ def make_alarm_service(
     alarms: AlarmRepository | None = None,
     profiles: AlarmProfileRepository | None = None,
     occurrences: AlarmOccurrenceRepository | None = None,
-    audio: AudioPlayer | None = None,
     lights: Lights | None = None,
     events: EventPublisher | None = None,
 ) -> AlarmService:
@@ -308,7 +246,6 @@ def make_alarm_service(
         occurrences=occurrences
         if occurrences is not None
         else InMemoryOccurrenceRepository(),
-        audio=audio if audio is not None else make_audio(),
         lights=lights if lights is not None else make_lights(),
         events=events if events is not None else RecordingPublisher(),
     )

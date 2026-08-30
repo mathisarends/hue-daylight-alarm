@@ -3,12 +3,7 @@ from uuid import uuid4
 import pytest
 
 from huerise.features.alarm.application import AlarmProfileService
-from huerise.features.alarm.domain import (
-    AlarmProfileNotFoundError,
-    IntroConfig,
-    RingtoneConfig,
-    SunriseConfig,
-)
+from huerise.features.alarm.domain import AlarmProfileNotFoundError, SunriseConfig
 from tests.application.conftest import (
     SCENE_ID,
     InMemoryProfileRepository,
@@ -22,8 +17,6 @@ async def test_create_profile_stores_the_scene_reference() -> None:
 
     profile = await service.create(
         name="Weekday",
-        intro_config=IntroConfig(sound_id=uuid4()),
-        ringtone_config=RingtoneConfig(sound_id=uuid4()),
         sunrise_config=SunriseConfig(scene_id=SCENE_ID, scene_name="Tageslichtwecker"),
     )
 
@@ -38,12 +31,7 @@ async def test_create_profile_keeps_a_given_sunrise_config() -> None:
         scene_id=SCENE_ID, scene_name="Tageslichtwecker", brightness_start=10
     )
 
-    profile = await service.create(
-        name="Weekday",
-        intro_config=IntroConfig(sound_id=uuid4()),
-        ringtone_config=RingtoneConfig(sound_id=uuid4()),
-        sunrise_config=sunrise,
-    )
+    profile = await service.create(name="Weekday", sunrise_config=sunrise)
 
     assert profile.sunrise_config == sunrise
 

@@ -164,19 +164,6 @@ class TestDispatch:
         runner.run.assert_not_awaited()
         assert occurrences.items[occurrence.id].state is OccurrenceState.SKIPPED
 
-    async def test_fires_a_snoozed_occurrence_again(self) -> None:
-        alarm = make_alarm(hour=7, minute=0, weekdays=frozenset({Weekday.MON}))
-        occurrence = make_occurrence(alarm.id, NOW, OccurrenceState.SNOOZED)
-        scheduler, _, runner, _ = make_scheduler(
-            alarms=InMemoryAlarmRepository([alarm]),
-            occurrences=InMemoryOccurrenceRepository([occurrence]),
-        )
-
-        await scheduler.tick(NOW)
-        await asyncio.sleep(0)
-
-        runner.run.assert_awaited_once()
-
     async def test_one_time_alarm_disables_itself_when_it_fires(self) -> None:
         alarm = make_alarm(hour=7, minute=0)
         occurrence = make_occurrence(alarm.id, NOW)

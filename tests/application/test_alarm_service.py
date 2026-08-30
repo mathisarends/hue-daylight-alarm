@@ -20,7 +20,6 @@ from huerise.features.events.domain import (
     AlarmUpdated,
     OccurrenceDismissed,
     OccurrenceSkipped,
-    OccurrenceSnoozed,
 )
 from tests.application.conftest import (
     ROOM_ID,
@@ -30,7 +29,6 @@ from tests.application.conftest import (
     RecordingPublisher,
     make_alarm,
     make_alarm_service,
-    make_audio,
     make_lights,
     make_occurrence,
     make_profile,
@@ -207,25 +205,9 @@ class TestPublishedEvents:
 
         assert events.events == []
 
-    async def test_snoozing_announces_the_new_time(self) -> None:
-        alarm = make_alarm()
-        occurrence = make_occurrence(alarm.id, NOW, OccurrenceState.RINGING)
-        events = RecordingPublisher()
-        service = make_alarm_service(
-            alarms=InMemoryAlarmRepository([alarm]),
-            occurrences=InMemoryOccurrenceRepository([occurrence]),
-            events=events,
-        )
-
-        await service.snooze(alarm.id, minutes=5)
-
-        published = events.only(OccurrenceSnoozed).occurrence
-        assert published.state is OccurrenceState.SNOOZED
-        assert published.snooze_count == 1
-
     async def test_dismissing_announces_the_finished_run(self) -> None:
         alarm = make_alarm()
-        occurrence = make_occurrence(alarm.id, NOW, OccurrenceState.RINGING)
+        occurrence = make_occurrence(alarm.id, NOW, OccurrenceState.SUNRISE)
         events = RecordingPublisher()
         service = make_alarm_service(
             alarms=InMemoryAlarmRepository([alarm]),
@@ -256,7 +238,7 @@ class TestPublishedEvents:
 
     async def test_disabling_a_ringing_alarm_announces_a_dismissal(self) -> None:
         alarm = make_alarm()
-        occurrence = make_occurrence(alarm.id, NOW, OccurrenceState.RINGING)
+        occurrence = make_occurrence(alarm.id, NOW, OccurrenceState.SUNRISE)
         events = RecordingPublisher()
         service = make_alarm_service(
             alarms=InMemoryAlarmRepository([alarm]),
@@ -385,19 +367,16 @@ class TestEnableDisable:
 
     async def test_disable_dismisses_a_running_occurrence(self) -> None:
         alarm = make_alarm()
-        occurrence = make_occurrence(alarm.id, NOW, OccurrenceState.RINGING)
+        occurrence = make_occurrence(alarm.id, NOW, OccurrenceState.SUNRISE)
         occurrences = InMemoryOccurrenceRepository([occurrence])
-        audio = make_audio()
         service = make_alarm_service(
             alarms=InMemoryAlarmRepository([alarm]),
             occurrences=occurrences,
-            audio=audio,
         )
 
         await service.disable(alarm.id)
 
         assert occurrences.items[occurrence.id].state is OccurrenceState.DISMISSED
-        audio.stop.assert_awaited_once()
 
     async def test_disable_with_no_occurrences_is_a_noop(self) -> None:
         alarm = make_alarm()
@@ -414,46 +393,10 @@ class TestEnableDisable:
             await service.enable(uuid4())
 
 
-class TestSnooze:
-    async def test_moves_the_active_occurrence(self) -> None:
-        alarm = make_alarm()
-        occurrence = make_occurrence(alarm.id, NOW, OccurrenceState.RINGING)
-        service = make_alarm_service(
-            alarms=InMemoryAlarmRepository([alarm]),
-            occurrences=InMemoryOccurrenceRepository([occurrence]),
-        )
-
-        result = await service.snooze(alarm.id, minutes=10)
-
-        assert result.state is OccurrenceState.SNOOZED
-        assert result.scheduled_for > NOW + timedelta(minutes=9)
-
-    async def test_stops_the_audio(self) -> None:
-        alarm = make_alarm()
-        occurrence = make_occurrence(alarm.id, NOW, OccurrenceState.RINGING)
-        audio = make_audio()
-        service = make_alarm_service(
-            alarms=InMemoryAlarmRepository([alarm]),
-            occurrences=InMemoryOccurrenceRepository([occurrence]),
-            audio=audio,
-        )
-
-        await service.snooze(alarm.id)
-
-        audio.stop.assert_awaited_once()
-
-    async def test_raises_without_an_active_occurrence(self) -> None:
-        alarm = make_alarm()
-        service = make_alarm_service(alarms=InMemoryAlarmRepository([alarm]))
-
-        with pytest.raises(NoActiveOccurrenceError):
-            await service.snooze(alarm.id)
-
-
 class TestDismiss:
     async def test_finishes_the_active_occurrence(self) -> None:
         alarm = make_alarm()
-        occurrence = make_occurrence(alarm.id, NOW, OccurrenceState.RINGING)
+        occurrence = make_occurrence(alarm.id, NOW, OccurrenceState.SUNRISE)
         service = make_alarm_service(
             alarms=InMemoryAlarmRepository([alarm]),
             occurrences=InMemoryOccurrenceRepository([occurrence]),
@@ -462,6 +405,13 @@ class TestDismiss:
         result = await service.dismiss(alarm.id)
 
         assert result.state is OccurrenceState.DISMISSED
+
+    async def test_raises_without_an_active_occurrence(self) -> None:
+        alarm = make_alarm()
+        service = make_alarm_service(alarms=InMemoryAlarmRepository([alarm]))
+
+        with pytest.raises(NoActiveOccurrenceError):
+            await service.dismiss(alarm.id)
 
 
 class TestDelete:

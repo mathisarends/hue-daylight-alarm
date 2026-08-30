@@ -80,11 +80,9 @@ class TestAlarmRead:
 
 
 class TestProfileRead:
-    def test_carries_the_nested_configs(self) -> None:
+    def test_carries_the_nested_config(self) -> None:
         profile = make_profile()
 
         read = ProfileRead.from_domain(profile)
 
-        assert read.intro.sound_id == profile.intro_config.sound_id
-        assert read.ringtone.volume == profile.ringtone_config.volume
         assert read.sunrise.duration_minutes == 7

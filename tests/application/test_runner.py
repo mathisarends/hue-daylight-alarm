@@ -1,8 +1,6 @@
 from datetime import UTC, datetime, timedelta
 from unittest.mock import call, patch
 
-import pytest
-
 from huerise.features.alarm.domain import AlarmDefect, AlarmField, OccurrenceState
 from huerise.features.devices.domain import Room, Scene, SunriseRamp, sunrise_steps
 from huerise.features.events.domain import (
@@ -10,7 +8,6 @@ from huerise.features.events.domain import (
     OccurrenceDismissed,
     OccurrenceFailed,
     OccurrenceProgress,
-    OccurrenceRinging,
     OccurrenceStarted,
 )
 from huerise.features.runner.application import AlarmRunner
@@ -24,7 +21,6 @@ from tests.application.conftest import (
     InMemoryProfileRepository,
     RecordingPublisher,
     make_alarm,
-    make_audio,
     make_lights,
     make_occurrence,
     make_profile,
@@ -57,20 +53,19 @@ def make_runner(
         profiles=InMemoryProfileRepository([profile]),
         occurrences=occurrences,
     )
-    lights, audio = make_lights(), make_audio()
+    lights = make_lights()
     runner = AlarmRunner(
         lights=lights,
-        audio=audio,
         unit_of_work_factory=FakeUnitOfWorkFactory(unit_of_work),
         events=events if events is not None else RecordingPublisher(),
         step_interval=STEP,
     )
-    return runner, occurrence, occurrences, lights, audio, alarm, profile
+    return runner, occurrence, occurrences, lights, alarm, profile
 
 
 class TestRun:
     async def test_runs_the_full_sequence(self) -> None:
-        runner, occurrence, occurrences, lights, audio, _, profile = make_runner()
+        runner, occurrence, occurrences, lights, _, profile = make_runner()
 
         with patch("asyncio.sleep"):
             await runner.run(occurrence)
@@ -82,13 +77,10 @@ class TestRun:
             ),
             call(profile.sunrise_config.scene_id),
         ]
-        audio.play.assert_any_await(
-            profile.ringtone_config.sound_id, profile.ringtone_config.volume
-        )
         assert occurrences.items[occurrence.id].state is OccurrenceState.DISMISSED
 
     async def test_dimming_follows_the_derived_steps(self) -> None:
-        runner, occurrence, _, lights, _, _, profile = make_runner()
+        runner, occurrence, _, lights, _, profile = make_runner()
 
         with patch("asyncio.sleep"):
             await runner.run(occurrence)
@@ -97,7 +89,7 @@ class TestRun:
         assert lights.set_brightness.await_count == expected
 
     async def test_stops_when_the_occurrence_is_dismissed_mid_sunrise(self) -> None:
-        runner, occurrence, occurrences, lights, _, _, _ = make_runner()
+        runner, occurrence, occurrences, lights, _, _ = make_runner()
 
         async def dismiss_after_first_step(*args, **kwargs) -> None:
             stored = occurrences.items[occurrence.id]
@@ -112,77 +104,31 @@ class TestRun:
         assert lights.set_brightness.await_count == 1
         assert occurrences.items[occurrence.id].state is OccurrenceState.DISMISSED
 
-    async def test_marks_the_occurrence_failed_when_the_ringtone_fails(self) -> None:
-        runner, occurrence, occurrences, _, audio, _, _ = make_runner()
-        audio.play.side_effect = RuntimeError("speaker unreachable")
 
-        with patch("asyncio.sleep"):
-            await runner.run(occurrence)
+class TestFinishingWithoutLight:
+    """A bridge or room problem must not cost the occurrence its finish."""
 
-        stored = occurrences.items[occurrence.id]
-        assert stored.state is OccurrenceState.FAILED
-        assert "speaker unreachable" in (stored.failure_reason or "")
-
-
-class TestWakingUpWithoutLight:
-    """The lights are the gentle part, the ringtone is the alarm."""
-
-    async def test_rings_when_the_bridge_cannot_be_reached(self) -> None:
-        runner, occurrence, occurrences, lights, audio, _, profile = make_runner()
+    async def test_finishes_when_the_bridge_cannot_be_reached(self) -> None:
+        runner, occurrence, occurrences, lights, _, _ = make_runner()
         lights.activate_scene.side_effect = RuntimeError("bridge unreachable")
 
         with patch("asyncio.sleep"):
             await runner.run(occurrence)
 
-        audio.play.assert_any_await(
-            profile.ringtone_config.sound_id, profile.ringtone_config.volume
-        )
         assert occurrences.items[occurrence.id].state is OccurrenceState.DISMISSED
 
-    async def test_rings_when_the_room_is_gone(self) -> None:
-        runner, occurrence, occurrences, lights, audio, _, profile = make_runner()
+    async def test_finishes_when_the_room_is_gone(self) -> None:
+        runner, occurrence, occurrences, lights, _, _ = make_runner()
         lights.list_rooms.return_value = []
 
         with patch("asyncio.sleep"):
             await runner.run(occurrence)
 
-        audio.play.assert_any_await(
-            profile.ringtone_config.sound_id, profile.ringtone_config.volume
-        )
-        assert occurrences.items[occurrence.id].state is OccurrenceState.DISMISSED
-
-    async def test_the_ringtone_keeps_its_time(self) -> None:
-        """Waking someone a whole ramp early is not a fallback, it is a bug."""
-        runner, occurrence, _, lights, _, _, profile = make_runner()
-        lights.list_rooms.return_value = []
-
-        with patch("asyncio.sleep") as sleep:
-            await runner.run(occurrence)
-
-        waited = sum(call.args[0] for call in sleep.await_args_list)
-        assert waited == pytest.approx(
-            profile.sunrise_config.duration.total_seconds(), abs=STEP.total_seconds()
-        )
-
-    async def test_a_dismiss_during_the_dark_stretch_wins(self) -> None:
-        events = RecordingPublisher()
-        runner, occurrence, occurrences, lights, _, _, _ = make_runner(events=events)
-        lights.list_rooms.return_value = []
-
-        async def dismiss(*args, **kwargs) -> None:
-            stored = occurrences.items[occurrence.id]
-            if stored.state is OccurrenceState.SUNRISE:
-                stored.dismiss(NOW)
-
-        with patch("asyncio.sleep", side_effect=dismiss):
-            await runner.run(occurrence)
-
-        assert events.of_type(OccurrenceRinging) == []
         assert occurrences.items[occurrence.id].state is OccurrenceState.DISMISSED
 
     async def test_a_missing_room_is_recorded_on_the_alarm(self) -> None:
         events = RecordingPublisher()
-        runner, occurrence, _, lights, _, alarm, _ = make_runner(events=events)
+        runner, occurrence, _, lights, alarm, _ = make_runner(events=events)
         lights.list_rooms.return_value = []
 
         with patch("asyncio.sleep"):
@@ -194,7 +140,7 @@ class TestWakingUpWithoutLight:
         assert published.alarm.defect is AlarmDefect.ROOM_MISSING
 
     async def test_a_missing_scene_is_recorded_on_the_alarm(self) -> None:
-        runner, occurrence, _, lights, _, alarm, _ = make_runner()
+        runner, occurrence, _, lights, alarm, _ = make_runner()
         lights.list_rooms.return_value = [Room(id=ROOM_ID, name="Bedroom", scenes=())]
 
         with patch("asyncio.sleep"):
@@ -204,9 +150,7 @@ class TestWakingUpWithoutLight:
 
     async def test_a_defect_already_known_is_not_reported_again(self) -> None:
         events = RecordingPublisher()
-        runner, occurrence, occurrences, lights, _, alarm, _ = make_runner(
-            events=events
-        )
+        runner, occurrence, occurrences, lights, alarm, _ = make_runner(events=events)
         alarm.set_defect(AlarmDefect.ROOM_MISSING)
         lights.list_rooms.return_value = []
 
@@ -216,12 +160,10 @@ class TestWakingUpWithoutLight:
         assert events.of_type(AlarmUpdated) == []
         assert occurrences.items[occurrence.id].state is OccurrenceState.DISMISSED
 
-    async def test_a_scene_too_dim_to_ramp_still_rings(self) -> None:
+    async def test_a_scene_too_dim_to_ramp_still_finishes(self) -> None:
         """A curve that cannot be walked is a setting, not a broken alarm."""
         events = RecordingPublisher()
-        runner, occurrence, occurrences, lights, _, alarm, _ = make_runner(
-            events=events
-        )
+        runner, occurrence, occurrences, lights, alarm, _ = make_runner(events=events)
         lights.list_rooms.return_value = [
             Room(
                 id=ROOM_ID,
@@ -239,7 +181,7 @@ class TestWakingUpWithoutLight:
 
     async def test_an_unreachable_bridge_is_not_blamed_on_the_alarm(self) -> None:
         events = RecordingPublisher()
-        runner, occurrence, _, lights, _, alarm, _ = make_runner(events=events)
+        runner, occurrence, _, lights, alarm, _ = make_runner(events=events)
         lights.activate_scene.side_effect = RuntimeError("bridge unreachable")
 
         with patch("asyncio.sleep"):
@@ -252,7 +194,7 @@ class TestWakingUpWithoutLight:
 class TestPublishedEvents:
     async def test_announces_the_sunrise_before_it_starts(self) -> None:
         events = RecordingPublisher()
-        runner, occurrence, _, _, _, alarm, profile = make_runner(events=events)
+        runner, occurrence, _, _, alarm, profile = make_runner(events=events)
 
         with patch("asyncio.sleep"):
             await runner.run(occurrence)
@@ -264,7 +206,7 @@ class TestPublishedEvents:
 
     async def test_reports_progress_once_per_brightness_step(self) -> None:
         events = RecordingPublisher()
-        runner, occurrence, _, lights, _, _, profile = make_runner(events=events)
+        runner, occurrence, _, lights, _, profile = make_runner(events=events)
 
         with patch("asyncio.sleep"):
             await runner.run(occurrence)
@@ -288,7 +230,7 @@ class TestPublishedEvents:
 
     async def test_progress_stops_when_the_sunrise_is_interrupted(self) -> None:
         events = RecordingPublisher()
-        runner, occurrence, occurrences, lights, _, _, _ = make_runner(events=events)
+        runner, occurrence, occurrences, lights, _, _ = make_runner(events=events)
 
         async def dismiss_after_first_step(*args, **kwargs) -> None:
             stored = occurrences.items[occurrence.id]
@@ -301,22 +243,10 @@ class TestPublishedEvents:
             await runner.run(occurrence)
 
         assert len(events.of_type(OccurrenceProgress)) == 1
-        assert events.of_type(OccurrenceRinging) == []
-
-    async def test_announces_the_ringtone_it_is_about_to_play(self) -> None:
-        events = RecordingPublisher()
-        runner, occurrence, _, _, _, _, profile = make_runner(events=events)
-
-        with patch("asyncio.sleep"):
-            await runner.run(occurrence)
-
-        ringing = events.only(OccurrenceRinging)
-        assert ringing.sound_id == profile.ringtone_config.sound_id
-        assert ringing.volume == profile.ringtone_config.volume
 
     async def test_announces_the_finished_run(self) -> None:
         events = RecordingPublisher()
-        runner, occurrence, _, _, _, _, _ = make_runner(events=events)
+        runner, occurrence, _, _, _, _ = make_runner(events=events)
 
         with patch("asyncio.sleep"):
             await runner.run(occurrence)
@@ -324,12 +254,18 @@ class TestPublishedEvents:
         assert events.only(OccurrenceDismissed).occurrence.id == occurrence.id
 
     async def test_announces_a_failure_with_its_reason(self) -> None:
+        """Anything that blows up outside the sunrise itself fails the run."""
         events = RecordingPublisher()
-        runner, occurrence, _, _, audio, _, _ = make_runner(events=events)
-        audio.play.side_effect = RuntimeError("speaker unreachable")
+        runner, occurrence, _, _, _, _ = make_runner(events=events)
+
+        class ExplodingProfiles(InMemoryProfileRepository):
+            async def find_by_id(self, id):
+                raise RuntimeError("database unavailable")
+
+        runner._unit_of_work_factory.unit_of_work.profiles = ExplodingProfiles()
 
         with patch("asyncio.sleep"):
             await runner.run(occurrence)
 
         failed = events.only(OccurrenceFailed).occurrence
-        assert "speaker unreachable" in (failed.failure_reason or "")
+        assert "database unavailable" in (failed.failure_reason or "")
