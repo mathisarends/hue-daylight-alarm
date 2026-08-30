@@ -3,7 +3,8 @@ from uuid import UUID
 from hueify import Hueify
 from hueify.onboarding import discover_bridges, register_app_key
 
-from huerise.configuration import HueEnvironment, YamlConfiguration
+from huerise.configuration import YamlConfiguration
+from huerise.env import HueEnvironment
 from huerise.features.lighting.application.models import (
     HueClient,
     HueCredentials,

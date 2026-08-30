@@ -31,7 +31,6 @@ addopts = "--cov=huerise --cov-report=term-missing"
 [tool.coverage.run]
 omit = [
     "huerise/tests/*",
-    "huerise/app.py",
     "huerise/main.py",
 ]
 

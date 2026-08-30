@@ -10,13 +10,11 @@ from pydantic import (
     ConfigDict,
     Field,
     IPvAnyAddress,
-    SecretStr,
     StrictInt,
     StrictStr,
     ValidationError,
     model_validator,
 )
-from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class ConfigurationIssue(BaseModel):
@@ -59,43 +57,6 @@ class HueriseConfig(BaseModel):
 
     daylight_alarm: DaylightAlarmConfig
     hue: HueConfig | None = None
-
-
-class APISettings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        env_prefix="HUERISE_",
-        extra="ignore",
-    )
-
-    api_key: SecretStr
-    config_path: Path = Path("huerise.yml")
-
-
-class HueEnvironment(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        env_ignore_empty=True,
-        env_prefix="HUE_",
-        extra="ignore",
-    )
-
-    bridge_ip: IPvAnyAddress | None = None
-    app_key: SecretStr | None = Field(default=None, min_length=20)
-
-    @model_validator(mode="after")
-    def require_complete_pair(self) -> Self:
-        if (self.bridge_ip is None) != (self.app_key is None):
-            raise ValueError(
-                "HUE_BRIDGE_IP and HUE_APP_KEY must either both be set or both be unset"
-            )
-        return self
-
-    @property
-    def configured(self) -> bool:
-        return self.bridge_ip is not None and self.app_key is not None
 
 
 class YamlConfiguration:

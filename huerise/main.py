@@ -1,13 +1,54 @@
 import logging
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 
-from huerise.app import create_app
+from dishka import AsyncContainer, make_async_container
+from dishka.integrations.fastapi import setup_dishka
+from fastapi import FastAPI
 
-# Uvicorn only attaches handlers to its own loggers, so without this the root
-# logger falls back to lastResort (WARNING) and every INFO record is dropped.
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
-)
+from huerise.env import AppSettings
+from huerise.exception_handlers import install_exception_handlers
+from huerise.features import FEATURES
+from huerise.features.daylight_alarm.application import DaylightAlarm
+from huerise.shared import CoreProvider
+
+
+def create_container() -> AsyncContainer:
+    return make_async_container(
+        CoreProvider(),
+        *(provider() for feature in FEATURES for provider in feature.providers),
+    )
+
+
+def create_app(container: AsyncContainer | None = None) -> FastAPI:
+    container = container or create_container()
+
+    @asynccontextmanager
+    async def lifespan(_: FastAPI) -> AsyncGenerator[None]:
+        settings = await container.get(AppSettings)
+        logging.basicConfig(
+            level=settings.log_level.value,
+            format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+        )
+        try:
+            yield
+        finally:
+            alarm = await container.get(DaylightAlarm)
+            await alarm.stop()
+            await container.close()
+
+    app = FastAPI(
+        title="Huerise Daylight Alarm API",
+        version="2.0.0",
+        description="Run one YAML-configured Philips Hue daylight alarm.",
+        lifespan=lifespan,
+    )
+    setup_dishka(container, app=app)
+    install_exception_handlers(app)
+    for feature in FEATURES:
+        feature.install(app)
+    return app
+
 
 app = create_app()
 

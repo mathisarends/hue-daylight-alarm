@@ -4,13 +4,8 @@ from uuid import UUID
 import pytest
 from pydantic import ValidationError
 
-from huerise.configuration import (
-    APISettings,
-    ConfigurationError,
-    HueConfig,
-    HueEnvironment,
-    YamlConfiguration,
-)
+from huerise.configuration import ConfigurationError, HueConfig, YamlConfiguration
+from huerise.env import AppSettings, HueEnvironment, LogLevel
 
 VALID_CONFIG = """\
 daylight_alarm:
@@ -107,11 +102,13 @@ def test_hue_can_be_onboarded_before_alarm_is_configured(tmp_path: Path) -> None
 def test_api_settings_use_huerise_environment(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("HUERISE_API_KEY", "test-key")
     monkeypatch.setenv("HUERISE_CONFIG_PATH", "custom.yml")
+    monkeypatch.setenv("HUERISE_LOG_LEVEL", "DEBUG")
 
-    settings = APISettings(_env_file=None)
+    settings = AppSettings(_env_file=None)
 
     assert settings.api_key.get_secret_value() == "test-key"
     assert settings.config_path == Path("custom.yml")
+    assert settings.log_level is LogLevel.DEBUG
 
 
 def test_hue_environment_requires_a_complete_pair(

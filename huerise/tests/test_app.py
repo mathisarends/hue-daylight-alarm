@@ -7,8 +7,8 @@ from dishka import Provider, Scope, make_async_container, provide
 from fastapi.testclient import TestClient
 from pydantic import SecretStr
 
-from huerise.app import create_app
-from huerise.configuration import APISettings, HueEnvironment, YamlConfiguration
+from huerise.configuration import YamlConfiguration
+from huerise.env import AppSettings, HueEnvironment
 from huerise.features.daylight_alarm.infrastructure import DaylightAlarmProvider
 from huerise.features.lighting.application import (
     HueBridge,
@@ -19,6 +19,7 @@ from huerise.features.lighting.application import (
     Scene,
 )
 from huerise.features.lighting.infrastructure import LightingProvider
+from huerise.main import create_app
 
 API_KEY = "test-api-key"
 AUTH = {"X-API-Key": API_KEY}
@@ -68,8 +69,8 @@ class AppTestProvider(Provider):
         self._client = client
 
     @provide
-    def settings(self) -> APISettings:
-        return APISettings(
+    def settings(self) -> AppSettings:
+        return AppSettings(
             api_key=SecretStr(API_KEY), config_path=self._path, _env_file=None
         )
 
@@ -121,13 +122,6 @@ daylight_alarm:
         yield test_client
 
 
-def test_health_is_public(client: TestClient) -> None:
-    response = client.get("/health")
-
-    assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
-
-
 def test_operation_ids_are_explicit_and_stable(client: TestClient) -> None:
     operations = {
         operation["operationId"]
@@ -138,7 +132,6 @@ def test_operation_ids_are_explicit_and_stable(client: TestClient) -> None:
     assert operations == {
         "doctor",
         "getHueBridge",
-        "health",
         "listHueBridges",
         "listRooms",
         "listScenes",

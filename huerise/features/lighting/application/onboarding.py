@@ -3,7 +3,8 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Protocol
 
-from huerise.configuration import HueConfig, HueEnvironment, YamlConfiguration
+from huerise.configuration import HueConfig, YamlConfiguration
+from huerise.env import HueEnvironment
 from huerise.features.lighting.application.models import HueUnavailableError
 
 

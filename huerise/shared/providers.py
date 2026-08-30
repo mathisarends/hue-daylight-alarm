@@ -1,23 +1,20 @@
 from dishka import Provider, Scope, provide
 
-from huerise.configuration import (
-    APISettings,
-    HueEnvironment,
-    YamlConfiguration,
-)
+from huerise.configuration import YamlConfiguration
+from huerise.env import AppSettings, HueEnvironment
 
 
 class CoreProvider(Provider):
     scope = Scope.APP
 
     @provide
-    def api_settings(self) -> APISettings:
-        return APISettings()
+    def app_settings(self) -> AppSettings:
+        return AppSettings()
 
     @provide
     def hue_environment(self) -> HueEnvironment:
         return HueEnvironment()
 
     @provide
-    def configuration(self, settings: APISettings) -> YamlConfiguration:
+    def configuration(self, settings: AppSettings) -> YamlConfiguration:
         return YamlConfiguration(settings.config_path)

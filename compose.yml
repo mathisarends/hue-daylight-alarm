@@ -8,15 +8,10 @@ services:
     environment:
       HUERISE_API_KEY: ${HUERISE_API_KEY:?Set HUERISE_API_KEY in .env}
       HUERISE_CONFIG_PATH: /config/huerise.yml
+      HUERISE_LOG_LEVEL: ${HUERISE_LOG_LEVEL:-INFO}
       HUE_BRIDGE_IP: ${HUE_BRIDGE_IP:-}
       HUE_APP_KEY: ${HUE_APP_KEY:-}
     ports:
       - "8000:8000"
     volumes:
       - ./data:/config
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
-      start_period: 5s

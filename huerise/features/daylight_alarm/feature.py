@@ -1,4 +1,4 @@
-from huerise.presentation import Feature
+from huerise.shared import Feature
 
 from .infrastructure import DaylightAlarmProvider
 from .presentation import router

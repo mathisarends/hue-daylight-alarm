@@ -3,7 +3,8 @@ from pathlib import Path
 
 import pytest
 
-from huerise.configuration import HueEnvironment, YamlConfiguration
+from huerise.configuration import YamlConfiguration
+from huerise.env import HueEnvironment
 from huerise.features.lighting.application import (
     BridgeNotFoundError,
     BridgeNotSelectedError,
