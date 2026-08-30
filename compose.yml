@@ -1,19 +1,39 @@
 services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: huerise-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-huerise}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-huerise}
+      - POSTGRES_DB=${POSTGRES_DB:-huerise}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-huerise} -d ${POSTGRES_DB:-huerise}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
   migrate:
     build:
       context: .
       dockerfile: Dockerfile
       target: dev
-    container_name: daylight-alarm-migrate
+    container_name: huerise-migrate
     env_file:
       - .env
     volumes:
-      - sqlite_data:/app/data
       - ./huerise:/app/huerise
-      - ./alembic:/app/alembic
       - ./alembic.ini:/app/alembic.ini
     environment:
-      - DATABASE_URL=sqlite+aiosqlite:////app/data/daylight.db
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-huerise}:${POSTGRES_PASSWORD:-huerise}@postgres:5432/${POSTGRES_DB:-huerise}
+    depends_on:
+      postgres:
+        condition: service_healthy
     command: ["python", "-m", "alembic", "upgrade", "head"]
 
   daylight-alarm:
@@ -28,12 +48,10 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - sqlite_data:/app/data
       - ./huerise:/app/huerise
-      - ./alembic:/app/alembic
       - ./alembic.ini:/app/alembic.ini
     environment:
-      - DATABASE_URL=sqlite+aiosqlite:////app/data/daylight.db
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-huerise}:${POSTGRES_PASSWORD:-huerise}@postgres:5432/${POSTGRES_DB:-huerise}
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -44,18 +62,5 @@ services:
       retries: 3
       start_period: 10s
 
-  adminer:
-    image: adminer
-    container_name: daylight-alarm-adminer
-    restart: unless-stopped
-    ports:
-      - "8080:8080"
-    volumes:
-      - sqlite_data:/data
-      - ./adminer/plugins-enabled:/var/www/html/plugins-enabled
-    environment:
-      - ADMINER_DEFAULT_DRIVER=sqlite
-      - ADMINER_DEFAULT_DB=/data/daylight.db
-
 volumes:
-  sqlite_data:
+  postgres_data:

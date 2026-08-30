@@ -65,7 +65,7 @@ removed, the alarm is marked as defective and the occurrence still finishes
 rather than blocking on a bridge that will not resolve.
 
 The scheduler keeps running in the API process, ticking on an interval to
-materialise and dispatch due occurrences. Alarm state is persisted in SQLite,
+materialise and dispatch due occurrences. Alarm state is persisted in Postgres,
 and live changes are published through a server-sent events stream.
 
 ## Features
@@ -120,10 +120,12 @@ docker compose up -d
 Compose applies the database migrations, starts the API at
 `http://localhost:8000`, and exposes these supporting services:
 
-| Service    | URL                          | Purpose                     |
-| ---------- | ----------------------------- | --------------------------- |
-| Swagger UI | `http://localhost:8000/docs` | Explore and call the API    |
-| Adminer    | `http://localhost:8080`      | Inspect the SQLite database |
+| Service    | URL                          | Purpose                    |
+| ---------- | ----------------------------- | -------------------------- |
+| Swagger UI | `http://localhost:8000/docs` | Explore and call the API   |
+| Postgres   | `localhost:5432`             | Alarm and account storage  |
+
+Inspect the database with `docker compose exec postgres psql -U huerise huerise`.
 
 ### 3. Verify the API
 
@@ -398,7 +400,7 @@ See [`docs/cli.md`](docs/cli.md) for the full scripting contract.
 | `AUTH_JWT_SECRET`     | Yes      | Signs access tokens issued by `/auth/login`          |
 | `HUE_APP_KEY`         | Paired   | Optional operator override; set with bridge IP       |
 | `HUE_BRIDGE_IP`       | Paired   | Optional operator override; set with app key         |
-| `DATABASE_URL`        | No       | SQLAlchemy database URL; defaults to local SQLite    |
+| `DATABASE_URL`        | No       | Postgres URL; defaults to the compose service        |
 | `HUERISE_API_TOKEN`   | CLI only | Overrides the stored `huerise auth login` credentials |
 | `HUERISE_API_URL`     | CLI only | CLI server URL; defaults to `http://localhost:8000`  |
 
@@ -437,6 +439,6 @@ Do not edit generated client files by hand.
 ## Tech stack
 
 - Python 3.14, FastAPI, Pydantic, and Dishka
-- SQLModel, SQLite, Alembic, and aiosqlite
+- SQLModel, Postgres, Alembic, and asyncpg
 - Philips Hue integration through [hueify](https://pypi.org/project/hueify/)
 - Go 1.25 CLI generated with [ogen](https://github.com/ogen-go/ogen)

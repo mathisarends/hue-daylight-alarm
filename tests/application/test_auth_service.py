@@ -1,10 +1,5 @@
-from collections.abc import AsyncIterator
-
 import pytest
-import pytest_asyncio
 from pydantic import SecretStr
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-from sqlmodel import SQLModel
 
 from huerise.features.auth.application import AuthService
 from huerise.features.auth.domain import (
@@ -15,15 +10,6 @@ from huerise.features.auth.infrastructure.persistence import SQLRefreshTokenRepo
 from huerise.features.user.application import UserService
 from huerise.features.user.infrastructure.persistence import SQLUserRepository
 from huerise.infrastructure.auth import AuthSettings
-
-
-@pytest_asyncio.fixture
-async def session_factory() -> AsyncIterator[async_sessionmaker]:
-    engine = create_async_engine("sqlite+aiosqlite://")
-    async with engine.begin() as connection:
-        await connection.run_sync(SQLModel.metadata.create_all)
-    yield async_sessionmaker(engine, expire_on_commit=False)
-    await engine.dispose()
 
 
 def make_settings() -> AuthSettings:

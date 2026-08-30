@@ -1,10 +1,6 @@
-from collections.abc import AsyncIterator
 from datetime import UTC, datetime, timedelta
 
 import pytest
-import pytest_asyncio
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-from sqlmodel import SQLModel
 
 from huerise.features.alarm.domain import AlarmDefect, OccurrenceState
 from huerise.features.alarm.infrastructure.persistence import (
@@ -19,15 +15,6 @@ from huerise.infrastructure.database.models import ALARM_DEFECTS, OCCURRENCE_STA
 from tests.application.conftest import make_alarm, make_occurrence, make_profile
 
 NOW = datetime(2026, 8, 3, 5, 0, tzinfo=UTC)
-
-
-@pytest_asyncio.fixture
-async def session_factory() -> AsyncIterator[async_sessionmaker]:
-    engine = create_async_engine("sqlite+aiosqlite://")
-    async with engine.begin() as connection:
-        await connection.run_sync(SQLModel.metadata.create_all)
-    yield async_sessionmaker(engine, expire_on_commit=False)
-    await engine.dispose()
 
 
 def test_orm_states_match_the_domain_enum() -> None:

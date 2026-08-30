@@ -1,22 +1,8 @@
-from collections.abc import AsyncIterator
-
 import pytest
-import pytest_asyncio
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-from sqlmodel import SQLModel
 
 from huerise.features.user.application import UserService
 from huerise.features.user.domain import UsernameAlreadyTakenError
 from huerise.features.user.infrastructure.persistence import SQLUserRepository
-
-
-@pytest_asyncio.fixture
-async def session_factory() -> AsyncIterator[async_sessionmaker]:
-    engine = create_async_engine("sqlite+aiosqlite://")
-    async with engine.begin() as connection:
-        await connection.run_sync(SQLModel.metadata.create_all)
-    yield async_sessionmaker(engine, expire_on_commit=False)
-    await engine.dispose()
 
 
 class TestSQLUserRepository:

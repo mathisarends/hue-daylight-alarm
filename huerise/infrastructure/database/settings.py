@@ -9,12 +9,22 @@ class DatabaseSettings(BaseSettings):
         extra="ignore",
     )
 
-    database_url: SecretStr = SecretStr("sqlite+aiosqlite:///./data/daylight.db")
+    database_url: SecretStr = SecretStr(
+        "postgresql+asyncpg://huerise:huerise@localhost:5432/huerise"
+    )
 
     @property
     def async_url(self) -> str:
-        """Ensure the URL uses an async driver (aiosqlite for SQLite)."""
+        """Ensure the URL uses the async driver.
+
+        Postgres tooling and connection strings from hosting providers almost
+        always spell the scheme ``postgres://`` or ``postgresql://``, which
+        SQLAlchemy resolves to the synchronous psycopg driver.
+        """
         database_url = self.database_url.get_secret_value()
-        if database_url.startswith("sqlite:///") and "+aiosqlite" not in database_url:
-            return database_url.replace("sqlite:///", "sqlite+aiosqlite:///", 1)
+        scheme, separator, rest = database_url.partition("://")
+        if not separator or "+" in scheme:
+            return database_url
+        if scheme in ("postgres", "postgresql"):
+            return f"postgresql+asyncpg://{rest}"
         return database_url

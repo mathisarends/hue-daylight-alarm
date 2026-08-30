@@ -6,11 +6,12 @@ from sqlalchemy.types import TypeDecorator
 
 
 class UtcDateTime(TypeDecorator[datetime]):
-    """Timezone-aware datetime that survives the roundtrip on every backend.
+    """Timezone-aware datetime that always reaches the domain in UTC.
 
-    SQLite has no native timestamp type and hands back naive values even for
-    ``DateTime(timezone=True)``. Storing UTC on the way in and re-attaching UTC
-    on the way out keeps the application side aware everywhere.
+    Postgres stores ``timestamptz`` as an instant and returns it in the
+    session time zone, so the value is aware but not necessarily UTC.
+    Normalising both ways keeps comparisons in the domain total, and rejecting
+    naive values on the way in stops an ambiguous instant from being stored.
     """
 
     impl = DateTime(timezone=True)
