@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Huerise Alarm API",
-    "description": "API for managing sunrise alarms with Philips Hue. Register or log in via `/auth`, then send the returned access token as `Authorization: Bearer <token>`.",
+    "title": "Huerise Light Automation API",
+    "description": "API for gradual, Hue-based sunrise light automation. Register or log in via `/auth`, then send the returned access token as `Authorization: Bearer <token>`.",
     "version": "1.0.0"
   },
   "paths": {
@@ -518,64 +518,6 @@
         }
       }
     },
-    "/alarms/{alarm_id}/snooze": {
-      "post": {
-        "tags": [
-          "alarms"
-        ],
-        "summary": "Snooze Alarm",
-        "operationId": "snoozeAlarm",
-        "security": [
-          {
-            "AccessToken": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "alarm_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Alarm Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SnoozeRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OccurrenceRead"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/alarms/{alarm_id}/dismiss": {
       "post": {
         "tags": [
@@ -799,162 +741,6 @@
             }
           }
         }
-      }
-    },
-    "/sounds": {
-      "get": {
-        "tags": [
-          "sounds"
-        ],
-        "summary": "List Sounds",
-        "operationId": "list_sounds",
-        "security": [
-          {
-            "AccessToken": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "category",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "$ref": "#/components/schemas/SoundCategory",
-              "title": "Category"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SoundRead"
-                  },
-                  "title": "Response List Sounds"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/sounds/preview": {
-      "post": {
-        "tags": [
-          "sounds"
-        ],
-        "summary": "Preview Sound",
-        "description": "Start playback and return immediately -- the sound keeps playing.",
-        "operationId": "preview_sound",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SoundPreviewRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "202": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SoundRead"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "AccessToken": []
-          }
-        ]
-      }
-    },
-    "/sounds/stop": {
-      "post": {
-        "tags": [
-          "sounds"
-        ],
-        "summary": "Stop Playback",
-        "operationId": "stop_playback",
-        "responses": {
-          "204": {
-            "description": "Successful Response"
-          }
-        },
-        "security": [
-          {
-            "AccessToken": []
-          }
-        ]
-      }
-    },
-    "/sounds/volume": {
-      "post": {
-        "tags": [
-          "sounds"
-        ],
-        "summary": "Set Volume",
-        "operationId": "set_volume",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/VolumeRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "204": {
-            "description": "Successful Response"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "AccessToken": []
-          }
-        ]
       }
     },
     "/rooms": {
@@ -1230,153 +1016,6 @@
         }
       }
     },
-    "/audio-output": {
-      "get": {
-        "tags": [
-          "audio-output"
-        ],
-        "summary": "Get Audio Output",
-        "operationId": "get_audio_output",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AudioOutputRead"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "AccessToken": []
-          }
-        ]
-      },
-      "put": {
-        "tags": [
-          "audio-output"
-        ],
-        "summary": "Select Audio Output",
-        "description": "Switch the output. Anything currently playing is stopped first.",
-        "operationId": "select_audio_output",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AudioOutputRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AudioOutputRead"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "AccessToken": []
-          }
-        ]
-      }
-    },
-    "/audio-output/sonos/speakers": {
-      "get": {
-        "tags": [
-          "audio-output"
-        ],
-        "summary": "List Sonos Speakers",
-        "operationId": "list_sonos_speakers",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/SonosSpeakerRead"
-                  },
-                  "type": "array",
-                  "title": "Response List Sonos Speakers"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "AccessToken": []
-          }
-        ]
-      }
-    },
-    "/audio-output/sonos/speaker": {
-      "put": {
-        "tags": [
-          "audio-output"
-        ],
-        "summary": "Select Sonos Speaker",
-        "operationId": "select_sonos_speaker",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SonosSpeakerRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SonosSpeakerRead"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "AccessToken": []
-          }
-        ]
-      }
-    },
     "/hue/bridges": {
       "get": {
         "tags": [
@@ -1570,10 +1209,8 @@
                       "occurrence.dismissed": "#/components/schemas/OccurrenceDismissed",
                       "occurrence.failed": "#/components/schemas/OccurrenceFailed",
                       "occurrence.progress": "#/components/schemas/OccurrenceProgress",
-                      "occurrence.ringing": "#/components/schemas/OccurrenceRinging",
                       "occurrence.scheduled": "#/components/schemas/OccurrenceScheduled",
                       "occurrence.skipped": "#/components/schemas/OccurrenceSkipped",
-                      "occurrence.snoozed": "#/components/schemas/OccurrenceSnoozed",
                       "occurrence.started": "#/components/schemas/OccurrenceStarted",
                       "profile.updated": "#/components/schemas/ProfileUpdated"
                     },
@@ -1603,12 +1240,6 @@
                     },
                     {
                       "$ref": "#/components/schemas/OccurrenceProgress"
-                    },
-                    {
-                      "$ref": "#/components/schemas/OccurrenceRinging"
-                    },
-                    {
-                      "$ref": "#/components/schemas/OccurrenceSnoozed"
                     },
                     {
                       "$ref": "#/components/schemas/OccurrenceDismissed"
@@ -2060,12 +1691,6 @@
             "$ref": "#/components/schemas/OccurrenceProgress"
           },
           {
-            "$ref": "#/components/schemas/OccurrenceRinging"
-          },
-          {
-            "$ref": "#/components/schemas/OccurrenceSnoozed"
-          },
-          {
             "$ref": "#/components/schemas/OccurrenceDismissed"
           },
           {
@@ -2085,57 +1710,12 @@
             "occurrence.dismissed": "#/components/schemas/OccurrenceDismissed",
             "occurrence.failed": "#/components/schemas/OccurrenceFailed",
             "occurrence.progress": "#/components/schemas/OccurrenceProgress",
-            "occurrence.ringing": "#/components/schemas/OccurrenceRinging",
             "occurrence.scheduled": "#/components/schemas/OccurrenceScheduled",
             "occurrence.skipped": "#/components/schemas/OccurrenceSkipped",
-            "occurrence.snoozed": "#/components/schemas/OccurrenceSnoozed",
             "occurrence.started": "#/components/schemas/OccurrenceStarted",
             "profile.updated": "#/components/schemas/ProfileUpdated"
           }
         }
-      },
-      "AudioOutput": {
-        "type": "string",
-        "enum": [
-          "local",
-          "sonos"
-        ],
-        "title": "AudioOutput",
-        "description": "Where alarm and preview audio is played."
-      },
-      "AudioOutputRead": {
-        "properties": {
-          "active": {
-            "$ref": "#/components/schemas/AudioOutput"
-          },
-          "available": {
-            "items": {
-              "$ref": "#/components/schemas/AudioOutput"
-            },
-            "type": "array",
-            "title": "Available"
-          }
-        },
-        "type": "object",
-        "required": [
-          "active",
-          "available"
-        ],
-        "title": "AudioOutputRead",
-        "description": "The device sounds are currently played on."
-      },
-      "AudioOutputRequest": {
-        "properties": {
-          "output": {
-            "$ref": "#/components/schemas/AudioOutput",
-            "description": "The output to play on from now on."
-          }
-        },
-        "type": "object",
-        "required": [
-          "output"
-        ],
-        "title": "AudioOutputRequest"
       },
       "DoctorCheckRead": {
         "properties": {
@@ -2156,9 +1736,6 @@
             "type": "boolean",
             "title": "Configured"
           },
-          "sonos_speaker": {
-            "$ref": "#/components/schemas/DoctorCheckRead"
-          },
           "hue_bridge": {
             "$ref": "#/components/schemas/DoctorCheckRead"
           }
@@ -2166,7 +1743,6 @@
         "type": "object",
         "required": [
           "configured",
-          "sonos_speaker",
           "hue_bridge"
         ],
         "title": "DoctorRead"
@@ -2291,21 +1867,6 @@
           "database"
         ],
         "title": "HueConfigurationSource"
-      },
-      "IntroSchema": {
-        "properties": {
-          "sound_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Sound Id",
-            "description": "UUID of a sound returned by GET /sounds, e.g. '5c0806e7-7162-5be7-948e-33d349bde4a8'."
-          }
-        },
-        "type": "object",
-        "required": [
-          "sound_id"
-        ],
-        "title": "IntroSchema"
       },
       "LoginRequest": {
         "properties": {
@@ -2600,10 +2161,6 @@
             ],
             "title": "Finished At"
           },
-          "snooze_count": {
-            "type": "integer",
-            "title": "Snooze Count"
-          },
           "failure_reason": {
             "anyOf": [
               {
@@ -2624,68 +2181,9 @@
           "state",
           "triggered_at",
           "finished_at",
-          "snooze_count",
           "failure_reason"
         ],
         "title": "OccurrenceRead"
-      },
-      "OccurrenceRinging": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "parent_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Parent Id"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "type": {
-            "type": "string",
-            "const": "occurrence.ringing",
-            "title": "Type",
-            "default": "occurrence.ringing"
-          },
-          "occurrence_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Occurrence Id"
-          },
-          "alarm_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Alarm Id"
-          },
-          "sound_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Sound Id"
-          },
-          "volume": {
-            "type": "integer",
-            "title": "Volume"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "occurrence_id",
-          "alarm_id",
-          "sound_id",
-          "volume"
-        ],
-        "title": "OccurrenceRinging"
       },
       "OccurrenceScheduled": {
         "properties": {
@@ -2809,10 +2307,6 @@
             ],
             "title": "Finished At"
           },
-          "snooze_count": {
-            "type": "integer",
-            "title": "Snooze Count"
-          },
           "failure_reason": {
             "anyOf": [
               {
@@ -2833,50 +2327,10 @@
           "state",
           "triggered_at",
           "finished_at",
-          "snooze_count",
           "failure_reason"
         ],
         "title": "OccurrenceSnapshot",
         "description": "One concrete run of an alarm as of the moment an event fired."
-      },
-      "OccurrenceSnoozed": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "parent_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Parent Id"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "type": {
-            "type": "string",
-            "const": "occurrence.snoozed",
-            "title": "Type",
-            "default": "occurrence.snoozed"
-          },
-          "occurrence": {
-            "$ref": "#/components/schemas/OccurrenceSnapshot"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "occurrence"
-        ],
-        "title": "OccurrenceSnoozed"
       },
       "OccurrenceStarted": {
         "properties": {
@@ -2938,8 +2392,6 @@
         "enum": [
           "pending",
           "sunrise",
-          "ringing",
-          "snoozed",
           "dismissed",
           "skipped",
           "failed"
@@ -2952,12 +2404,6 @@
             "type": "string",
             "title": "Name"
           },
-          "intro": {
-            "$ref": "#/components/schemas/IntroSchema"
-          },
-          "ringtone": {
-            "$ref": "#/components/schemas/RingtoneSchema"
-          },
           "sunrise": {
             "$ref": "#/components/schemas/SunriseSchema"
           }
@@ -2965,8 +2411,6 @@
         "type": "object",
         "required": [
           "name",
-          "intro",
-          "ringtone",
           "sunrise"
         ],
         "title": "ProfileCreate"
@@ -2985,12 +2429,6 @@
             "type": "string",
             "title": "Name"
           },
-          "intro": {
-            "$ref": "#/components/schemas/IntroSchema"
-          },
-          "ringtone": {
-            "$ref": "#/components/schemas/RingtoneSchema"
-          },
           "sunrise": {
             "$ref": "#/components/schemas/SunriseSchema"
           },
@@ -3007,8 +2445,6 @@
         "type": "object",
         "required": [
           "name",
-          "intro",
-          "ringtone",
           "sunrise",
           "id",
           "is_default"
@@ -3043,7 +2479,7 @@
           "sunrise"
         ],
         "title": "ProfileSnapshot",
-        "description": "The behaviour shared by every alarm using it, as of an event.\n\nOnly the sunrise is carried: the intro and ringtone are sounds this app\nowns, and nothing outside it can move them."
+        "description": "The behaviour shared by every alarm using it, as of an event."
       },
       "ProfileUpdated": {
         "properties": {
@@ -3127,28 +2563,6 @@
           "password"
         ],
         "title": "RegisterRequest"
-      },
-      "RingtoneSchema": {
-        "properties": {
-          "sound_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Sound Id",
-            "description": "UUID of a sound returned by GET /sounds, e.g. '5c0806e7-7162-5be7-948e-33d349bde4a8'."
-          },
-          "volume": {
-            "type": "integer",
-            "maximum": 100.0,
-            "minimum": 0.0,
-            "title": "Volume",
-            "default": 80
-          }
-        },
-        "type": "object",
-        "required": [
-          "sound_id"
-        ],
-        "title": "RingtoneSchema"
       },
       "RoomRead": {
         "properties": {
@@ -3282,140 +2696,6 @@
           "weekdays"
         ],
         "title": "ScheduleSnapshot"
-      },
-      "SnoozeRequest": {
-        "properties": {
-          "minutes": {
-            "type": "integer",
-            "maximum": 60.0,
-            "minimum": 1.0,
-            "title": "Minutes",
-            "default": 10
-          }
-        },
-        "type": "object",
-        "title": "SnoozeRequest"
-      },
-      "SonosSpeakerRead": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id",
-            "description": "Stable Sonos device UID used for selection."
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "ip_address": {
-            "type": "string",
-            "title": "Ip Address"
-          },
-          "group_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Group Id"
-          },
-          "is_coordinator": {
-            "type": "boolean",
-            "title": "Is Coordinator"
-          },
-          "selected": {
-            "type": "boolean",
-            "title": "Selected"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "name",
-          "ip_address",
-          "group_id",
-          "is_coordinator",
-          "selected"
-        ],
-        "title": "SonosSpeakerRead"
-      },
-      "SonosSpeakerRequest": {
-        "properties": {
-          "speaker_id": {
-            "type": "string",
-            "minLength": 1,
-            "title": "Speaker Id",
-            "description": "Sonos device UID to select."
-          }
-        },
-        "type": "object",
-        "required": [
-          "speaker_id"
-        ],
-        "title": "SonosSpeakerRequest"
-      },
-      "SoundCategory": {
-        "type": "string",
-        "enum": [
-          "wake_up",
-          "get_up"
-        ],
-        "title": "SoundCategory"
-      },
-      "SoundPreviewRequest": {
-        "properties": {
-          "sound_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Sound Id"
-          },
-          "volume": {
-            "type": "integer",
-            "maximum": 100.0,
-            "minimum": 0.0,
-            "title": "Volume",
-            "default": 60
-          }
-        },
-        "type": "object",
-        "required": [
-          "sound_id"
-        ],
-        "title": "SoundPreviewRequest"
-      },
-      "SoundRead": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id",
-            "description": "Store this UUID in a profile."
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "category": {
-            "$ref": "#/components/schemas/SoundCategory"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "name",
-          "category",
-          "created_at"
-        ],
-        "title": "SoundRead",
-        "description": "A sound as an alarm profile refers to it."
       },
       "SunriseDemoRead": {
         "properties": {
@@ -3640,21 +2920,6 @@
           "type"
         ],
         "title": "ValidationError"
-      },
-      "VolumeRequest": {
-        "properties": {
-          "volume": {
-            "type": "integer",
-            "maximum": 100.0,
-            "minimum": 0.0,
-            "title": "Volume"
-          }
-        },
-        "type": "object",
-        "required": [
-          "volume"
-        ],
-        "title": "VolumeRequest"
       },
       "Weekday": {
         "type": "integer",

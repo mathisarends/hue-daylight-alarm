@@ -20,7 +20,6 @@ type alarmsCommand struct {
 	Get         alarmsGetCommand         `cmd:"" help:"Show a single alarm."`
 	Enable      alarmsEnableCommand      `cmd:"" help:"Enable an alarm."`
 	Disable     alarmsDisableCommand     `cmd:"" help:"Disable an alarm."`
-	Snooze      alarmsSnoozeCommand      `cmd:"" help:"Snooze the current occurrence."`
 	Dismiss     alarmsDismissCommand     `cmd:"" help:"Dismiss the current occurrence."`
 	Occurrences alarmsOccurrencesCommand `cmd:"" help:"List recent occurrences."`
 	Delete      alarmsDeleteCommand      `cmd:"" help:"Delete an alarm."`
@@ -48,11 +47,6 @@ type alarmsEnableCommand struct {
 
 type alarmsDisableCommand struct {
 	AlarmID uuid.UUID `arg:"" name:"alarm-id"`
-}
-
-type alarmsSnoozeCommand struct {
-	AlarmID uuid.UUID `arg:"" name:"alarm-id"`
-	Minutes int       `default:"10" help:"Snooze duration (1-60 minutes)."`
 }
 
 type alarmsDismissCommand struct {
@@ -165,24 +159,6 @@ func (command alarmsDisableCommand) Run(runtime *Runtime) error {
 	return handleAlarmResponse(runtime, "disable alarm", response)
 }
 
-func (command alarmsSnoozeCommand) Run(runtime *Runtime) error {
-	if command.Minutes < 1 || command.Minutes > 60 {
-		return &commandError{Code: "usage", Message: "minutes must be between 1 and 60", ExitCode: 2}
-	}
-	apiClient, err := runtime.client()
-	if err != nil {
-		return err
-	}
-	response, err := apiClient.SnoozeAlarm(runtime.ctx,
-		&client.SnoozeRequest{Minutes: client.NewOptInt(command.Minutes)},
-		client.SnoozeAlarmParams{AlarmID: command.AlarmID},
-	)
-	if err != nil {
-		return err
-	}
-	return handleOccurrenceResponse(runtime, "snooze alarm", response)
-}
-
 func (command alarmsDismissCommand) Run(runtime *Runtime) error {
 	apiClient, err := runtime.client()
 	if err != nil {
@@ -217,7 +193,7 @@ func (command alarmsOccurrencesCommand) Run(runtime *Runtime) error {
 			for _, occurrence := range occurrences {
 				rows = append(rows, occurrenceRow(occurrence))
 			}
-			return writeTable(runtime.stdout, []string{"ID", "SCHEDULED FOR", "STATE", "SNOOZES", "FAILURE"}, rows, "No occurrences yet.")
+			return writeTable(runtime.stdout, []string{"ID", "SCHEDULED FOR", "STATE", "FAILURE"}, rows, "No occurrences yet.")
 		})
 	case *client.HTTPValidationError:
 		return validationError(result)
@@ -345,8 +321,7 @@ func writeOccurrence(runtime *Runtime, occurrence *client.OccurrenceRead) error 
 			recordField{Name: "id", Value: row[0]},
 			recordField{Name: "scheduled_for", Value: row[1]},
 			recordField{Name: "state", Value: row[2]},
-			recordField{Name: "snoozes", Value: row[3]},
-			recordField{Name: "failure", Value: row[4]},
+			recordField{Name: "failure", Value: row[3]},
 		)
 	})
 }
@@ -354,7 +329,7 @@ func writeOccurrence(runtime *Runtime, occurrence *client.OccurrenceRead) error 
 func occurrenceRow(occurrence client.OccurrenceRead) []string {
 	return []string{
 		occurrence.ID.String(), occurrence.ScheduledFor.Format(time.RFC3339), string(occurrence.State),
-		strconv.Itoa(occurrence.SnoozeCount), occurrence.FailureReason.Or("-"),
+		occurrence.FailureReason.Or("-"),
 	}
 }
 

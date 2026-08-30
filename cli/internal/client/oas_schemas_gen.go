@@ -327,94 +327,6 @@ func (s *AlarmUpdate) SetProfileID(val OptNilUUID) {
 	s.ProfileID = val
 }
 
-// Where alarm and preview audio is played.
-// Ref: #/components/schemas/AudioOutput
-type AudioOutput string
-
-const (
-	AudioOutputLocal AudioOutput = "local"
-	AudioOutputSonos AudioOutput = "sonos"
-)
-
-// AllValues returns all AudioOutput values.
-func (AudioOutput) AllValues() []AudioOutput {
-	return []AudioOutput{
-		AudioOutputLocal,
-		AudioOutputSonos,
-	}
-}
-
-// MarshalText implements encoding.TextMarshaler.
-func (s AudioOutput) MarshalText() ([]byte, error) {
-	switch s {
-	case AudioOutputLocal:
-		return []byte(s), nil
-	case AudioOutputSonos:
-		return []byte(s), nil
-	default:
-		return nil, errors.Errorf("invalid value: %q", s)
-	}
-}
-
-// UnmarshalText implements encoding.TextUnmarshaler.
-func (s *AudioOutput) UnmarshalText(data []byte) error {
-	switch AudioOutput(data) {
-	case AudioOutputLocal:
-		*s = AudioOutputLocal
-		return nil
-	case AudioOutputSonos:
-		*s = AudioOutputSonos
-		return nil
-	default:
-		return errors.Errorf("invalid value: %q", data)
-	}
-}
-
-// The device sounds are currently played on.
-// Ref: #/components/schemas/AudioOutputRead
-type AudioOutputRead struct {
-	Active    AudioOutput   `json:"active"`
-	Available []AudioOutput `json:"available"`
-}
-
-// GetActive returns the value of Active.
-func (s *AudioOutputRead) GetActive() AudioOutput {
-	return s.Active
-}
-
-// GetAvailable returns the value of Available.
-func (s *AudioOutputRead) GetAvailable() []AudioOutput {
-	return s.Available
-}
-
-// SetActive sets the value of Active.
-func (s *AudioOutputRead) SetActive(val AudioOutput) {
-	s.Active = val
-}
-
-// SetAvailable sets the value of Available.
-func (s *AudioOutputRead) SetAvailable(val []AudioOutput) {
-	s.Available = val
-}
-
-func (*AudioOutputRead) selectAudioOutputRes() {}
-
-// Ref: #/components/schemas/AudioOutputRequest
-type AudioOutputRequest struct {
-	// The output to play on from now on.
-	Output AudioOutput `json:"output"`
-}
-
-// GetOutput returns the value of Output.
-func (s *AudioOutputRequest) GetOutput() AudioOutput {
-	return s.Output
-}
-
-// SetOutput sets the value of Output.
-func (s *AudioOutputRequest) SetOutput(val AudioOutput) {
-	s.Output = val
-}
-
 // DeleteAlarmNoContent is response for DeleteAlarm operation.
 type DeleteAlarmNoContent struct{}
 
@@ -442,19 +354,13 @@ func (s *DoctorCheckRead) SetConfigured(val bool) {
 
 // Ref: #/components/schemas/DoctorRead
 type DoctorRead struct {
-	Configured   bool            `json:"configured"`
-	SonosSpeaker DoctorCheckRead `json:"sonos_speaker"`
-	HueBridge    DoctorCheckRead `json:"hue_bridge"`
+	Configured bool            `json:"configured"`
+	HueBridge  DoctorCheckRead `json:"hue_bridge"`
 }
 
 // GetConfigured returns the value of Configured.
 func (s *DoctorRead) GetConfigured() bool {
 	return s.Configured
-}
-
-// GetSonosSpeaker returns the value of SonosSpeaker.
-func (s *DoctorRead) GetSonosSpeaker() DoctorCheckRead {
-	return s.SonosSpeaker
 }
 
 // GetHueBridge returns the value of HueBridge.
@@ -465,11 +371,6 @@ func (s *DoctorRead) GetHueBridge() DoctorCheckRead {
 // SetConfigured sets the value of Configured.
 func (s *DoctorRead) SetConfigured(val bool) {
 	s.Configured = val
-}
-
-// SetSonosSpeaker sets the value of SonosSpeaker.
-func (s *DoctorRead) SetSonosSpeaker(val DoctorCheckRead) {
-	s.SonosSpeaker = val
 }
 
 // SetHueBridge sets the value of HueBridge.
@@ -492,32 +393,26 @@ func (s *HTTPValidationError) SetDetail(val []ValidationError) {
 	s.Detail = val
 }
 
-func (*HTTPValidationError) activateSceneRes()      {}
-func (*HTTPValidationError) createAlarmRes()        {}
-func (*HTTPValidationError) createProfileRes()      {}
-func (*HTTPValidationError) deleteAlarmRes()        {}
-func (*HTTPValidationError) deleteProfileRes()      {}
-func (*HTTPValidationError) demoSceneRes()          {}
-func (*HTTPValidationError) disableAlarmRes()       {}
-func (*HTTPValidationError) dismissAlarmRes()       {}
-func (*HTTPValidationError) enableAlarmRes()        {}
-func (*HTTPValidationError) getAlarmRes()           {}
-func (*HTTPValidationError) getRoomRes()            {}
-func (*HTTPValidationError) listOccurrencesRes()    {}
-func (*HTTPValidationError) listSoundsRes()         {}
-func (*HTTPValidationError) loginRes()              {}
-func (*HTTPValidationError) logoutRes()             {}
-func (*HTTPValidationError) previewSoundRes()       {}
-func (*HTTPValidationError) refreshRes()            {}
-func (*HTTPValidationError) registerRes()           {}
-func (*HTTPValidationError) selectAudioOutputRes()  {}
-func (*HTTPValidationError) selectHueBridgeRes()    {}
-func (*HTTPValidationError) selectSonosSpeakerRes() {}
-func (*HTTPValidationError) setVolumeRes()          {}
-func (*HTTPValidationError) snoozeAlarmRes()        {}
-func (*HTTPValidationError) stopSceneDemoRes()      {}
-func (*HTTPValidationError) streamEventsRes()       {}
-func (*HTTPValidationError) updateAlarmRes()        {}
+func (*HTTPValidationError) activateSceneRes()   {}
+func (*HTTPValidationError) createAlarmRes()     {}
+func (*HTTPValidationError) createProfileRes()   {}
+func (*HTTPValidationError) deleteAlarmRes()     {}
+func (*HTTPValidationError) deleteProfileRes()   {}
+func (*HTTPValidationError) demoSceneRes()       {}
+func (*HTTPValidationError) disableAlarmRes()    {}
+func (*HTTPValidationError) dismissAlarmRes()    {}
+func (*HTTPValidationError) enableAlarmRes()     {}
+func (*HTTPValidationError) getAlarmRes()        {}
+func (*HTTPValidationError) getRoomRes()         {}
+func (*HTTPValidationError) listOccurrencesRes() {}
+func (*HTTPValidationError) loginRes()           {}
+func (*HTTPValidationError) logoutRes()          {}
+func (*HTTPValidationError) refreshRes()         {}
+func (*HTTPValidationError) registerRes()        {}
+func (*HTTPValidationError) selectHueBridgeRes() {}
+func (*HTTPValidationError) stopSceneDemoRes()   {}
+func (*HTTPValidationError) streamEventsRes()    {}
+func (*HTTPValidationError) updateAlarmRes()     {}
 
 // Ref: #/components/schemas/HealthResponse
 type HealthResponse struct {
@@ -681,29 +576,9 @@ func (s *HueConfigurationSource) UnmarshalText(data []byte) error {
 	}
 }
 
-// Ref: #/components/schemas/IntroSchema
-type IntroSchema struct {
-	// UUID of a sound returned by GET /sounds, e.g. '5c0806e7-7162-5be7-948e-33d349bde4a8'.
-	SoundID uuid.UUID `json:"sound_id"`
-}
-
-// GetSoundID returns the value of SoundID.
-func (s *IntroSchema) GetSoundID() uuid.UUID {
-	return s.SoundID
-}
-
-// SetSoundID sets the value of SoundID.
-func (s *IntroSchema) SetSoundID(val uuid.UUID) {
-	s.SoundID = val
-}
-
 type ListOccurrencesOKApplicationJSON []OccurrenceRead
 
 func (*ListOccurrencesOKApplicationJSON) listOccurrencesRes() {}
-
-type ListSoundsOKApplicationJSON []SoundRead
-
-func (*ListSoundsOKApplicationJSON) listSoundsRes() {}
 
 // Ref: #/components/schemas/LoginRequest
 type LoginRequest struct {
@@ -894,7 +769,6 @@ type OccurrenceRead struct {
 	State         OccurrenceState `json:"state"`
 	TriggeredAt   NilDateTime     `json:"triggered_at"`
 	FinishedAt    NilDateTime     `json:"finished_at"`
-	SnoozeCount   int             `json:"snooze_count"`
 	FailureReason NilString       `json:"failure_reason"`
 }
 
@@ -926,11 +800,6 @@ func (s *OccurrenceRead) GetTriggeredAt() NilDateTime {
 // GetFinishedAt returns the value of FinishedAt.
 func (s *OccurrenceRead) GetFinishedAt() NilDateTime {
 	return s.FinishedAt
-}
-
-// GetSnoozeCount returns the value of SnoozeCount.
-func (s *OccurrenceRead) GetSnoozeCount() int {
-	return s.SnoozeCount
 }
 
 // GetFailureReason returns the value of FailureReason.
@@ -968,18 +837,12 @@ func (s *OccurrenceRead) SetFinishedAt(val NilDateTime) {
 	s.FinishedAt = val
 }
 
-// SetSnoozeCount sets the value of SnoozeCount.
-func (s *OccurrenceRead) SetSnoozeCount(val int) {
-	s.SnoozeCount = val
-}
-
 // SetFailureReason sets the value of FailureReason.
 func (s *OccurrenceRead) SetFailureReason(val NilString) {
 	s.FailureReason = val
 }
 
 func (*OccurrenceRead) dismissAlarmRes() {}
-func (*OccurrenceRead) snoozeAlarmRes()  {}
 
 // Ref: #/components/schemas/OccurrenceState
 type OccurrenceState string
@@ -987,8 +850,6 @@ type OccurrenceState string
 const (
 	OccurrenceStatePending   OccurrenceState = "pending"
 	OccurrenceStateSunrise   OccurrenceState = "sunrise"
-	OccurrenceStateRinging   OccurrenceState = "ringing"
-	OccurrenceStateSnoozed   OccurrenceState = "snoozed"
 	OccurrenceStateDismissed OccurrenceState = "dismissed"
 	OccurrenceStateSkipped   OccurrenceState = "skipped"
 	OccurrenceStateFailed    OccurrenceState = "failed"
@@ -999,8 +860,6 @@ func (OccurrenceState) AllValues() []OccurrenceState {
 	return []OccurrenceState{
 		OccurrenceStatePending,
 		OccurrenceStateSunrise,
-		OccurrenceStateRinging,
-		OccurrenceStateSnoozed,
 		OccurrenceStateDismissed,
 		OccurrenceStateSkipped,
 		OccurrenceStateFailed,
@@ -1013,10 +872,6 @@ func (s OccurrenceState) MarshalText() ([]byte, error) {
 	case OccurrenceStatePending:
 		return []byte(s), nil
 	case OccurrenceStateSunrise:
-		return []byte(s), nil
-	case OccurrenceStateRinging:
-		return []byte(s), nil
-	case OccurrenceStateSnoozed:
 		return []byte(s), nil
 	case OccurrenceStateDismissed:
 		return []byte(s), nil
@@ -1037,12 +892,6 @@ func (s *OccurrenceState) UnmarshalText(data []byte) error {
 		return nil
 	case OccurrenceStateSunrise:
 		*s = OccurrenceStateSunrise
-		return nil
-	case OccurrenceStateRinging:
-		*s = OccurrenceStateRinging
-		return nil
-	case OccurrenceStateSnoozed:
-		*s = OccurrenceStateSnoozed
 		return nil
 	case OccurrenceStateDismissed:
 		*s = OccurrenceStateDismissed
@@ -1591,52 +1440,6 @@ func (o OptNilUUID) Or(d uuid.UUID) uuid.UUID {
 	return d
 }
 
-// NewOptSoundCategory returns new OptSoundCategory with value set to v.
-func NewOptSoundCategory(v SoundCategory) OptSoundCategory {
-	return OptSoundCategory{
-		Value: v,
-		Set:   true,
-	}
-}
-
-// OptSoundCategory is optional SoundCategory.
-type OptSoundCategory struct {
-	Value SoundCategory
-	Set   bool
-}
-
-// IsSet returns true if OptSoundCategory was set.
-func (o OptSoundCategory) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptSoundCategory) Reset() {
-	var v SoundCategory
-	o.Value = v
-	o.Set = false
-}
-
-// SetTo sets value to v.
-func (o *OptSoundCategory) SetTo(v SoundCategory) {
-	o.Set = true
-	o.Value = v
-}
-
-// Get returns value and boolean that denotes whether value was set.
-func (o OptSoundCategory) Get() (v SoundCategory, ok bool) {
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o OptSoundCategory) Or(d SoundCategory) SoundCategory {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
-
 // NewOptString returns new OptString with value set to v.
 func NewOptString(v string) OptString {
 	return OptString{
@@ -1685,25 +1488,13 @@ func (o OptString) Or(d string) string {
 
 // Ref: #/components/schemas/ProfileCreate
 type ProfileCreate struct {
-	Name     string         `json:"name"`
-	Intro    IntroSchema    `json:"intro"`
-	Ringtone RingtoneSchema `json:"ringtone"`
-	Sunrise  SunriseSchema  `json:"sunrise"`
+	Name    string        `json:"name"`
+	Sunrise SunriseSchema `json:"sunrise"`
 }
 
 // GetName returns the value of Name.
 func (s *ProfileCreate) GetName() string {
 	return s.Name
-}
-
-// GetIntro returns the value of Intro.
-func (s *ProfileCreate) GetIntro() IntroSchema {
-	return s.Intro
-}
-
-// GetRingtone returns the value of Ringtone.
-func (s *ProfileCreate) GetRingtone() RingtoneSchema {
-	return s.Ringtone
 }
 
 // GetSunrise returns the value of Sunrise.
@@ -1716,16 +1507,6 @@ func (s *ProfileCreate) SetName(val string) {
 	s.Name = val
 }
 
-// SetIntro sets the value of Intro.
-func (s *ProfileCreate) SetIntro(val IntroSchema) {
-	s.Intro = val
-}
-
-// SetRingtone sets the value of Ringtone.
-func (s *ProfileCreate) SetRingtone(val RingtoneSchema) {
-	s.Ringtone = val
-}
-
 // SetSunrise sets the value of Sunrise.
 func (s *ProfileCreate) SetSunrise(val SunriseSchema) {
 	s.Sunrise = val
@@ -1734,27 +1515,15 @@ func (s *ProfileCreate) SetSunrise(val SunriseSchema) {
 // Everything a profile is created with, plus what the server owns.
 // Ref: #/components/schemas/ProfileRead
 type ProfileRead struct {
-	Name      string         `json:"name"`
-	Intro     IntroSchema    `json:"intro"`
-	Ringtone  RingtoneSchema `json:"ringtone"`
-	Sunrise   SunriseSchema  `json:"sunrise"`
-	ID        uuid.UUID      `json:"id"`
-	IsDefault bool           `json:"is_default"`
+	Name      string        `json:"name"`
+	Sunrise   SunriseSchema `json:"sunrise"`
+	ID        uuid.UUID     `json:"id"`
+	IsDefault bool          `json:"is_default"`
 }
 
 // GetName returns the value of Name.
 func (s *ProfileRead) GetName() string {
 	return s.Name
-}
-
-// GetIntro returns the value of Intro.
-func (s *ProfileRead) GetIntro() IntroSchema {
-	return s.Intro
-}
-
-// GetRingtone returns the value of Ringtone.
-func (s *ProfileRead) GetRingtone() RingtoneSchema {
-	return s.Ringtone
 }
 
 // GetSunrise returns the value of Sunrise.
@@ -1775,16 +1544,6 @@ func (s *ProfileRead) GetIsDefault() bool {
 // SetName sets the value of Name.
 func (s *ProfileRead) SetName(val string) {
 	s.Name = val
-}
-
-// SetIntro sets the value of Intro.
-func (s *ProfileRead) SetIntro(val IntroSchema) {
-	s.Intro = val
-}
-
-// SetRingtone sets the value of Ringtone.
-func (s *ProfileRead) SetRingtone(val RingtoneSchema) {
-	s.Ringtone = val
 }
 
 // SetSunrise sets the value of Sunrise.
@@ -1843,33 +1602,6 @@ func (s *RegisterRequest) SetUsername(val string) {
 // SetPassword sets the value of Password.
 func (s *RegisterRequest) SetPassword(val string) {
 	s.Password = val
-}
-
-// Ref: #/components/schemas/RingtoneSchema
-type RingtoneSchema struct {
-	// UUID of a sound returned by GET /sounds, e.g. '5c0806e7-7162-5be7-948e-33d349bde4a8'.
-	SoundID uuid.UUID `json:"sound_id"`
-	Volume  OptInt    `json:"volume"`
-}
-
-// GetSoundID returns the value of SoundID.
-func (s *RingtoneSchema) GetSoundID() uuid.UUID {
-	return s.SoundID
-}
-
-// GetVolume returns the value of Volume.
-func (s *RingtoneSchema) GetVolume() OptInt {
-	return s.Volume
-}
-
-// SetSoundID sets the value of SoundID.
-func (s *RingtoneSchema) SetSoundID(val uuid.UUID) {
-	s.SoundID = val
-}
-
-// SetVolume sets the value of Volume.
-func (s *RingtoneSchema) SetVolume(val OptInt) {
-	s.Volume = val
 }
 
 // Ref: #/components/schemas/RoomRead
@@ -2002,238 +1734,6 @@ func (s *ScheduleSchema) SetTimezone(val OptString) {
 func (s *ScheduleSchema) SetDays(val []Weekday) {
 	s.Days = val
 }
-
-// SetVolumeNoContent is response for SetVolume operation.
-type SetVolumeNoContent struct{}
-
-func (*SetVolumeNoContent) setVolumeRes() {}
-
-// Ref: #/components/schemas/SnoozeRequest
-type SnoozeRequest struct {
-	Minutes OptInt `json:"minutes"`
-}
-
-// GetMinutes returns the value of Minutes.
-func (s *SnoozeRequest) GetMinutes() OptInt {
-	return s.Minutes
-}
-
-// SetMinutes sets the value of Minutes.
-func (s *SnoozeRequest) SetMinutes(val OptInt) {
-	s.Minutes = val
-}
-
-// Ref: #/components/schemas/SonosSpeakerRead
-type SonosSpeakerRead struct {
-	// Stable Sonos device UID used for selection.
-	ID            string    `json:"id"`
-	Name          string    `json:"name"`
-	IPAddress     string    `json:"ip_address"`
-	GroupID       NilString `json:"group_id"`
-	IsCoordinator bool      `json:"is_coordinator"`
-	Selected      bool      `json:"selected"`
-}
-
-// GetID returns the value of ID.
-func (s *SonosSpeakerRead) GetID() string {
-	return s.ID
-}
-
-// GetName returns the value of Name.
-func (s *SonosSpeakerRead) GetName() string {
-	return s.Name
-}
-
-// GetIPAddress returns the value of IPAddress.
-func (s *SonosSpeakerRead) GetIPAddress() string {
-	return s.IPAddress
-}
-
-// GetGroupID returns the value of GroupID.
-func (s *SonosSpeakerRead) GetGroupID() NilString {
-	return s.GroupID
-}
-
-// GetIsCoordinator returns the value of IsCoordinator.
-func (s *SonosSpeakerRead) GetIsCoordinator() bool {
-	return s.IsCoordinator
-}
-
-// GetSelected returns the value of Selected.
-func (s *SonosSpeakerRead) GetSelected() bool {
-	return s.Selected
-}
-
-// SetID sets the value of ID.
-func (s *SonosSpeakerRead) SetID(val string) {
-	s.ID = val
-}
-
-// SetName sets the value of Name.
-func (s *SonosSpeakerRead) SetName(val string) {
-	s.Name = val
-}
-
-// SetIPAddress sets the value of IPAddress.
-func (s *SonosSpeakerRead) SetIPAddress(val string) {
-	s.IPAddress = val
-}
-
-// SetGroupID sets the value of GroupID.
-func (s *SonosSpeakerRead) SetGroupID(val NilString) {
-	s.GroupID = val
-}
-
-// SetIsCoordinator sets the value of IsCoordinator.
-func (s *SonosSpeakerRead) SetIsCoordinator(val bool) {
-	s.IsCoordinator = val
-}
-
-// SetSelected sets the value of Selected.
-func (s *SonosSpeakerRead) SetSelected(val bool) {
-	s.Selected = val
-}
-
-func (*SonosSpeakerRead) selectSonosSpeakerRes() {}
-
-// Ref: #/components/schemas/SonosSpeakerRequest
-type SonosSpeakerRequest struct {
-	// Sonos device UID to select.
-	SpeakerID string `json:"speaker_id"`
-}
-
-// GetSpeakerID returns the value of SpeakerID.
-func (s *SonosSpeakerRequest) GetSpeakerID() string {
-	return s.SpeakerID
-}
-
-// SetSpeakerID sets the value of SpeakerID.
-func (s *SonosSpeakerRequest) SetSpeakerID(val string) {
-	s.SpeakerID = val
-}
-
-// Ref: #/components/schemas/SoundCategory
-type SoundCategory string
-
-const (
-	SoundCategoryWakeUp SoundCategory = "wake_up"
-	SoundCategoryGetUp  SoundCategory = "get_up"
-)
-
-// AllValues returns all SoundCategory values.
-func (SoundCategory) AllValues() []SoundCategory {
-	return []SoundCategory{
-		SoundCategoryWakeUp,
-		SoundCategoryGetUp,
-	}
-}
-
-// MarshalText implements encoding.TextMarshaler.
-func (s SoundCategory) MarshalText() ([]byte, error) {
-	switch s {
-	case SoundCategoryWakeUp:
-		return []byte(s), nil
-	case SoundCategoryGetUp:
-		return []byte(s), nil
-	default:
-		return nil, errors.Errorf("invalid value: %q", s)
-	}
-}
-
-// UnmarshalText implements encoding.TextUnmarshaler.
-func (s *SoundCategory) UnmarshalText(data []byte) error {
-	switch SoundCategory(data) {
-	case SoundCategoryWakeUp:
-		*s = SoundCategoryWakeUp
-		return nil
-	case SoundCategoryGetUp:
-		*s = SoundCategoryGetUp
-		return nil
-	default:
-		return errors.Errorf("invalid value: %q", data)
-	}
-}
-
-// Ref: #/components/schemas/SoundPreviewRequest
-type SoundPreviewRequest struct {
-	SoundID uuid.UUID `json:"sound_id"`
-	Volume  OptInt    `json:"volume"`
-}
-
-// GetSoundID returns the value of SoundID.
-func (s *SoundPreviewRequest) GetSoundID() uuid.UUID {
-	return s.SoundID
-}
-
-// GetVolume returns the value of Volume.
-func (s *SoundPreviewRequest) GetVolume() OptInt {
-	return s.Volume
-}
-
-// SetSoundID sets the value of SoundID.
-func (s *SoundPreviewRequest) SetSoundID(val uuid.UUID) {
-	s.SoundID = val
-}
-
-// SetVolume sets the value of Volume.
-func (s *SoundPreviewRequest) SetVolume(val OptInt) {
-	s.Volume = val
-}
-
-// A sound as an alarm profile refers to it.
-// Ref: #/components/schemas/SoundRead
-type SoundRead struct {
-	// Store this UUID in a profile.
-	ID        uuid.UUID     `json:"id"`
-	Name      string        `json:"name"`
-	Category  SoundCategory `json:"category"`
-	CreatedAt time.Time     `json:"created_at"`
-}
-
-// GetID returns the value of ID.
-func (s *SoundRead) GetID() uuid.UUID {
-	return s.ID
-}
-
-// GetName returns the value of Name.
-func (s *SoundRead) GetName() string {
-	return s.Name
-}
-
-// GetCategory returns the value of Category.
-func (s *SoundRead) GetCategory() SoundCategory {
-	return s.Category
-}
-
-// GetCreatedAt returns the value of CreatedAt.
-func (s *SoundRead) GetCreatedAt() time.Time {
-	return s.CreatedAt
-}
-
-// SetID sets the value of ID.
-func (s *SoundRead) SetID(val uuid.UUID) {
-	s.ID = val
-}
-
-// SetName sets the value of Name.
-func (s *SoundRead) SetName(val string) {
-	s.Name = val
-}
-
-// SetCategory sets the value of Category.
-func (s *SoundRead) SetCategory(val SoundCategory) {
-	s.Category = val
-}
-
-// SetCreatedAt sets the value of CreatedAt.
-func (s *SoundRead) SetCreatedAt(val time.Time) {
-	s.CreatedAt = val
-}
-
-func (*SoundRead) previewSoundRes() {}
-
-// StopPlaybackNoContent is response for StopPlayback operation.
-type StopPlaybackNoContent struct{}
 
 // StopSceneDemoNoContent is response for StopSceneDemo operation.
 type StopSceneDemoNoContent struct{}
@@ -2614,21 +2114,6 @@ func NewIntValidationErrorLocItem(v int) ValidationErrorLocItem {
 	var s ValidationErrorLocItem
 	s.SetInt(v)
 	return s
-}
-
-// Ref: #/components/schemas/VolumeRequest
-type VolumeRequest struct {
-	Volume int `json:"volume"`
-}
-
-// GetVolume returns the value of Volume.
-func (s *VolumeRequest) GetVolume() int {
-	return s.Volume
-}
-
-// SetVolume sets the value of Volume.
-func (s *VolumeRequest) SetVolume(val int) {
-	s.Volume = val
 }
 
 // Ref: #/components/schemas/Weekday

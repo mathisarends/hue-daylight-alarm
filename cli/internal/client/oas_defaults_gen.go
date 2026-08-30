@@ -11,34 +11,10 @@ func (s *HealthResponse) setDefaults() {
 }
 
 // setDefaults set default value of fields.
-func (s *RingtoneSchema) setDefaults() {
-	{
-		val := int(80)
-		s.Volume.SetTo(val)
-	}
-}
-
-// setDefaults set default value of fields.
 func (s *ScheduleSchema) setDefaults() {
 	{
 		val := string("Europe/Berlin")
 		s.Timezone.SetTo(val)
-	}
-}
-
-// setDefaults set default value of fields.
-func (s *SnoozeRequest) setDefaults() {
-	{
-		val := int(10)
-		s.Minutes.SetTo(val)
-	}
-}
-
-// setDefaults set default value of fields.
-func (s *SoundPreviewRequest) setDefaults() {
-	{
-		val := int(60)
-		s.Volume.SetTo(val)
 	}
 }
 

@@ -59,16 +59,6 @@ type ListOccurrencesParams struct {
 	Limit   OptInt `json:",omitempty,omitzero"`
 }
 
-// ListSoundsParams is parameters of list_sounds operation.
-type ListSoundsParams struct {
-	Category OptSoundCategory `json:",omitempty,omitzero"`
-}
-
-// SnoozeAlarmParams is parameters of snoozeAlarm operation.
-type SnoozeAlarmParams struct {
-	AlarmID uuid.UUID
-}
-
 // StopSceneDemoParams is parameters of stop_scene_demo operation.
 type StopSceneDemoParams struct {
 	RoomID  uuid.UUID

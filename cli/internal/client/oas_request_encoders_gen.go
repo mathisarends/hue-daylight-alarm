@@ -106,20 +106,6 @@ func encodeLogoutRequest(
 	return nil
 }
 
-func encodePreviewSoundRequest(
-	req *SoundPreviewRequest,
-	r *http.Request,
-) error {
-	const contentType = "application/json"
-	e := new(jx.Encoder)
-	{
-		req.Encode(e)
-	}
-	encoded := e.Bytes()
-	ht.SetBody(r, bytes.NewReader(encoded), contentType)
-	return nil
-}
-
 func encodeRefreshRequest(
 	req *RefreshRequest,
 	r *http.Request,
@@ -148,64 +134,8 @@ func encodeRegisterRequest(
 	return nil
 }
 
-func encodeSelectAudioOutputRequest(
-	req *AudioOutputRequest,
-	r *http.Request,
-) error {
-	const contentType = "application/json"
-	e := new(jx.Encoder)
-	{
-		req.Encode(e)
-	}
-	encoded := e.Bytes()
-	ht.SetBody(r, bytes.NewReader(encoded), contentType)
-	return nil
-}
-
 func encodeSelectHueBridgeRequest(
 	req *HueBridgeSelectionRequest,
-	r *http.Request,
-) error {
-	const contentType = "application/json"
-	e := new(jx.Encoder)
-	{
-		req.Encode(e)
-	}
-	encoded := e.Bytes()
-	ht.SetBody(r, bytes.NewReader(encoded), contentType)
-	return nil
-}
-
-func encodeSelectSonosSpeakerRequest(
-	req *SonosSpeakerRequest,
-	r *http.Request,
-) error {
-	const contentType = "application/json"
-	e := new(jx.Encoder)
-	{
-		req.Encode(e)
-	}
-	encoded := e.Bytes()
-	ht.SetBody(r, bytes.NewReader(encoded), contentType)
-	return nil
-}
-
-func encodeSetVolumeRequest(
-	req *VolumeRequest,
-	r *http.Request,
-) error {
-	const contentType = "application/json"
-	e := new(jx.Encoder)
-	{
-		req.Encode(e)
-	}
-	encoded := e.Bytes()
-	ht.SetBody(r, bytes.NewReader(encoded), contentType)
-	return nil
-}
-
-func encodeSnoozeAlarmRequest(
-	req *SnoozeRequest,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"

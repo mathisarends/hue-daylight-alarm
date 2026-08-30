@@ -17,15 +17,12 @@ type profilesCommand struct {
 type profilesListCommand struct{}
 
 type profilesCreateCommand struct {
-	Name            string    `arg:"" help:"Human-readable profile name."`
-	Room            string    `required:"" help:"Room the sunrise scene lives in."`
-	IntroSoundID    uuid.UUID `name:"intro-sound-id" required:"" help:"Sound UUID from sounds list."`
-	RingtoneSoundID uuid.UUID `name:"ringtone-sound-id" required:"" help:"Sound UUID from sounds list."`
-	RingtoneVolume  int       `default:"80" help:"Ringtone volume (0-100)."`
-	SceneName       string    `default:"Tageslichtwecker" help:"Hue scene name."`
-	DurationMinutes int       `default:"7" help:"Sunrise duration (0-120 minutes)."`
-	BrightnessStart int       `default:"1" help:"Starting brightness (1-99)."`
-	BrightnessEnd   int       `default:"100" help:"Ending brightness (2-100)."`
+	Name            string `arg:"" help:"Human-readable profile name."`
+	Room            string `required:"" help:"Room the sunrise scene lives in."`
+	SceneName       string `default:"Tageslichtwecker" help:"Hue scene name."`
+	DurationMinutes int    `default:"7" help:"Sunrise duration (0-120 minutes)."`
+	BrightnessStart int    `default:"1" help:"Starting brightness (1-99)."`
+	BrightnessEnd   int    `default:"100" help:"Ending brightness (2-100)."`
 }
 
 type profilesDeleteCommand struct {
@@ -47,7 +44,7 @@ func (profilesListCommand) Run(runtime *Runtime) error {
 		for _, profile := range profiles {
 			rows = append(rows, profileRow(profile))
 		}
-		return writeTable(runtime.stdout, []string{"ID", "NAME", "DEFAULT", "SCENE", "INTRO SOUND", "RINGTONE SOUND"}, rows, "No profiles yet.")
+		return writeTable(runtime.stdout, []string{"ID", "NAME", "DEFAULT", "SCENE"}, rows, "No profiles yet.")
 	})
 }
 
@@ -64,12 +61,7 @@ func (command profilesCreateCommand) Run(runtime *Runtime) error {
 		return err
 	}
 	request := &client.ProfileCreate{
-		Name:  command.Name,
-		Intro: client.IntroSchema{SoundID: command.IntroSoundID},
-		Ringtone: client.RingtoneSchema{
-			SoundID: command.RingtoneSoundID,
-			Volume:  client.NewOptInt(command.RingtoneVolume),
-		},
+		Name: command.Name,
 		Sunrise: client.SunriseSchema{
 			SceneID:         scene.ID,
 			SceneName:       scene.Name,
@@ -93,9 +85,6 @@ func (command profilesCreateCommand) Run(runtime *Runtime) error {
 }
 
 func (command profilesCreateCommand) validate() error {
-	if err := validateVolume(command.RingtoneVolume); err != nil {
-		return err
-	}
 	if command.DurationMinutes < 0 || command.DurationMinutes > 120 {
 		return &commandError{Code: "usage", Message: "duration must be between 0 and 120 minutes", ExitCode: 2}
 	}
@@ -146,8 +135,6 @@ func writeProfile(runtime *Runtime, profile *client.ProfileRead) error {
 			recordField{Name: "name", Value: row[1]},
 			recordField{Name: "default", Value: row[2]},
 			recordField{Name: "scene", Value: row[3]},
-			recordField{Name: "intro_sound", Value: row[4]},
-			recordField{Name: "ringtone_sound", Value: row[5]},
 		)
 	})
 }
@@ -158,7 +145,5 @@ func profileRow(profile client.ProfileRead) []string {
 		profile.Name,
 		strconv.FormatBool(profile.IsDefault),
 		profile.Sunrise.SceneName,
-		profile.Intro.SoundID.String(),
-		profile.Ringtone.SoundID.String(),
 	}
 }

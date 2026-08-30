@@ -25,7 +25,6 @@ func writeDoctor(runtime *Runtime, result *client.DoctorRead) error {
 		return writeRecord(runtime.stdout,
 			recordField{Name: "configured", Value: fmt.Sprintf("%t", result.Configured)},
 			recordField{Name: "hue_bridge", Value: fmt.Sprintf("%t", result.HueBridge.Configured)},
-			recordField{Name: "sonos_speaker", Value: fmt.Sprintf("%t", result.SonosSpeaker.Configured)},
 		)
 	})
 }

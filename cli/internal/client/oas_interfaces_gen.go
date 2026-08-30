@@ -49,20 +49,12 @@ type ListOccurrencesRes interface {
 	listOccurrencesRes()
 }
 
-type ListSoundsRes interface {
-	listSoundsRes()
-}
-
 type LoginRes interface {
 	loginRes()
 }
 
 type LogoutRes interface {
 	logoutRes()
-}
-
-type PreviewSoundRes interface {
-	previewSoundRes()
 }
 
 type RefreshRes interface {
@@ -73,24 +65,8 @@ type RegisterRes interface {
 	registerRes()
 }
 
-type SelectAudioOutputRes interface {
-	selectAudioOutputRes()
-}
-
 type SelectHueBridgeRes interface {
 	selectHueBridgeRes()
-}
-
-type SelectSonosSpeakerRes interface {
-	selectSonosSpeakerRes()
-}
-
-type SetVolumeRes interface {
-	setVolumeRes()
-}
-
-type SnoozeAlarmRes interface {
-	snoozeAlarmRes()
 }
 
 type StopSceneDemoRes interface {
