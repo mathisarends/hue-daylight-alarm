@@ -1,15 +1,11 @@
 from huerise.presentation import Feature
 
-from . import alarm, auth, events, lighting, runner, scheduler, user
+from .daylight_alarm.feature import feature as daylight_alarm
+from .lighting.feature import feature as lighting
 
 FEATURES: tuple[Feature, ...] = (
-    user.feature,
-    auth.feature,
-    alarm.feature,
-    lighting.feature,
-    events.feature,
-    runner.feature,
-    scheduler.feature,
+    lighting,
+    daylight_alarm,
 )
 
 __all__ = ["FEATURES"]

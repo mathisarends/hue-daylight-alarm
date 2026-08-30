@@ -6,7 +6,7 @@ from typing import Protocol
 from uuid import UUID
 
 from huerise.configuration import DaylightAlarmConfig, HueriseConfig
-from huerise.hue import (
+from huerise.features.lighting.hue import (
     HueClient,
     HueClientFactory,
     HueCredentials,

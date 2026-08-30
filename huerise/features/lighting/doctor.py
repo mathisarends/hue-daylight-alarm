@@ -1,8 +1,11 @@
 from dataclasses import dataclass
 from typing import Literal
 
-from huerise.daylight_alarm import ConfigurationSource, CredentialsSource
-from huerise.hue import (
+from huerise.features.daylight_alarm.service import (
+    ConfigurationSource,
+    CredentialsSource,
+)
+from huerise.features.lighting.hue import (
     HueClientFactory,
     HueUnavailableError,
     SceneNotFoundError,

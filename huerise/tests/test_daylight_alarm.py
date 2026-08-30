@@ -5,8 +5,11 @@ from uuid import UUID
 import pytest
 
 from huerise.configuration import DaylightAlarmConfig, HueriseConfig
-from huerise.daylight_alarm import AlarmAlreadyRunningError, DaylightAlarm
-from huerise.hue import (
+from huerise.features.daylight_alarm.service import (
+    AlarmAlreadyRunningError,
+    DaylightAlarm,
+)
+from huerise.features.lighting.hue import (
     HueCredentials,
     Room,
     RoomNotFoundError,

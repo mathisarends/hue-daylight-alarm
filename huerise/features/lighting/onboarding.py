@@ -6,7 +6,7 @@ from typing import Protocol
 from hueify.onboarding import discover_bridges, register_app_key
 
 from huerise.configuration import HueConfig, HueEnvironment, YamlConfiguration
-from huerise.hue import HueUnavailableError
+from huerise.features.lighting.hue import HueUnavailableError
 
 
 class OnboardingState(StrEnum):

@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 from huerise.configuration import HueEnvironment, YamlConfiguration
-from huerise.onboarding import (
+from huerise.features.lighting.onboarding import (
     BridgeNotFoundError,
     BridgeNotSelectedError,
     HueBridge,

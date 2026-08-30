@@ -1,65 +1,55 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from dataclasses import dataclass
 
-from fastapi import Depends, FastAPI, Request, status
+from dishka import AsyncContainer, make_async_container
+from dishka.integrations.fastapi import setup_dishka
+from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from huerise.authentication import require_api_key
-from huerise.configuration import (
-    APISettings,
-    ConfigurationError,
-    HueEnvironment,
-    YamlConfiguration,
+from huerise.configuration import ConfigurationError
+from huerise.features import FEATURES
+from huerise.features.daylight_alarm.service import (
+    AlarmAlreadyRunningError,
+    DaylightAlarm,
 )
-from huerise.daylight_alarm import AlarmAlreadyRunningError, DaylightAlarm
-from huerise.hue import (
-    HueClientFactory,
-    HueCredentialsProvider,
-    HueifyClientFactory,
+from huerise.features.lighting.hue import (
     HueUnavailableError,
+    RoomNotFoundError,
     SceneNotFoundError,
 )
+from huerise.features.lighting.onboarding import (
+    BridgeNotFoundError,
+    BridgeNotSelectedError,
+    LinkButtonTimeoutError,
+    OnboardingReadOnlyError,
+)
+from huerise.providers import CoreProvider
 
 
-@dataclass(slots=True)
-class AppServices:
-    api_key: str
-    alarm: DaylightAlarm
-
-
-class StatusResponse(BaseModel):
+class HealthResponse(BaseModel):
     status: str
 
 
-def build_services(
-    settings: APISettings | None = None,
-    hue_environment: HueEnvironment | None = None,
-    clients: HueClientFactory | None = None,
-) -> AppServices:
-    settings = settings or APISettings()
-    configuration = YamlConfiguration(settings.config_path)
-    credentials = HueCredentialsProvider(
-        configuration, hue_environment or HueEnvironment()
-    )
-    alarm = DaylightAlarm(
-        configuration,
-        credentials,
-        clients or HueifyClientFactory(),
-    )
-    return AppServices(settings.api_key.get_secret_value(), alarm)
+def create_container() -> AsyncContainer:
+    providers = [
+        CoreProvider(),
+        *(provider() for feature in FEATURES for provider in feature.providers),
+    ]
+    return make_async_container(*providers)
 
 
-def create_app(services: AppServices | None = None) -> FastAPI:
-    services = services or build_services()
+def create_app(container: AsyncContainer | None = None) -> FastAPI:
+    container = container or create_container()
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         try:
             yield
         finally:
-            await services.alarm.stop()
+            alarm = await container.get(DaylightAlarm)
+            await alarm.stop()
+            await container.close()
 
     app = FastAPI(
         title="Huerise Daylight Alarm API",
@@ -67,34 +57,15 @@ def create_app(services: AppServices | None = None) -> FastAPI:
         description="Run one YAML-configured Philips Hue daylight alarm.",
         lifespan=lifespan,
     )
-    app.state.services = services
+    setup_dishka(container, app=app)
     _install_exception_handlers(app)
 
-    @app.get("/health", response_model=StatusResponse, tags=["health"])
-    async def health() -> StatusResponse:
-        return StatusResponse(status="ok")
+    @app.get("/health", response_model=HealthResponse, tags=["health"])
+    async def health() -> HealthResponse:
+        return HealthResponse(status="ok")
 
-    @app.post(
-        "/daylight-alarm/start",
-        status_code=status.HTTP_202_ACCEPTED,
-        response_model=StatusResponse,
-        dependencies=[Depends(require_api_key)],
-        tags=["daylight-alarm"],
-    )
-    async def start_daylight_alarm() -> StatusResponse:
-        await services.alarm.start()
-        return StatusResponse(status="started")
-
-    @app.post(
-        "/daylight-alarm/stop",
-        status_code=status.HTTP_204_NO_CONTENT,
-        response_model=None,
-        dependencies=[Depends(require_api_key)],
-        tags=["daylight-alarm"],
-    )
-    async def stop_daylight_alarm() -> None:
-        await services.alarm.stop()
-
+    for feature in FEATURES:
+        feature.install(app)
     return app
 
 
@@ -111,25 +82,18 @@ def _install_exception_handlers(app: FastAPI) -> None:
             },
         )
 
-    @app.exception_handler(AlarmAlreadyRunningError)
-    async def alarm_already_running(
-        _: Request, error: AlarmAlreadyRunningError
-    ) -> JSONResponse:
-        return JSONResponse(
-            status_code=status.HTTP_409_CONFLICT,
-            content={"detail": str(error)},
-        )
+    _map_error(app, AlarmAlreadyRunningError, status.HTTP_409_CONFLICT)
+    _map_error(app, OnboardingReadOnlyError, status.HTTP_409_CONFLICT)
+    _map_error(app, BridgeNotSelectedError, status.HTTP_409_CONFLICT)
+    _map_error(app, LinkButtonTimeoutError, status.HTTP_409_CONFLICT)
+    _map_error(app, BridgeNotFoundError, status.HTTP_404_NOT_FOUND)
+    _map_error(app, RoomNotFoundError, status.HTTP_404_NOT_FOUND)
+    _map_error(app, SceneNotFoundError, status.HTTP_404_NOT_FOUND)
+    _map_error(app, HueUnavailableError, status.HTTP_503_SERVICE_UNAVAILABLE)
 
-    @app.exception_handler(SceneNotFoundError)
-    async def scene_not_found(_: Request, error: SceneNotFoundError) -> JSONResponse:
-        return JSONResponse(
-            status_code=status.HTTP_404_NOT_FOUND,
-            content={"detail": str(error)},
-        )
 
-    @app.exception_handler(HueUnavailableError)
-    async def hue_unavailable(_: Request, error: HueUnavailableError) -> JSONResponse:
-        return JSONResponse(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            content={"detail": str(error)},
-        )
+def _map_error(app: FastAPI, error_type: type[Exception], status_code: int) -> None:
+    async def handler(_: Request, error: Exception) -> JSONResponse:
+        return JSONResponse(status_code=status_code, content={"detail": str(error)})
+
+    app.add_exception_handler(error_type, handler)

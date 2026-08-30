@@ -1,16 +1,20 @@
 import secrets
 
-from fastapi import HTTPException, Request, Security, status
+from dishka.integrations.fastapi import FromDishka, inject
+from fastapi import HTTPException, Security, status
 from fastapi.security import APIKeyHeader
+
+from huerise.configuration import APISettings
 
 _api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 
+@inject
 async def require_api_key(
-    request: Request,
+    settings: FromDishka[APISettings],
     supplied: str | None = Security(_api_key_header),
 ) -> None:
-    expected: str = request.app.state.services.api_key
+    expected = settings.api_key.get_secret_value()
     if supplied is None or not secrets.compare_digest(supplied, expected):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
