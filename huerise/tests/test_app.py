@@ -58,7 +58,7 @@ class StubOnboardingGateway:
         return (HueBridge("bridge-1", "192.0.2.10"),)
 
     async def register(self, bridge_ip: str) -> str:
-        return "registered-key"
+        return "registered-hue-key-123"
 
 
 class AppTestProvider(Provider):
@@ -105,7 +105,7 @@ def client(tmp_path: Path, hue_client: StubHueClient) -> Iterator[TestClient]:
 hue:
   bridge_id: bridge-1
   bridge_ip: 192.0.2.10
-  app_key: secret
+  app_key: a-valid-hue-app-key-123
 daylight_alarm:
   scene_id: {SCENE_ID}
   start_brightness: 1
@@ -192,3 +192,16 @@ def test_exposes_onboarding_state(client: TestClient) -> None:
         "ip_address": "192.0.2.10",
         "read_only": False,
     }
+
+
+def test_supports_complete_client_onboarding_flow(client: TestClient) -> None:
+    bridges = client.get("/hue/bridges", headers=AUTH)
+    selected = client.put("/hue/bridge", headers=AUTH, json={"bridge_id": "bridge-1"})
+    registered = client.post("/hue/bridge/register", headers=AUTH)
+
+    assert bridges.status_code == 200
+    assert bridges.json() == [
+        {"id": "bridge-1", "ip_address": "192.0.2.10", "selected": True}
+    ]
+    assert selected.json()["state"] == "link_button_required"
+    assert registered.json()["state"] == "ready"

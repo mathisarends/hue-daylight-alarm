@@ -51,7 +51,7 @@ class HueConfig(BaseModel):
 
     bridge_id: StrictStr | None = Field(default=None, min_length=1)
     bridge_ip: IPvAnyAddress
-    app_key: StrictStr | None = Field(default=None, min_length=1)
+    app_key: StrictStr | None = Field(default=None, min_length=20)
 
 
 class HueriseConfig(BaseModel):
@@ -77,12 +77,13 @@ class HueEnvironment(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
+        env_ignore_empty=True,
         env_prefix="HUE_",
         extra="ignore",
     )
 
     bridge_ip: IPvAnyAddress | None = None
-    app_key: SecretStr | None = None
+    app_key: SecretStr | None = Field(default=None, min_length=20)
 
     @model_validator(mode="after")
     def require_complete_pair(self) -> Self:

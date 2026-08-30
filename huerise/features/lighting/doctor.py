@@ -1,3 +1,4 @@
+from contextlib import suppress
 from dataclasses import dataclass
 from typing import Literal
 
@@ -39,7 +40,12 @@ class Doctor:
     async def check(self) -> DoctorReport:
         config = self._configuration.load()
         credentials = self._credentials.get()
-        client = self._clients.create(credentials)
+        try:
+            client = self._clients.create(credentials)
+        except Exception as error:
+            raise HueUnavailableError(
+                "Could not initialize Hue Bridge connection"
+            ) from error
         try:
             rooms = await client.list_rooms()
             room_for_scene(rooms, config.daylight_alarm.scene_id)
@@ -50,7 +56,8 @@ class Doctor:
                 "Could not connect to or authenticate with Hue Bridge"
             ) from error
         finally:
-            await client.close()
+            with suppress(Exception):
+                await client.close()
 
         return DoctorReport(
             status="ok",

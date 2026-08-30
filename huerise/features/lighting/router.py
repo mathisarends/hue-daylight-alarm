@@ -148,18 +148,14 @@ async def discover_bridges(
     return [BridgeResponse.from_domain(item) for item in await service.discover()]
 
 
-@router.get(
-    "/hue/bridge", response_model=OnboardingStatusResponse, tags=["hue-setup"]
-)
+@router.get("/hue/bridge", response_model=OnboardingStatusResponse, tags=["hue-setup"])
 async def bridge_status(
     service: FromDishka[HueOnboarding],
 ) -> OnboardingStatusResponse:
     return OnboardingStatusResponse.from_domain(service.status())
 
 
-@router.put(
-    "/hue/bridge", response_model=OnboardingStatusResponse, tags=["hue-setup"]
-)
+@router.put("/hue/bridge", response_model=OnboardingStatusResponse, tags=["hue-setup"])
 async def select_bridge(
     body: BridgeSelectionRequest,
     service: FromDishka[HueOnboarding],

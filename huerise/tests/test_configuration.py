@@ -82,11 +82,13 @@ def test_updates_only_hue_section_atomically(tmp_path: Path) -> None:
     path.write_text(VALID_CONFIG, encoding="utf-8")
     repository = YamlConfiguration(path)
 
-    repository.save_hue(HueConfig(bridge_ip="192.0.2.10", app_key="secret"))
+    repository.save_hue(
+        HueConfig(bridge_ip="192.0.2.10", app_key="a-valid-hue-app-key-123")
+    )
 
     config = repository.load()
     assert str(config.hue.bridge_ip) == "192.0.2.10"
-    assert config.hue.app_key == "secret"
+    assert config.hue.app_key == "a-valid-hue-app-key-123"
     assert config.daylight_alarm.scene_id == UUID(int=1)
     assert list(tmp_path.glob("*.tmp")) == []
 

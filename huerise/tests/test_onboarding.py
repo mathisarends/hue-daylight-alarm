@@ -21,7 +21,7 @@ class StubGateway:
         HueBridge("bridge-1", "192.0.2.10"),
         HueBridge("bridge-2", "192.0.2.11"),
     )
-    app_key: str = "registered-key"
+    app_key: str = "registered-hue-key-123"
     registration_error: Exception | None = None
 
     async def discover(self) -> tuple[HueBridge, ...]:
@@ -92,7 +92,7 @@ async def test_environment_configuration_is_ready_and_read_only(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setenv("HUE_BRIDGE_IP", "192.0.2.20")
-    monkeypatch.setenv("HUE_APP_KEY", "environment-key")
+    monkeypatch.setenv("HUE_APP_KEY", "environment-hue-key-123")
     onboarding = HueOnboarding(
         YamlConfiguration(tmp_path / "huerise.yml"),
         HueEnvironment(_env_file=None),

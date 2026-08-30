@@ -72,7 +72,14 @@ class DaylightAlarm:
             if self.is_running:
                 raise AlarmAlreadyRunningError("Daylight alarm is already running")
 
-            client = self._clients.create(self._credentials.get())
+            try:
+                client = self._clients.create(self._credentials.get())
+            except HueUnavailableError:
+                raise
+            except Exception as error:
+                raise HueUnavailableError(
+                    "Could not initialize Hue Bridge connection"
+                ) from error
             try:
                 room = room_for_scene(
                     await client.list_rooms(), config.scene_id, room_id=room_id
