@@ -2,7 +2,7 @@ services:
   daylight-alarm:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: huerise/Dockerfile
     container_name: huerise
     restart: unless-stopped
     environment:
