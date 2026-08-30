@@ -7,6 +7,7 @@ from dishka import Provider, Scope, make_async_container, provide
 from fastapi.testclient import TestClient
 from pydantic import SecretStr
 
+from huerise import __version__
 from huerise.configuration import YamlConfiguration
 from huerise.env import AppSettings, HueEnvironment
 from huerise.features.daylight_alarm.infrastructure import DaylightAlarmProvider
@@ -111,6 +112,10 @@ def test_operation_ids_are_explicit_and_stable(client: TestClient) -> None:
         "startDaylightAlarm",
         "stopDaylightAlarm",
     }
+
+
+def test_api_uses_package_version(client: TestClient) -> None:
+    assert client.app.version == __version__
 
 
 def test_errors_are_documented_on_their_routes(client: TestClient) -> None:

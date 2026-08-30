@@ -6,6 +6,7 @@ from dishka import AsyncContainer, make_async_container
 from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
 
+from huerise import __version__
 from huerise.env import AppSettings
 from huerise.features import FEATURES
 from huerise.features.daylight_alarm.application import DaylightAlarm
@@ -38,7 +39,7 @@ def create_app(container: AsyncContainer | None = None) -> FastAPI:
 
     app = FastAPI(
         title="Huerise Daylight Alarm API",
-        version="2.0.0",
+        version=__version__,
         description="Run one YAML-configured Philips Hue daylight alarm.",
         lifespan=lifespan,
     )

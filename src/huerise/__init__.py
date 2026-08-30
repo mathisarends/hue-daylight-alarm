@@ -1,1 +1,3 @@
-__all__: list[str] = []
+from huerise.version import __version__
+
+__all__ = ["__version__"]
