@@ -49,6 +49,7 @@ class DaylightAlarmConfig(BaseModel):
 class HueConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
+    bridge_id: StrictStr | None = Field(default=None, min_length=1)
     bridge_ip: IPvAnyAddress
     app_key: StrictStr | None = Field(default=None, min_length=1)
 
