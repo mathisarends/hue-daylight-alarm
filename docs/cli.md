@@ -17,7 +17,6 @@ huerise
 │   ├── get
 │   ├── enable
 │   ├── disable
-│   ├── snooze
 │   ├── dismiss
 │   ├── occurrences
 │   └── delete
@@ -31,14 +30,6 @@ huerise
 │   ├── activate-scene
 │   ├── demo
 │   └── stop-demo
-├── sounds
-│   ├── list
-│   ├── preview
-│   ├── stop
-│   └── volume
-├── audio-output
-│   ├── get
-│   └── select
 ├── hue
 │   └── bridge
 │       ├── list
@@ -69,8 +60,7 @@ logout` revokes the refresh token server-side and forgets the local file.
 <bridge-id>` persists the selected bridge. Press its physical link button, then
 run `huerise hue bridge register`; registration may take up to 60 seconds.
 `huerise hue bridge status` shows the effective bridge configuration and its
-source. `huerise doctor` reports whether the Hue Bridge and Sonos speaker are
-configured.
+source. `huerise doctor` reports whether the Hue Bridge is configured.
 
 ## Streams and JSON
 
