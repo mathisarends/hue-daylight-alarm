@@ -123,23 +123,22 @@ class AlarmScheduler(Runnable):
 
                 occurrence.start_sunrise(now)
                 await uow.occurrences.save(occurrence)
-                await self._retire_one_time_alarm(uow, occurrence)
+                await _retire_one_time_alarm(uow, occurrence)
                 claimed.append(occurrence)
 
         return claimed
-
-    @staticmethod
-    async def _retire_one_time_alarm(
-        uow: AlarmUnitOfWork, occurrence: AlarmOccurrence
-    ) -> None:
-        """A one-time alarm is done the moment its single run starts."""
-        alarm = await uow.alarms.find_by_id(occurrence.alarm_id)
-        if alarm is None or alarm.schedule.is_recurring or not alarm.is_enabled:
-            return
-        alarm.disable()
-        await uow.alarms.save(alarm)
 
     def _spawn(self, occurrence: AlarmOccurrence) -> None:
         task = asyncio.create_task(self._runner.run(occurrence))
         self._running_tasks.add(task)
         task.add_done_callback(self._running_tasks.discard)
+
+
+async def _retire_one_time_alarm(
+    uow: AlarmUnitOfWork, occurrence: AlarmOccurrence
+) -> None:
+    alarm = await uow.alarms.find_by_id(occurrence.alarm_id)
+    if alarm is None or alarm.schedule.is_recurring or not alarm.is_enabled:
+        return
+    alarm.disable()
+    await uow.alarms.save(alarm)
