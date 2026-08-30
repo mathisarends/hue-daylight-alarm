@@ -117,7 +117,6 @@ class OccurrenceRead(BaseModel):
     state: OccurrenceState
     triggered_at: datetime | None
     finished_at: datetime | None
-    snooze_count: int
     failure_reason: str | None
 
     @classmethod
@@ -129,10 +128,5 @@ class OccurrenceRead(BaseModel):
             state=occurrence.state,
             triggered_at=occurrence.triggered_at,
             finished_at=occurrence.finished_at,
-            snooze_count=occurrence.snooze_count,
             failure_reason=occurrence.failure_reason,
         )
-
-
-class SnoozeRequest(BaseModel):
-    minutes: int = Field(default=10, ge=1, le=60)

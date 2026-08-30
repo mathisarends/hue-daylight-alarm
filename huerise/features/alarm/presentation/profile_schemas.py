@@ -4,17 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from huerise.features.alarm.domain import (
-    AlarmProfile,
-    IntroConfig,
-    RingtoneConfig,
-    SunriseConfig,
-)
-
-_SOUND_ID_DESCRIPTION = (
-    "UUID of a sound returned by GET /sounds, "
-    "e.g. '5c0806e7-7162-5be7-948e-33d349bde4a8'."
-)
+from huerise.features.alarm.domain import AlarmProfile, SunriseConfig
 
 
 class SunriseSchema(BaseModel):
@@ -46,33 +36,8 @@ class SunriseSchema(BaseModel):
         )
 
 
-class RingtoneSchema(BaseModel):
-    sound_id: UUID = Field(description=_SOUND_ID_DESCRIPTION)
-    volume: int = Field(default=80, ge=0, le=100)
-
-    def to_domain(self) -> RingtoneConfig:
-        return RingtoneConfig(sound_id=self.sound_id, volume=self.volume)
-
-    @classmethod
-    def from_domain(cls, config: RingtoneConfig) -> Self:
-        return cls(sound_id=config.sound_id, volume=config.volume)
-
-
-class IntroSchema(BaseModel):
-    sound_id: UUID = Field(description=_SOUND_ID_DESCRIPTION)
-
-    def to_domain(self) -> IntroConfig:
-        return IntroConfig(sound_id=self.sound_id)
-
-    @classmethod
-    def from_domain(cls, config: IntroConfig) -> Self:
-        return cls(sound_id=config.sound_id)
-
-
 class ProfileCreate(BaseModel):
     name: str
-    intro: IntroSchema
-    ringtone: RingtoneSchema
     sunrise: SunriseSchema
 
 
@@ -88,7 +53,5 @@ class ProfileRead(ProfileCreate):
             id=profile.id,
             name=profile.name,
             is_default=profile.is_default,
-            intro=IntroSchema.from_domain(profile.intro_config),
             sunrise=SunriseSchema.from_domain(profile.sunrise_config),
-            ringtone=RingtoneSchema.from_domain(profile.ringtone_config),
         )

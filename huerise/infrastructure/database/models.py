@@ -17,8 +17,6 @@ from huerise.infrastructure.database.types import UtcDateTime
 OCCURRENCE_STATES = (
     "pending",
     "sunrise",
-    "ringing",
-    "snoozed",
     "dismissed",
     "skipped",
     "failed",
@@ -57,28 +55,6 @@ class RefreshTokenModel(DatabaseEntity, table=True):
     revoked_at: datetime | None = Field(default=None, sa_column=Column(UtcDateTime))
 
 
-class SoundModel(DatabaseEntity, table=True):
-    __tablename__ = "sounds"
-    __table_args__ = (
-        UniqueConstraint("category", "name", name="uq_sounds_category_name"),
-    )
-
-    name: str
-    category: str = Field(index=True)
-    storage_path: str = Field(unique=True)
-    created_at: datetime = Field(sa_column=Column(UtcDateTime, nullable=False))
-
-
-class SonosSpeakerSelectionModel(DatabaseEntity, table=True):
-    __tablename__ = "sonos_speaker_selection"
-
-    speaker_id: str = Field(unique=True)
-    speaker_name: str
-    ip_address: str
-    group_id: str | None = None
-    is_coordinator: bool = False
-
-
 class HueBridgeSelectionModel(DatabaseEntity, table=True):
     __tablename__ = "hue_bridge_selection"
 
@@ -95,16 +71,11 @@ class AlarmProfileModel(DatabaseEntity, table=True):
     name: str = Field(unique=True)
     is_default: bool = Field(default=False)
 
-    intro_sound_id: UUID
-
     sunrise_scene_id: UUID
     sunrise_scene_name: str
     sunrise_duration_minutes: int
     sunrise_brightness_start: int
     sunrise_brightness_end: int
-
-    ringtone_sound_id: UUID
-    ringtone_volume: int
 
 
 class AlarmModel(DatabaseEntity, table=True):
@@ -150,5 +121,4 @@ class AlarmOccurrenceModel(DatabaseEntity, table=True):
     )
     triggered_at: datetime | None = Field(default=None, sa_column=Column(UtcDateTime))
     finished_at: datetime | None = Field(default=None, sa_column=Column(UtcDateTime))
-    snooze_count: int = Field(default=0)
     failure_reason: str | None = Field(default=None)

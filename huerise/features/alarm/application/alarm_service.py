@@ -15,7 +15,7 @@ from huerise.features.alarm.domain import (
     OccurrenceState,
     Schedule,
 )
-from huerise.features.devices.application import AudioPlayer, Lights
+from huerise.features.devices.application import Lights
 from huerise.features.devices.domain import RoomNotFoundError, SceneNotFoundError
 from huerise.features.events.application import EventPublisher
 from huerise.features.events.domain import (
@@ -26,7 +26,6 @@ from huerise.features.events.domain import (
     OccurrenceDismissed,
     OccurrenceSkipped,
     OccurrenceSnapshot,
-    OccurrenceSnoozed,
 )
 
 logger = logging.getLogger(__name__)
@@ -38,14 +37,12 @@ class AlarmService:
         alarms: AlarmRepository,
         profiles: AlarmProfileRepository,
         occurrences: AlarmOccurrenceRepository,
-        audio: AudioPlayer,
         lights: Lights,
         events: EventPublisher,
     ) -> None:
         self._alarms = alarms
         self._profiles = profiles
         self._occurrences = occurrences
-        self._audio = audio
         self._lights = lights
         self._events = events
 
@@ -168,23 +165,10 @@ class AlarmService:
         await self.find_by_id(alarm_id)
         return await self._occurrences.find_for_alarm(alarm_id, limit=limit)
 
-    async def snooze(self, alarm_id: UUID, minutes: int = 10) -> AlarmOccurrence:
-        logger.info("Snoozing alarm %s for %d minutes", alarm_id, minutes)
-        occurrence = await self._get_active_or_raise(alarm_id)
-        occurrence.snooze(minutes)
-        await self._audio.stop()
-
-        occurrence = await self._occurrences.save(occurrence)
-        self._events.publish(
-            OccurrenceSnoozed(occurrence=OccurrenceSnapshot.from_domain(occurrence))
-        )
-        return occurrence
-
     async def dismiss(self, alarm_id: UUID) -> AlarmOccurrence:
         logger.info("Dismissing alarm %s", alarm_id)
         occurrence = await self._get_active_or_raise(alarm_id)
         occurrence.dismiss()
-        await self._audio.stop()
 
         occurrence = await self._occurrences.save(occurrence)
         self._events.publish(
@@ -253,7 +237,6 @@ class AlarmService:
 
         if occurrence.is_running:
             occurrence.dismiss()
-            await self._audio.stop()
         else:
             occurrence.skip()
 

@@ -27,8 +27,6 @@ class EventType(StrEnum):
     OCCURRENCE_SCHEDULED = "occurrence.scheduled"
     OCCURRENCE_STARTED = "occurrence.started"
     OCCURRENCE_PROGRESS = "occurrence.progress"
-    OCCURRENCE_RINGING = "occurrence.ringing"
-    OCCURRENCE_SNOOZED = "occurrence.snoozed"
     OCCURRENCE_DISMISSED = "occurrence.dismissed"
     OCCURRENCE_SKIPPED = "occurrence.skipped"
     OCCURRENCE_FAILED = "occurrence.failed"
@@ -121,19 +119,6 @@ class OccurrenceProgress(HueriseEvent):
         return round(100 * (self.step + 1) / self.total_steps, 1)
 
 
-class OccurrenceRinging(HueriseEvent):
-    type: Literal[EventType.OCCURRENCE_RINGING] = EventType.OCCURRENCE_RINGING
-    occurrence_id: UUID
-    alarm_id: UUID
-    sound_id: UUID
-    volume: int
-
-
-class OccurrenceSnoozed(HueriseEvent):
-    type: Literal[EventType.OCCURRENCE_SNOOZED] = EventType.OCCURRENCE_SNOOZED
-    occurrence: OccurrenceSnapshot
-
-
 class OccurrenceDismissed(HueriseEvent):
     type: Literal[EventType.OCCURRENCE_DISMISSED] = EventType.OCCURRENCE_DISMISSED
     occurrence: OccurrenceSnapshot
@@ -158,8 +143,6 @@ type AnyHueriseEvent = Annotated[
     | OccurrenceScheduled
     | OccurrenceStarted
     | OccurrenceProgress
-    | OccurrenceRinging
-    | OccurrenceSnoozed
     | OccurrenceDismissed
     | OccurrenceSkipped
     | OccurrenceFailed,

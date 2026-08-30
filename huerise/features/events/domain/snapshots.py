@@ -83,11 +83,7 @@ class SunriseSnapshot(BaseModel):
 
 
 class ProfileSnapshot(BaseModel):
-    """The behaviour shared by every alarm using it, as of an event.
-
-    Only the sunrise is carried: the intro and ringtone are sounds this app
-    owns, and nothing outside it can move them.
-    """
+    """The behaviour shared by every alarm using it, as of an event."""
 
     id: UUID
     name: str
@@ -113,7 +109,6 @@ class OccurrenceSnapshot(BaseModel):
     state: OccurrenceState
     triggered_at: datetime | None
     finished_at: datetime | None
-    snooze_count: int
     failure_reason: str | None
 
     @classmethod
@@ -125,6 +120,5 @@ class OccurrenceSnapshot(BaseModel):
             state=occurrence.state,
             triggered_at=occurrence.triggered_at,
             finished_at=occurrence.finished_at,
-            snooze_count=occurrence.snooze_count,
             failure_reason=occurrence.failure_reason,
         )

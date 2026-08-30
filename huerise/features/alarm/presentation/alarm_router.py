@@ -9,7 +9,6 @@ from huerise.features.alarm.presentation.alarm_schemas import (
     AlarmRead,
     AlarmUpdate,
     OccurrenceRead,
-    SnoozeRequest,
 )
 from huerise.presentation import get_current_user
 
@@ -90,18 +89,6 @@ async def disable_alarm(
 ) -> AlarmRead:
     alarm = await alarm_service.disable(alarm_id)
     return AlarmRead.from_domain(alarm)
-
-
-@alarm_router.post(
-    "/{alarm_id}/snooze", response_model=OccurrenceRead, operation_id="snoozeAlarm"
-)
-async def snooze_alarm(
-    alarm_id: UUID,
-    body: SnoozeRequest,
-    alarm_service: FromDishka[AlarmService],
-) -> OccurrenceRead:
-    occurrence = await alarm_service.snooze(alarm_id, minutes=body.minutes)
-    return OccurrenceRead.from_domain(occurrence)
 
 
 @alarm_router.post(

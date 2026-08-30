@@ -1,15 +1,12 @@
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from uuid import UUID
 
-from huerise.features.alarm.domain.exceptions import (
-    InvalidOccurrenceTransitionError,
-    OccurrenceNotRunningError,
-)
+from huerise.features.alarm.domain.exceptions import InvalidOccurrenceTransitionError
 from huerise.features.alarm.domain.views import OccurrenceState
 from huerise.shared.ddd import Entity
 
-_WAITING_STATES = {OccurrenceState.PENDING, OccurrenceState.SNOOZED}
-_RUNNING_STATES = {OccurrenceState.SUNRISE, OccurrenceState.RINGING}
+_WAITING_STATES = {OccurrenceState.PENDING}
+_RUNNING_STATES = {OccurrenceState.SUNRISE}
 _FINAL_STATES = {
     OccurrenceState.DISMISSED,
     OccurrenceState.SKIPPED,
@@ -27,7 +24,6 @@ class AlarmOccurrence(Entity):
         state: OccurrenceState = OccurrenceState.PENDING,
         triggered_at: datetime | None = None,
         finished_at: datetime | None = None,
-        snooze_count: int = 0,
         failure_reason: str | None = None,
         id: UUID | None = None,
     ) -> None:
@@ -40,7 +36,6 @@ class AlarmOccurrence(Entity):
         self.state = state
         self.triggered_at = triggered_at
         self.finished_at = finished_at
-        self.snooze_count = snooze_count
         self.failure_reason = failure_reason
 
     @property
@@ -63,21 +58,10 @@ class AlarmOccurrence(Entity):
         self.state = OccurrenceState.SUNRISE
         self.triggered_at = now or datetime.now(UTC)
 
-    def ring(self) -> None:
-        self._require({OccurrenceState.SUNRISE}, OccurrenceState.RINGING)
-        self.state = OccurrenceState.RINGING
-
     def dismiss(self, now: datetime | None = None) -> None:
         self._require(_RUNNING_STATES | _WAITING_STATES, OccurrenceState.DISMISSED)
         self.state = OccurrenceState.DISMISSED
         self.finished_at = now or datetime.now(UTC)
-
-    def snooze(self, minutes: int = 10, now: datetime | None = None) -> None:
-        if not self.is_running:
-            raise OccurrenceNotRunningError(self.id)
-        self.state = OccurrenceState.SNOOZED
-        self.scheduled_for = (now or datetime.now(UTC)) + timedelta(minutes=minutes)
-        self.snooze_count += 1
 
     def skip(self, now: datetime | None = None) -> None:
         """Drop a run that is no longer worth firing, e.g. missed while offline."""

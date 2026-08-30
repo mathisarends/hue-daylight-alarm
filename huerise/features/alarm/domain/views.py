@@ -50,8 +50,6 @@ class ProfileField(StrEnum):
 class OccurrenceState(StrEnum):
     PENDING = "pending"
     SUNRISE = "sunrise"
-    RINGING = "ringing"
-    SNOOZED = "snoozed"
     DISMISSED = "dismissed"
     SKIPPED = "skipped"
     FAILED = "failed"
@@ -138,11 +136,6 @@ class Schedule:
 
 
 @dataclass(frozen=True)
-class IntroConfig:
-    sound_id: UUID
-
-
-@dataclass(frozen=True)
 class SunriseConfig:
     scene_id: UUID
     scene_name: str
@@ -159,13 +152,3 @@ class SunriseConfig:
     @property
     def duration_minutes(self) -> int:
         return int(self.duration.total_seconds() // 60)
-
-
-@dataclass(frozen=True)
-class RingtoneConfig:
-    sound_id: UUID
-    volume: int = 80
-
-    def __post_init__(self) -> None:
-        if not (0 <= self.volume <= 100):
-            raise ValueError("volume must be 0-100")

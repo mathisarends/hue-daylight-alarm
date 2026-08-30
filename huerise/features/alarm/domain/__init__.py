@@ -7,7 +7,6 @@ from .exceptions import (
     InvalidOccurrenceTransitionError,
     NoActiveOccurrenceError,
     OccurrenceNotFoundError,
-    OccurrenceNotRunningError,
 )
 from .occurrence import AlarmOccurrence
 from .profile import AlarmProfile
@@ -21,10 +20,8 @@ from .views import (
     DEFAULT_TIMEZONE,
     AlarmDefect,
     AlarmField,
-    IntroConfig,
     OccurrenceState,
     ProfileField,
-    RingtoneConfig,
     Schedule,
     SunriseConfig,
     Weekday,
@@ -46,14 +43,11 @@ __all__ = [
     "AlarmUnitOfWork",
     "AlarmUnitOfWorkFactory",
     "HueriseError",
-    "IntroConfig",
     "InvalidOccurrenceTransitionError",
     "NoActiveOccurrenceError",
     "OccurrenceNotFoundError",
-    "OccurrenceNotRunningError",
     "OccurrenceState",
     "ProfileField",
-    "RingtoneConfig",
     "Schedule",
     "SunriseConfig",
     "Weekday",

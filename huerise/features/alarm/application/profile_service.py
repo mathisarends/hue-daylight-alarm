@@ -5,8 +5,6 @@ from huerise.features.alarm.domain import (
     AlarmProfile,
     AlarmProfileNotFoundError,
     AlarmProfileRepository,
-    IntroConfig,
-    RingtoneConfig,
     SunriseConfig,
 )
 
@@ -26,20 +24,9 @@ class AlarmProfileService:
             raise AlarmProfileNotFoundError(profile_id)
         return profile
 
-    async def create(
-        self,
-        name: str,
-        intro_config: IntroConfig,
-        ringtone_config: RingtoneConfig,
-        sunrise_config: SunriseConfig,
-    ) -> AlarmProfile:
+    async def create(self, name: str, sunrise_config: SunriseConfig) -> AlarmProfile:
         logger.info("Creating alarm profile '%s'", name)
-        profile = AlarmProfile(
-            name=name,
-            intro_config=intro_config,
-            sunrise_config=sunrise_config,
-            ringtone_config=ringtone_config,
-        )
+        profile = AlarmProfile(name=name, sunrise_config=sunrise_config)
         return await self._profiles.save(profile)
 
     async def delete(self, profile_id: UUID) -> None:

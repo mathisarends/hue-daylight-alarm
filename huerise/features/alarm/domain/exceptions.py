@@ -34,11 +34,6 @@ class NoActiveOccurrenceError(HueriseError):
         super().__init__(f"Alarm {alarm_id} has no active occurrence")
 
 
-class OccurrenceNotRunningError(HueriseError):
-    def __init__(self, occurrence_id: UUID) -> None:
-        super().__init__(f"Occurrence {occurrence_id} is not currently running")
-
-
 class InvalidOccurrenceTransitionError(HueriseError):
     def __init__(
         self,

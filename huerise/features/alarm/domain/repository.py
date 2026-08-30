@@ -52,7 +52,7 @@ class AlarmOccurrenceRepository(ABC):
 
     @abstractmethod
     async def find_active_for_alarm(self, alarm_id: UUID) -> AlarmOccurrence | None:
-        """The occurrence currently running or snoozed for this alarm."""
+        """The occurrence currently pending or running for this alarm."""
 
     @abstractmethod
     async def find_due(self, now: datetime) -> list[AlarmOccurrence]:

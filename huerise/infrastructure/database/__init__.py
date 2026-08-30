@@ -5,8 +5,6 @@ from .models import (
     DatabaseEntity,
     HueBridgeSelectionModel,
     RefreshTokenModel,
-    SonosSpeakerSelectionModel,
-    SoundModel,
     UserModel,
 )
 from .repository import Repository
@@ -21,7 +19,5 @@ __all__ = [
     "HueBridgeSelectionModel",
     "RefreshTokenModel",
     "Repository",
-    "SonosSpeakerSelectionModel",
-    "SoundModel",
     "UserModel",
 ]

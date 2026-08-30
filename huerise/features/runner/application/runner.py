@@ -1,7 +1,6 @@
 import asyncio
 import logging
 from datetime import timedelta
-from time import monotonic
 from uuid import UUID
 
 from huerise.features.alarm.domain import (
@@ -13,7 +12,7 @@ from huerise.features.alarm.domain import (
     AlarmUnitOfWorkFactory,
     OccurrenceState,
 )
-from huerise.features.devices.application import AudioPlayer, Lights
+from huerise.features.devices.application import Lights
 from huerise.features.devices.domain import (
     STEP_INTERVAL,
     RoomNotFoundError,
@@ -29,7 +28,6 @@ from huerise.features.events.domain import (
     OccurrenceDismissed,
     OccurrenceFailed,
     OccurrenceProgress,
-    OccurrenceRinging,
     OccurrenceSnapshot,
     OccurrenceStarted,
 )
@@ -39,30 +37,25 @@ from huerise.features.runner.application.runner_port import (
 
 logger = logging.getLogger(__name__)
 
-_INTRO_VOLUME = 50
-
 
 class AlarmRunner(AlarmRunnerPort):
-    """Executes one occurrence: intro, sunrise, ringtone.
+    """Executes one occurrence: ramp the room up, then finish.
 
     The occurrence arrives already claimed (SUNRISE) by the scheduler. State is
-    re-read between phases so a dismiss or snooze coming in over the API wins.
+    re-read between steps so a dismiss coming in over the API wins.
     """
 
     def __init__(
         self,
         lights: Lights,
-        audio: AudioPlayer,
         unit_of_work_factory: AlarmUnitOfWorkFactory,
         events: EventPublisher,
         step_interval: timedelta = STEP_INTERVAL,
     ) -> None:
         self._lights = lights
-        self._audio = audio
         self._unit_of_work_factory = unit_of_work_factory
         self._events = events
         self._step_interval = step_interval
-        self._intro_tasks: set[asyncio.Task[None]] = set()
 
     async def run(self, occurrence: AlarmOccurrence) -> None:
         try:
@@ -72,11 +65,7 @@ class AlarmRunner(AlarmRunnerPort):
                 return
             alarm, profile = context
 
-            if not await self._light_up(occurrence, alarm, profile):
-                return
-            if not await self._start_ringing(occurrence.id):
-                return
-            await self._run_ringtone(occurrence, alarm, profile)
+            await self._light_up(occurrence, alarm, profile)
             await self._finish(occurrence.id)
         except Exception as error:
             logger.exception("Occurrence %s failed during execution", occurrence.id)
@@ -84,42 +73,19 @@ class AlarmRunner(AlarmRunnerPort):
 
     async def _light_up(
         self, occurrence: AlarmOccurrence, alarm: Alarm, profile: AlarmProfile
-    ) -> bool:
-        """Run the sunrise, and see the wake-up through when it cannot run.
+    ) -> None:
+        """Run the sunrise, recording a defect rather than failing the run.
 
-        The lights are what makes waking up gentle; the ringtone is what makes
-        this an alarm clock. A bridge that is down or a room somebody deleted
-        must not cost the user the ring, so the rest of the ramp is waited out
-        in the dark instead. Reports whether the ringtone is still to come.
+        A bridge that is down or a room somebody deleted must not cost the
+        occurrence its finish -- it is recorded and the occurrence still ends.
         """
-        started = monotonic()
         try:
             await self._run_sunrise(occurrence, alarm, profile)
         except Exception as error:
             logger.exception(
-                "Sunrise for %s failed, waking up without light", occurrence.id
+                "Sunrise for %s failed, finishing without light", occurrence.id
             )
             await self._record_defect(alarm, error)
-            elapsed = monotonic() - started
-            return await self._wait_out_sunrise(
-                occurrence.id, profile.sunrise_config.duration.total_seconds() - elapsed
-            )
-        return True
-
-    async def _wait_out_sunrise(self, occurrence_id: UUID, seconds: float) -> bool:
-        """Sit out what is left of the ramp, so the ringtone keeps its time.
-
-        Polled rather than slept through in one go: a dismiss or snooze during
-        the dark stretch has to win just as it would during a real sunrise.
-        """
-        interval = self._step_interval.total_seconds()
-        while seconds > 0:
-            if not await self._still_in_state(occurrence_id, OccurrenceState.SUNRISE):
-                logger.info("Sunrise for %s interrupted", occurrence_id)
-                return False
-            await asyncio.sleep(min(interval, seconds))
-            seconds -= interval
-        return True
 
     async def _record_defect(self, alarm: Alarm, error: Exception) -> None:
         """Flag a room or scene that is not there, so it can be fixed by tomorrow.
@@ -156,11 +122,6 @@ class AlarmRunner(AlarmRunnerPort):
                 sunrise_seconds=round(sunrise.duration.total_seconds()),
             )
         )
-        intro_task = asyncio.create_task(
-            self._audio.play(profile.intro_config.sound_id, volume=_INTRO_VOLUME)
-        )
-        self._intro_tasks.add(intro_task)
-        intro_task.add_done_callback(self._intro_finished)
         scene = await self._get_scene(alarm.room_id, sunrise.scene_id)
         brightness_end = (
             round(scene.brightness)
@@ -218,31 +179,6 @@ class AlarmRunner(AlarmRunnerPort):
             raise SceneNotFoundError(str(room_id), str(scene_id))
         return scene
 
-    def _intro_finished(self, task: asyncio.Task[None]) -> None:
-        self._intro_tasks.discard(task)
-        if task.cancelled():
-            return
-        try:
-            task.result()
-        except Exception:
-            logger.exception("Intro playback failed")
-
-    async def _run_ringtone(
-        self, occurrence: AlarmOccurrence, alarm: Alarm, profile: AlarmProfile
-    ) -> None:
-        ringtone = profile.ringtone_config
-
-        self._events.publish(
-            OccurrenceRinging(
-                occurrence_id=occurrence.id,
-                alarm_id=alarm.id,
-                sound_id=ringtone.sound_id,
-                volume=ringtone.volume,
-            )
-        )
-        await self._audio.stop()
-        await self._audio.play(ringtone.sound_id, ringtone.volume)
-
     async def _load(self, alarm_id: UUID) -> tuple[Alarm, AlarmProfile] | None:
         async with self._unit_of_work_factory.create() as uow:
             alarm = await uow.alarms.find_by_id(alarm_id)
@@ -259,16 +195,6 @@ class AlarmRunner(AlarmRunnerPort):
         async with self._unit_of_work_factory.create() as uow:
             occurrence = await uow.occurrences.find_by_id(occurrence_id)
             return occurrence is not None and occurrence.state is state
-
-    async def _start_ringing(self, occurrence_id: UUID) -> bool:
-        """False when the occurrence was dismissed or snoozed during sunrise."""
-        async with self._unit_of_work_factory.create() as uow:
-            occurrence = await uow.occurrences.find_by_id(occurrence_id)
-            if occurrence is None or occurrence.state is not OccurrenceState.SUNRISE:
-                return False
-            occurrence.ring()
-            await uow.occurrences.save(occurrence)
-            return True
 
     async def _finish(self, occurrence_id: UUID) -> None:
         async with self._unit_of_work_factory.create() as uow:

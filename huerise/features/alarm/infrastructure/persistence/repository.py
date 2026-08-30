@@ -14,9 +14,7 @@ from huerise.features.alarm.domain import (
     AlarmProfile,
     AlarmProfileRepository,
     AlarmRepository,
-    IntroConfig,
     OccurrenceState,
-    RingtoneConfig,
     Schedule,
     SunriseConfig,
 )
@@ -27,13 +25,8 @@ from huerise.infrastructure.database import (
     Repository,
 )
 
-_WAITING_STATES = (OccurrenceState.PENDING, OccurrenceState.SNOOZED)
-_ACTIVE_STATES = (
-    OccurrenceState.PENDING,
-    OccurrenceState.SNOOZED,
-    OccurrenceState.SUNRISE,
-    OccurrenceState.RINGING,
-)
+_WAITING_STATES = (OccurrenceState.PENDING,)
+_ACTIVE_STATES = (OccurrenceState.PENDING, OccurrenceState.SUNRISE)
 
 
 class SQLAlarmProfileRepository(
@@ -50,17 +43,12 @@ class SQLAlarmProfileRepository(
             id=orm.id,
             name=orm.name,
             is_default=orm.is_default,
-            intro_config=IntroConfig(sound_id=orm.intro_sound_id),
             sunrise_config=SunriseConfig(
                 scene_id=orm.sunrise_scene_id,
                 scene_name=orm.sunrise_scene_name,
                 duration=timedelta(minutes=orm.sunrise_duration_minutes),
                 brightness_start=orm.sunrise_brightness_start,
                 brightness_end=orm.sunrise_brightness_end,
-            ),
-            ringtone_config=RingtoneConfig(
-                sound_id=orm.ringtone_sound_id,
-                volume=orm.ringtone_volume,
             ),
         )
 
@@ -69,14 +57,11 @@ class SQLAlarmProfileRepository(
             id=domain.id,
             name=domain.name,
             is_default=domain.is_default,
-            intro_sound_id=domain.intro_config.sound_id,
             sunrise_scene_id=domain.sunrise_config.scene_id,
             sunrise_scene_name=domain.sunrise_config.scene_name,
             sunrise_duration_minutes=domain.sunrise_config.duration_minutes,
             sunrise_brightness_start=domain.sunrise_config.brightness_start,
             sunrise_brightness_end=domain.sunrise_config.brightness_end,
-            ringtone_sound_id=domain.ringtone_config.sound_id,
-            ringtone_volume=domain.ringtone_config.volume,
         )
 
 
@@ -185,7 +170,6 @@ class SQLAlarmOccurrenceRepository(
             state=OccurrenceState(orm.state),
             triggered_at=orm.triggered_at,
             finished_at=orm.finished_at,
-            snooze_count=orm.snooze_count,
             failure_reason=orm.failure_reason,
         )
 
@@ -197,6 +181,5 @@ class SQLAlarmOccurrenceRepository(
             state=domain.state.value,
             triggered_at=domain.triggered_at,
             finished_at=domain.finished_at,
-            snooze_count=domain.snooze_count,
             failure_reason=domain.failure_reason,
         )
