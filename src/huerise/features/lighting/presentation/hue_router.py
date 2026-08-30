@@ -1,16 +1,14 @@
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
-from fastapi import Depends, status
+from fastapi import Depends
 
 from huerise.authentication import require_api_key
-from huerise.configuration import ConfigurationError
-from huerise.exception_handlers import ExceptionRouter, error
-from huerise.features.lighting.application import (
-    BridgeNotFoundError,
-    BridgeNotSelectedError,
-    HueOnboarding,
-    HueUnavailableError,
-    LinkButtonTimeoutError,
-    OnboardingReadOnlyError,
+from huerise.exception_handlers import ExceptionRouter
+from huerise.features.lighting.application import HueOnboarding
+from huerise.features.lighting.presentation.errors import (
+    bridge_status_errors,
+    discover_bridges_errors,
+    register_bridge_errors,
+    select_bridge_errors,
 )
 from huerise.features.lighting.presentation.mappers import (
     to_bridge_response,
@@ -34,16 +32,7 @@ hue_router = ExceptionRouter(
     "/bridges",
     response_model=list[BridgeResponse],
     operation_id="listHueBridges",
-    errors={
-        ConfigurationError: error(
-            status.HTTP_422_UNPROCESSABLE_CONTENT,
-            "The stored Hue configuration is invalid.",
-        ),
-        HueUnavailableError: error(
-            status.HTTP_503_SERVICE_UNAVAILABLE,
-            "Hue Bridge discovery is unavailable.",
-        ),
-    },
+    errors=discover_bridges_errors,
 )
 async def discover_bridges(
     service: FromDishka[HueOnboarding],
@@ -56,12 +45,7 @@ async def discover_bridges(
     "/bridge",
     response_model=OnboardingStatusResponse,
     operation_id="getHueBridge",
-    errors={
-        ConfigurationError: error(
-            status.HTTP_422_UNPROCESSABLE_CONTENT,
-            "The stored Hue configuration is invalid.",
-        ),
-    },
+    errors=bridge_status_errors,
 )
 async def bridge_status(
     service: FromDishka[HueOnboarding],
@@ -74,24 +58,7 @@ async def bridge_status(
     "/bridge",
     response_model=OnboardingStatusResponse,
     operation_id="selectHueBridge",
-    errors={
-        BridgeNotFoundError: error(
-            status.HTTP_404_NOT_FOUND,
-            "The selected Hue Bridge was not discovered.",
-        ),
-        OnboardingReadOnlyError: error(
-            status.HTTP_409_CONFLICT,
-            "Environment overrides make Hue onboarding read-only.",
-        ),
-        ConfigurationError: error(
-            status.HTTP_422_UNPROCESSABLE_CONTENT,
-            "The stored Hue configuration is invalid.",
-        ),
-        HueUnavailableError: error(
-            status.HTTP_503_SERVICE_UNAVAILABLE,
-            "Hue Bridge discovery is unavailable.",
-        ),
-    },
+    errors=select_bridge_errors,
 )
 async def select_bridge(
     body: BridgeSelectionRequest,
@@ -105,28 +72,7 @@ async def select_bridge(
     "/bridge/register",
     response_model=OnboardingStatusResponse,
     operation_id="registerHueBridge",
-    errors={
-        BridgeNotSelectedError: error(
-            status.HTTP_409_CONFLICT,
-            "A Hue Bridge must be selected before registration.",
-        ),
-        LinkButtonTimeoutError: error(
-            status.HTTP_409_CONFLICT,
-            "The Hue Bridge link button was not pressed in time.",
-        ),
-        OnboardingReadOnlyError: error(
-            status.HTTP_409_CONFLICT,
-            "Environment overrides make Hue onboarding read-only.",
-        ),
-        ConfigurationError: error(
-            status.HTTP_422_UNPROCESSABLE_CONTENT,
-            "The stored Hue configuration is invalid.",
-        ),
-        HueUnavailableError: error(
-            status.HTTP_503_SERVICE_UNAVAILABLE,
-            "Hue Bridge registration is unavailable.",
-        ),
-    },
+    errors=register_bridge_errors,
 )
 async def register_bridge(
     service: FromDishka[HueOnboarding],
