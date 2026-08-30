@@ -65,8 +65,8 @@ Async-Task. Dieser Zustand lebt nur im Prozessspeicher:
 - Ein Prozessneustart beendet eine laufende Ausführung.
 - Nach einem Neustart gibt es nichts wiederherzustellen.
 - Es werden weder Fortschritt noch vergangene Ausführungen gespeichert.
-- Der normale Alarm und eine Demo teilen sich dieselbe Ausführung. Parallele
-  Läufe sind nicht erlaubt und antworten mit `409 Conflict`.
+- Parallele Ausführungen sind nicht erlaubt. Ein weiterer Start antwortet mit
+  `409 Conflict`.
 - `stop` ist idempotent. Ohne laufende Ausführung ist der Aufruf ebenfalls
   erfolgreich.
 
@@ -76,17 +76,15 @@ Der fachliche API-Scope besteht nur aus:
 
 | Methode | Route | Verhalten |
 | --- | --- | --- |
-| `POST` | `/daylight-alarm/start` | Startet die Ausführung und antwortet mit `202 Accepted`. |
+| `POST` | `/daylight-alarm/start` | Startet die Ausführung, optional mit abweichender Dauer, und antwortet mit `202 Accepted`. |
 | `POST` | `/daylight-alarm/stop` | Bricht sie ab und antwortet mit `204 No Content`. |
 | `GET` | `/doctor` | Prüft, ob die Konfiguration mit der eingerichteten Hue Bridge ausführbar ist. |
 | `GET` | `/rooms` | Listet die Räume und Szenen der eingerichteten Bridge zur Auswahl auf. |
-| `POST` | `/rooms/{room_id}/scenes/{scene_id}/demo` | Führt den Daylight-Verlauf für diese Szene in 10 Sekunden vor. |
-| `DELETE` | `/rooms/{room_id}/scenes/{scene_id}/demo` | Bricht eine laufende Demo ohne weiteren Lichtbefehl ab. |
+| `GET` | `/scenes` | Listet alle verfügbaren Szenen flach mit ihrem Raum auf. |
 | `GET` | `/hue/bridges` | Sucht Bridges und markiert die aktuell ausgewählte Bridge. |
 | `GET` | `/hue/bridge` | Liefert den aktuellen Zustand des Onboardings. |
 | `PUT` | `/hue/bridge` | Wählt eine gefundene Bridge aus. |
 | `POST` | `/hue/bridge/register` | Registriert Huerise nach Betätigung des Link-Buttons an der Bridge. |
-| `GET` | `/health` | Einfache, öffentliche Liveness-Prüfung ohne externe Abhängigkeiten. |
 
 `doctor` ist eine read-only Ende-zu-Ende-Prüfung der Laufbereitschaft. Die Route:
 
@@ -102,11 +100,17 @@ sie einen passenden Fehlerstatus und einen konkreten fehlgeschlagenen Check.
 
 Eine eigene Status-, Fortschritts- oder Historienroute gehört nicht zum Scope.
 
-Die Demo verwendet die Start- und Endhelligkeit aus `huerise.yml`, überschreibt
-aber Szene und Dauer mit den Werten aus der Route beziehungsweise festen zehn
-Sekunden. Sie verwendet exakt denselben Runner und dieselbe Abbruchsemantik wie
-der normale Alarm. Eine Demo und der normale Alarm können nicht gleichzeitig
-laufen.
+Ohne Request Body verwendet `start` die vollständige YAML-Konfiguration. Für
+eine beschleunigte Vorschau darf ein Client ausschließlich die Dauer dieses
+einen Laufs überschreiben:
+
+```json
+{"duration_seconds": 10}
+```
+
+Szene, Start- und Endhelligkeit kommen immer aus `huerise.yml`. Der Override
+wird nicht gespeichert. Eine eigene Demo-Route und Room-/Scene-Parameter sind
+damit nicht notwendig.
 
 ## Authentifizierung
 
@@ -117,7 +121,7 @@ Geschützte Endpunkte verwenden genau einen statischen API-Key:
   `HUERISE_API_KEY`, und wird nicht von Huerise gespeichert.
 - Clients senden ihn im Header `X-API-Key`.
 - `start`, `stop`, `doctor` und alle Hue-Onboarding-Routen sind geschützt.
-- Nur `/health` bleibt ohne Authentifizierung erreichbar.
+- Alle API-Routen sind geschützt.
 
 ## Hue-Onboarding
 
@@ -178,6 +182,7 @@ Der neue Scope enthält ausdrücklich nicht mehr:
 - Domain-Event-Persistenz, SSE und „next alarm“-Projektionen
 - freie Szenen-Aktivierungsroute sowie schreibende Raum- und Szenenverwaltung
 - Readiness-Prüfungen, die eine Datenbank voraussetzen
+- ein eigener Health-Endpunkt
 
 Die vorhandene Hue-Anbindung und die Logik für den Helligkeitsverlauf können
 vereinfacht wiederverwendet werden. Bestehende Abstraktionen werden aber nur
@@ -189,14 +194,20 @@ Die Anwendung bleibt nach Features gegliedert, ohne die bisherigen
 Persistenzschichten künstlich nachzubauen:
 
 - `daylight_alarm` besitzt Runner, Start/Stop-Service und API-Routen.
-- `lighting` besitzt Hue-Adapter, Doctor, Onboarding, Szenenübersicht und Demo.
-- gemeinsame Konfiguration und API-Key-Authentifizierung bleiben kleine,
-  eigenständige Infrastrukturbausteine.
+- `lighting` besitzt Hue-Adapter, Doctor, Onboarding und Szenenübersicht.
+- gemeinsame Konfiguration, Environment-Settings und API-Key-Authentifizierung
+  bleiben kleine Bausteine unterhalb von `huerise` und `huerise.shared`.
 
 Dishka bleibt der Composition Root für App-scoped Services und Adapter. Ports
 werden dort injiziert, wo sie Tests oder den Austausch der Hue-Anbindung klarer
 machen. Repository-, Unit-of-Work- oder Aggregate-Abstraktionen ohne Persistenz
 werden nicht übernommen.
+
+Beide Features sind minimal in `application`, `infrastructure` und
+`presentation` gegliedert. Router und Schemas liegen getrennt; die
+Presentation-Schicht exportiert ihre öffentlichen Router über `__init__.py`.
+Jede API-Operation besitzt eine explizite, stabile `operationId` für generierte
+Clients. Tags werden einmalig am jeweiligen Router definiert.
 
 ## Fehlerverhalten
 
@@ -220,9 +231,9 @@ Der neue Zielzustand ist erreicht, wenn:
    verständliche Fehler meldet,
 5. alle geschützten Routen ausschließlich den statischen API-Key verwenden,
 6. Hue-Onboarding ohne Benutzer- oder Datenbankmodell funktioniert,
-7. Räume und Szenen lesbar sind und eine Szene in genau zehn Sekunden als Demo
-   ausgeführt und abgebrochen werden kann,
-8. kein Alarm-, Profil-, Scheduler-, Event- oder Datenbankzustand mehr
+7. Räume und Szenen hierarchisch sowie als flache Szenenliste lesbar sind,
+8. `start` optional nur die Dauer des aktuellen Laufs überschreiben kann,
+9. kein Alarm-, Profil-, Scheduler-, Event- oder Datenbankzustand mehr
    persistiert wird und
-9. der Prozess nach einem Neustart allein aus Deployment-Umgebung und YAML-Datei
+10. der Prozess nach einem Neustart allein aus Deployment-Umgebung und YAML-Datei
    wieder betriebsbereit ist.

@@ -6,34 +6,13 @@
     "version": "2.0.0"
   },
   "paths": {
-    "/health": {
-      "get": {
-        "tags": [
-          "health"
-        ],
-        "summary": "Health",
-        "operationId": "health_health_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HealthResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/doctor": {
       "get": {
         "tags": [
-          "health"
+          "doctor"
         ],
         "summary": "Doctor",
-        "operationId": "doctor_doctor_get",
+        "operationId": "doctor",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -59,7 +38,7 @@
           "lighting"
         ],
         "summary": "Rooms",
-        "operationId": "rooms_rooms_get",
+        "operationId": "listRooms",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -70,7 +49,7 @@
                     "$ref": "#/components/schemas/RoomResponse"
                   },
                   "type": "array",
-                  "title": "Response Rooms Rooms Get"
+                  "title": "Response Listrooms"
                 }
               }
             }
@@ -83,111 +62,34 @@
         ]
       }
     },
-    "/rooms/{room_id}/scenes/{scene_id}/demo": {
-      "post": {
+    "/scenes": {
+      "get": {
         "tags": [
           "lighting"
         ],
-        "summary": "Demo",
-        "operationId": "demo_rooms__room_id__scenes__scene_id__demo_post",
-        "security": [
-          {
-            "APIKeyHeader": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "room_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Room Id"
-            }
-          },
-          {
-            "name": "scene_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Scene Id"
-            }
-          }
-        ],
+        "summary": "Scenes",
+        "operationId": "listScenes",
         "responses": {
-          "202": {
+          "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DemoResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "items": {
+                    "$ref": "#/components/schemas/AvailableSceneResponse"
+                  },
+                  "type": "array",
+                  "title": "Response Listscenes"
                 }
               }
             }
           }
-        }
-      },
-      "delete": {
-        "tags": [
-          "lighting"
-        ],
-        "summary": "Stop Demo",
-        "operationId": "stop_demo_rooms__room_id__scenes__scene_id__demo_delete",
+        },
         "security": [
           {
             "APIKeyHeader": []
           }
-        ],
-        "parameters": [
-          {
-            "name": "room_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Room Id"
-            }
-          },
-          {
-            "name": "scene_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Scene Id"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Successful Response"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
+        ]
       }
     },
     "/hue/bridges": {
@@ -196,7 +98,7 @@
           "hue-setup"
         ],
         "summary": "Discover Bridges",
-        "operationId": "discover_bridges_hue_bridges_get",
+        "operationId": "listHueBridges",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -207,7 +109,7 @@
                     "$ref": "#/components/schemas/BridgeResponse"
                   },
                   "type": "array",
-                  "title": "Response Discover Bridges Hue Bridges Get"
+                  "title": "Response Listhuebridges"
                 }
               }
             }
@@ -226,7 +128,7 @@
           "hue-setup"
         ],
         "summary": "Bridge Status",
-        "operationId": "bridge_status_hue_bridge_get",
+        "operationId": "getHueBridge",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -250,7 +152,7 @@
           "hue-setup"
         ],
         "summary": "Select Bridge",
-        "operationId": "select_bridge_hue_bridge_put",
+        "operationId": "selectHueBridge",
         "requestBody": {
           "content": {
             "application/json": {
@@ -296,7 +198,7 @@
           "hue-setup"
         ],
         "summary": "Register Bridge",
-        "operationId": "register_bridge_hue_bridge_register_post",
+        "operationId": "registerHueBridge",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -322,7 +224,24 @@
           "daylight-alarm"
         ],
         "summary": "Start",
-        "operationId": "start_daylight_alarm_start_post",
+        "operationId": "startDaylightAlarm",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/StartRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
         "responses": {
           "202": {
             "description": "Successful Response",
@@ -330,6 +249,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AlarmStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -348,7 +277,7 @@
           "daylight-alarm"
         ],
         "summary": "Stop",
-        "operationId": "stop_daylight_alarm_stop_post",
+        "operationId": "stopDaylightAlarm",
         "responses": {
           "204": {
             "description": "Successful Response"
@@ -368,14 +297,50 @@
         "properties": {
           "status": {
             "type": "string",
-            "title": "Status"
+            "const": "started",
+            "title": "Status",
+            "default": "started"
+          },
+          "duration_seconds": {
+            "type": "integer",
+            "title": "Duration Seconds"
           }
         },
         "type": "object",
         "required": [
-          "status"
+          "duration_seconds"
         ],
         "title": "AlarmStatusResponse"
+      },
+      "AvailableSceneResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "room_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Room Id"
+          },
+          "room_name": {
+            "type": "string",
+            "title": "Room Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "room_id",
+          "room_name"
+        ],
+        "title": "AvailableSceneResponse"
       },
       "BridgeResponse": {
         "properties": {
@@ -413,24 +378,6 @@
           "bridge_id"
         ],
         "title": "BridgeSelectionRequest"
-      },
-      "DemoResponse": {
-        "properties": {
-          "status": {
-            "type": "string",
-            "const": "started",
-            "title": "Status",
-            "default": "started"
-          },
-          "duration_seconds": {
-            "type": "integer",
-            "const": 10,
-            "title": "Duration Seconds",
-            "default": 10
-          }
-        },
-        "type": "object",
-        "title": "DemoResponse"
       },
       "DoctorCheckResponse": {
         "properties": {
@@ -485,19 +432,6 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
-      },
-      "HealthResponse": {
-        "properties": {
-          "status": {
-            "type": "string",
-            "title": "Status"
-          }
-        },
-        "type": "object",
-        "required": [
-          "status"
-        ],
-        "title": "HealthResponse"
       },
       "OnboardingState": {
         "type": "string",
@@ -594,6 +528,20 @@
           "name"
         ],
         "title": "SceneResponse"
+      },
+      "StartRequest": {
+        "properties": {
+          "duration_seconds": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Duration Seconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "duration_seconds"
+        ],
+        "title": "StartRequest"
       },
       "ValidationError": {
         "properties": {

@@ -17,6 +17,7 @@ Set a private API key in `.env`:
 
 ```dotenv
 HUERISE_API_KEY=replace-with-a-long-random-key
+HUERISE_LOG_LEVEL=INFO
 ```
 
 The alarm is fully described by `data/huerise.yml`:
@@ -48,17 +49,15 @@ file is the application's only persistent storage.
 
 ## API
 
-Send the configured key as `X-API-Key` on every route except `/health`.
+Send the configured key as `X-API-Key` on every route.
 
 | Method | Route | Purpose |
 | --- | --- | --- |
-| `GET` | `/health` | Process liveness without external checks |
 | `GET` | `/doctor` | Validate YAML, credentials, Bridge access, and configured scene |
-| `POST` | `/daylight-alarm/start` | Start the configured daylight alarm immediately |
+| `POST` | `/daylight-alarm/start` | Start immediately, optionally overriding this run's duration |
 | `POST` | `/daylight-alarm/stop` | Stop it without changing the current light state |
 | `GET` | `/rooms` | List Hue rooms and scenes |
-| `POST` | `/rooms/{room_id}/scenes/{scene_id}/demo` | Run a ten-second demo |
-| `DELETE` | `/rooms/{room_id}/scenes/{scene_id}/demo` | Stop the demo in place |
+| `GET` | `/scenes` | List all scenes with their room |
 | `GET` | `/hue/bridges` | Discover Hue Bridges |
 | `GET` | `/hue/bridge` | Read onboarding state |
 | `PUT` | `/hue/bridge` | Select a discovered Bridge |
@@ -72,11 +71,15 @@ Example:
 
 ```bash
 curl -X POST http://localhost:8000/daylight-alarm/start \
-  -H "X-API-Key: $HUERISE_API_KEY"
+  -H "X-API-Key: $HUERISE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"duration_seconds": 10}'
 ```
 
-Only one alarm or demo can run at a time. A second start returns `409 Conflict`.
-Stopping is idempotent and never sends a final Hue command.
+Omit the body to use the configured duration. The request may override only the
+duration of that run; scene and brightness always come from YAML. Only one run
+can be active. A second start returns `409 Conflict`. Stopping is idempotent and
+never sends a final Hue command.
 
 ## Local development
 
