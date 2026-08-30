@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from uuid import UUID
 
 import pytest
@@ -8,7 +9,12 @@ from huerise.features.daylight_alarm.application import (
     AlarmAlreadyRunningError,
     DaylightAlarm,
 )
-from huerise.features.lighting.application import Room, Scene, SceneNotFoundError
+from huerise.features.lighting.application import (
+    HueUnavailableError,
+    Room,
+    Scene,
+    SceneNotFoundError,
+)
 from tests.huerise.fakes import FakeConfiguration
 from tests.huerise.features.lighting.fakes import (
     FakeHueClient,
@@ -135,3 +141,76 @@ async def test_overrides_only_the_duration_for_one_run() -> None:
     assert client.commands[0] == ("activate", SCENE_ID, 10)
     assert client.commands[-1] == ("brightness", ROOM_ID, 30)
     assert len(client.commands) == 11
+
+
+@pytest.mark.parametrize(
+    ("error", "message"),
+    [
+        (HueUnavailableError("not configured"), "not configured"),
+        (OSError("connection failed"), "initialize Hue Bridge connection"),
+    ],
+)
+async def test_reports_client_initialization_failures(
+    error: Exception, message: str
+) -> None:
+    client = FakeHueClient(DEFAULT_ROOMS)
+    factory = FakeHueClientFactory(client, error=error)
+    alarm = DaylightAlarm(
+        FakeConfiguration(
+            HueriseConfig(
+                daylight_alarm=DaylightAlarmConfig(
+                    scene_id=SCENE_ID,
+                    start_brightness=10,
+                    end_brightness=30,
+                    duration_seconds=2,
+                )
+            )
+        ),
+        FakeHueCredentialsSource(),
+        factory,
+    )
+
+    with pytest.raises(HueUnavailableError, match=message):
+        await alarm.start()
+
+    assert client.commands == []
+    assert client.closed is False
+
+
+@pytest.mark.parametrize(
+    ("error", "message"),
+    [
+        (HueUnavailableError("offline"), "offline"),
+        (OSError("protocol error"), "communicate with Hue Bridge"),
+    ],
+)
+async def test_reports_startup_communication_failures(
+    error: Exception, message: str
+) -> None:
+    client = FakeHueClient(DEFAULT_ROOMS, activate_scene_error=error)
+    alarm = make_alarm(client)
+
+    with pytest.raises(HueUnavailableError, match=message):
+        await alarm.start()
+
+    assert client.closed is True
+
+
+async def test_logs_runtime_and_cleanup_failures(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    client = FakeHueClient(
+        DEFAULT_ROOMS,
+        set_brightness_error=OSError("light disconnected"),
+        close_error=OSError("socket stuck"),
+    )
+    alarm = make_alarm(client, sleep=immediate_sleep)
+
+    with caplog.at_level(logging.WARNING):
+        await alarm.start()
+        assert alarm._task is not None
+        await alarm._task
+
+    assert "Daylight alarm failed during execution" in caplog.text
+    assert "Could not close Hue client" in caplog.text
+    assert client.closed is True
