@@ -2,13 +2,9 @@ from dishka.integrations.fastapi import DishkaRoute, FromDishka
 from fastapi import Depends
 
 from huerise.authentication import require_api_key
-from huerise.configuration import ConfigurationError
 from huerise.exception_handlers import ExceptionRouter
-from huerise.features.lighting.application import HueUnavailableError, SceneService
-from huerise.features.lighting.presentation.errors import (
-    invalid_scene_configuration,
-    unavailable_hue_bridge,
-)
+from huerise.features.lighting.application import SceneService
+from huerise.features.lighting.presentation.errors import scene_errors
 from huerise.features.lighting.presentation.mappers import (
     to_available_scene_response,
     to_room_response,
@@ -29,10 +25,7 @@ scene_router = ExceptionRouter(
     "/rooms",
     response_model=list[RoomResponse],
     operation_id="listRooms",
-    errors={
-        ConfigurationError: invalid_scene_configuration,
-        HueUnavailableError: unavailable_hue_bridge,
-    },
+    errors=scene_errors,
 )
 async def rooms(
     service: FromDishka[SceneService],
@@ -45,10 +38,7 @@ async def rooms(
     "/scenes",
     response_model=list[AvailableSceneResponse],
     operation_id="listScenes",
-    errors={
-        ConfigurationError: invalid_scene_configuration,
-        HueUnavailableError: unavailable_hue_bridge,
-    },
+    errors=scene_errors,
 )
 async def scenes(
     service: FromDishka[SceneService],
