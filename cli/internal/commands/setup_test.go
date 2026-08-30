@@ -15,7 +15,7 @@ func TestDoctorJSON(t *testing.T) {
 			t.Errorf("request = %s %s", request.Method, request.URL.Path)
 		}
 		writer.Header().Set("Content-Type", "application/json")
-		_, _ = writer.Write([]byte(`{"configured":false,"sonos_speaker":{"configured":true},"hue_bridge":{"configured":false}}`))
+		_, _ = writer.Write([]byte(`{"configured":false,"hue_bridge":{"configured":false}}`))
 	}))
 	defer server.Close()
 

@@ -11,8 +11,6 @@ from huerise.infrastructure.database.models import (
     AlarmProfileModel,
     HueBridgeSelectionModel,
     RefreshTokenModel,
-    SonosSpeakerSelectionModel,
-    SoundModel,
     UserModel,
 )
 
@@ -22,8 +20,6 @@ __all__ = [
     "AlarmProfileModel",
     "HueBridgeSelectionModel",
     "RefreshTokenModel",
-    "SonosSpeakerSelectionModel",
-    "SoundModel",
     "UserModel",
 ]
 

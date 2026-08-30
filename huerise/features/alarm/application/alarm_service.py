@@ -217,9 +217,8 @@ class AlarmService:
     async def _drop_pending_occurrence(self, alarm_id: UUID) -> None:
         """Retire the run materialised for the old time, so it cannot still fire.
 
-        Only a pending run is dropped. A sunrise already underway, or a snooze
-        belonging to it, is about the current wake-up and outlives a change to
-        tomorrow's schedule.
+        Only a pending run is dropped. A sunrise already underway is about the
+        current wake-up and outlives a change to tomorrow's schedule.
         """
         occurrence = await self._occurrences.find_active_for_alarm(alarm_id)
         if occurrence is None or occurrence.state is not OccurrenceState.PENDING:
