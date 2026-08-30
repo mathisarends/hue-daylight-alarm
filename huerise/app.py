@@ -3,20 +3,19 @@ from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
 
 from huerise.features import FEATURES
-from huerise.infrastructure.di import DatabaseProvider, StorageProvider
+from huerise.infrastructure.di import DatabaseProvider
 from huerise.lifespan import LifecycleProvider, lifespan
 from huerise.presentation import health_router
 
 INFRASTRUCTURE_PROVIDERS: tuple[type[Provider], ...] = (
     DatabaseProvider,
-    StorageProvider,
     LifecycleProvider,
 )
 
-_TITLE = "Huerise Alarm API"
+_TITLE = "Huerise Light Automation API"
 _VERSION = "1.0.0"
 _DESCRIPTION = (
-    "API for managing sunrise alarms with Philips Hue. "
+    "API for gradual, Hue-based sunrise light automation. "
     "Register or log in via `/auth`, then send the returned access token as "
     "`Authorization: Bearer <token>`."
 )
