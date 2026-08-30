@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
@@ -14,34 +13,21 @@ from huerise.features.lighting.application import (
     OnboardingReadOnlyError,
     OnboardingState,
 )
+from tests.huerise.features.lighting.fakes import FakeOnboardingGateway
 
-
-@dataclass
-class StubGateway:
-    bridges: tuple[HueBridge, ...] = (
-        HueBridge("bridge-1", "192.0.2.10"),
-        HueBridge("bridge-2", "192.0.2.11"),
-    )
-    app_key: str = "registered-hue-key-123"
-    registration_error: Exception | None = None
-
-    async def discover(self) -> tuple[HueBridge, ...]:
-        return self.bridges
-
-    async def register(self, bridge_ip: str) -> str:
-        assert bridge_ip == "192.0.2.11"
-        if self.registration_error is not None:
-            raise self.registration_error
-        return self.app_key
+BRIDGES = (
+    HueBridge("bridge-1", "192.0.2.10"),
+    HueBridge("bridge-2", "192.0.2.11"),
+)
 
 
 def make_onboarding(
-    tmp_path: Path, gateway: StubGateway | None = None
+    tmp_path: Path, gateway: FakeOnboardingGateway | None = None
 ) -> HueOnboarding:
     return HueOnboarding(
         YamlConfiguration(tmp_path / "huerise.yml"),
         HueEnvironment(_env_file=None),
-        gateway or StubGateway(),
+        gateway or FakeOnboardingGateway(BRIDGES),
     )
 
 
@@ -79,7 +65,8 @@ async def test_requires_selection_before_registration(tmp_path: Path) -> None:
 
 async def test_keeps_selection_after_link_button_timeout(tmp_path: Path) -> None:
     onboarding = make_onboarding(
-        tmp_path, StubGateway(registration_error=TimeoutError())
+        tmp_path,
+        FakeOnboardingGateway(BRIDGES, registration_error=TimeoutError()),
     )
     await onboarding.select("bridge-2")
 
@@ -97,7 +84,7 @@ async def test_environment_configuration_is_ready_and_read_only(
     onboarding = HueOnboarding(
         YamlConfiguration(tmp_path / "huerise.yml"),
         HueEnvironment(_env_file=None),
-        StubGateway(),
+        FakeOnboardingGateway(BRIDGES),
     )
 
     status = onboarding.status()

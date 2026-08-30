@@ -13,13 +13,17 @@ from huerise.features.daylight_alarm.infrastructure import DaylightAlarmProvider
 from huerise.features.lighting.application import (
     HueBridge,
     HueClientFactory,
-    HueCredentials,
     OnboardingGateway,
     Room,
     Scene,
 )
 from huerise.features.lighting.infrastructure import LightingProvider
 from huerise.main import create_app
+from tests.huerise.features.lighting.fakes import (
+    FakeHueClient,
+    FakeHueClientFactory,
+    FakeOnboardingGateway,
+)
 
 API_KEY = "test-api-key"
 AUTH = {"X-API-Key": API_KEY}
@@ -27,43 +31,10 @@ SCENE_ID = UUID(int=1)
 ROOM_ID = UUID(int=2)
 
 
-class StubHueClient:
-    def __init__(self) -> None:
-        self.commands: list[tuple] = []
-
-    async def list_rooms(self) -> list[Room]:
-        return [Room(ROOM_ID, "Bedroom", (Scene(SCENE_ID, "Sunrise"),))]
-
-    async def activate_scene(self, scene_id: UUID, *, brightness: float) -> None:
-        self.commands.append(("activate", scene_id, brightness))
-
-    async def set_brightness(self, room_id: UUID, brightness: float) -> None:
-        self.commands.append(("brightness", room_id, brightness))
-
-    async def close(self) -> None:
-        pass
-
-
-class StubClientFactory:
-    def __init__(self, client: StubHueClient) -> None:
-        self.client = client
-
-    def create(self, _: HueCredentials) -> StubHueClient:
-        return self.client
-
-
-class StubOnboardingGateway:
-    async def discover(self) -> tuple[HueBridge, ...]:
-        return (HueBridge("bridge-1", "192.0.2.10"),)
-
-    async def register(self, bridge_ip: str) -> str:
-        return "registered-hue-key-123"
-
-
 class AppTestProvider(Provider):
     scope = Scope.APP
 
-    def __init__(self, path: Path, client: StubHueClient) -> None:
+    def __init__(self, path: Path, client: FakeHueClient) -> None:
         super().__init__()
         self._path = path
         self._client = client
@@ -84,20 +55,20 @@ class AppTestProvider(Provider):
 
     @provide
     def clients(self) -> HueClientFactory:
-        return StubClientFactory(self._client)
+        return FakeHueClientFactory(self._client)
 
     @provide
     def onboarding_gateway(self) -> OnboardingGateway:
-        return StubOnboardingGateway()
+        return FakeOnboardingGateway((HueBridge("bridge-1", "192.0.2.10"),))
 
 
 @pytest.fixture
-def hue_client() -> StubHueClient:
-    return StubHueClient()
+def hue_client() -> FakeHueClient:
+    return FakeHueClient([Room(ROOM_ID, "Bedroom", (Scene(SCENE_ID, "Sunrise"),))])
 
 
 @pytest.fixture
-def client(tmp_path: Path, hue_client: StubHueClient) -> Iterator[TestClient]:
+def client(tmp_path: Path, hue_client: FakeHueClient) -> Iterator[TestClient]:
     path = tmp_path / "huerise.yml"
     path.write_text(
         f"""\
@@ -199,7 +170,7 @@ def test_exposes_doctor_and_rooms(client: TestClient) -> None:
 
 
 def test_starts_and_stops_daylight_alarm(
-    client: TestClient, hue_client: StubHueClient
+    client: TestClient, hue_client: FakeHueClient
 ) -> None:
     started = client.post("/daylight-alarm/start", headers=AUTH)
     stopped = client.post("/daylight-alarm/stop", headers=AUTH)
