@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/go-faster/errors"
-	"github.com/ogen-go/ogen/conv"
 	ht "github.com/ogen-go/ogen/http"
 	"github.com/ogen-go/ogen/ogenerrors"
 	"github.com/ogen-go/ogen/uri"
@@ -21,188 +20,60 @@ func trimTrailingSlashes(u *url.URL) {
 
 // Invoker invokes operations described by OpenAPI v3 specification.
 type Invoker interface {
-	// ActivateScene invokes activate_scene operation.
-	//
-	// Preview a scene the way an alarm would start it.
-	//
-	// POST /rooms/{room_id}/scenes/{scene_id}/activate
-	ActivateScene(ctx context.Context, request OptNilSceneActivationRequest, params ActivateSceneParams) (ActivateSceneRes, error)
-	// CreateAlarm invokes create_alarm operation.
-	//
-	// Create Alarm.
-	//
-	// POST /alarms
-	CreateAlarm(ctx context.Context, request *AlarmCreate) (CreateAlarmRes, error)
-	// CreateProfile invokes createProfile operation.
-	//
-	// Create Profile.
-	//
-	// POST /alarm-profiles
-	CreateProfile(ctx context.Context, request *ProfileCreate) (CreateProfileRes, error)
-	// DeleteAlarm invokes deleteAlarm operation.
-	//
-	// Delete Alarm.
-	//
-	// DELETE /alarms/{alarm_id}
-	DeleteAlarm(ctx context.Context, params DeleteAlarmParams) (DeleteAlarmRes, error)
-	// DeleteProfile invokes deleteProfile operation.
-	//
-	// Delete Profile.
-	//
-	// DELETE /alarm-profiles/{profile_id}
-	DeleteProfile(ctx context.Context, params DeleteProfileParams) (DeleteProfileRes, error)
-	// DemoScene invokes demo_scene operation.
-	//
-	// Fast-forward a whole sunrise on this scene, lights only.
-	// Returns as soon as the climb is under way, describing the run so a client
-	// can follow along. The scene does not have to belong to a saved alarm.
-	//
-	// POST /rooms/{room_id}/scenes/{scene_id}/demo
-	DemoScene(ctx context.Context, request OptNilSunriseDemoRequest, params DemoSceneParams) (DemoSceneRes, error)
-	// DisableAlarm invokes disableAlarm operation.
-	//
-	// Disable Alarm.
-	//
-	// POST /alarms/{alarm_id}/disable
-	DisableAlarm(ctx context.Context, params DisableAlarmParams) (DisableAlarmRes, error)
-	// DismissAlarm invokes dismissAlarm operation.
-	//
-	// Dismiss Alarm.
-	//
-	// POST /alarms/{alarm_id}/dismiss
-	DismissAlarm(ctx context.Context, params DismissAlarmParams) (DismissAlarmRes, error)
 	// Doctor invokes doctor operation.
 	//
 	// Doctor.
 	//
 	// GET /doctor
-	Doctor(ctx context.Context) (*DoctorRead, error)
-	// EnableAlarm invokes enableAlarm operation.
+	Doctor(ctx context.Context) (DoctorRes, error)
+	// GetHueBridge invokes getHueBridge operation.
 	//
-	// Enable Alarm.
-	//
-	// POST /alarms/{alarm_id}/enable
-	EnableAlarm(ctx context.Context, params EnableAlarmParams) (EnableAlarmRes, error)
-	// GetAlarm invokes getAlarm operation.
-	//
-	// Get Alarm.
-	//
-	// GET /alarms/{alarm_id}
-	GetAlarm(ctx context.Context, params GetAlarmParams) (GetAlarmRes, error)
-	// GetHueBridge invokes get_hue_bridge operation.
-	//
-	// Get Hue Bridge.
+	// Bridge Status.
 	//
 	// GET /hue/bridge
-	GetHueBridge(ctx context.Context) (*HueBridgeStatusRead, error)
-	// GetRoom invokes get_room operation.
+	GetHueBridge(ctx context.Context) (GetHueBridgeRes, error)
+	// ListHueBridges invokes listHueBridges operation.
 	//
-	// Get Room.
-	//
-	// GET /rooms/{room_id}
-	GetRoom(ctx context.Context, params GetRoomParams) (GetRoomRes, error)
-	// Health invokes health operation.
-	//
-	// Health.
-	//
-	// GET /health
-	Health(ctx context.Context) (*HealthResponse, error)
-	// ListAlarms invokes listAlarms operation.
-	//
-	// List Alarms.
-	//
-	// GET /alarms
-	ListAlarms(ctx context.Context) ([]AlarmRead, error)
-	// ListHueBridges invokes list_hue_bridges operation.
-	//
-	// List Hue Bridges.
+	// Discover Bridges.
 	//
 	// GET /hue/bridges
-	ListHueBridges(ctx context.Context) ([]HueBridgeRead, error)
-	// ListOccurrences invokes listOccurrences operation.
+	ListHueBridges(ctx context.Context) (ListHueBridgesRes, error)
+	// ListRooms invokes listRooms operation.
 	//
-	// List Occurrences.
-	//
-	// GET /alarms/{alarm_id}/occurrences
-	ListOccurrences(ctx context.Context, params ListOccurrencesParams) (ListOccurrencesRes, error)
-	// ListProfiles invokes listProfiles operation.
-	//
-	// List Profiles.
-	//
-	// GET /alarm-profiles
-	ListProfiles(ctx context.Context) ([]ProfileRead, error)
-	// ListRooms invokes list_rooms operation.
-	//
-	// List Rooms.
+	// Rooms.
 	//
 	// GET /rooms
-	ListRooms(ctx context.Context) ([]RoomRead, error)
-	// Login invokes login operation.
+	ListRooms(ctx context.Context) (ListRoomsRes, error)
+	// ListScenes invokes listScenes operation.
 	//
-	// Login.
+	// Scenes.
 	//
-	// POST /auth/login
-	Login(ctx context.Context, request *LoginRequest) (LoginRes, error)
-	// Logout invokes logout operation.
+	// GET /scenes
+	ListScenes(ctx context.Context) (ListScenesRes, error)
+	// RegisterHueBridge invokes registerHueBridge operation.
 	//
-	// Logout.
-	//
-	// POST /auth/logout
-	Logout(ctx context.Context, request *LogoutRequest) (LogoutRes, error)
-	// Readiness invokes readiness operation.
-	//
-	// Readiness.
-	//
-	// GET /ready
-	Readiness(ctx context.Context) (*HealthResponse, error)
-	// Refresh invokes refresh operation.
-	//
-	// Refresh.
-	//
-	// POST /auth/refresh
-	Refresh(ctx context.Context, request *RefreshRequest) (RefreshRes, error)
-	// Register invokes register operation.
-	//
-	// Register.
-	//
-	// POST /auth/register
-	Register(ctx context.Context, request *RegisterRequest) (RegisterRes, error)
-	// RegisterHueBridge invokes register_hue_bridge operation.
-	//
-	// Wait up to 60 seconds for the selected bridge's link button.
+	// Register Bridge.
 	//
 	// POST /hue/bridge/register
-	RegisterHueBridge(ctx context.Context) (*HueBridgeStatusRead, error)
-	// SelectHueBridge invokes select_hue_bridge operation.
+	RegisterHueBridge(ctx context.Context) (RegisterHueBridgeRes, error)
+	// SelectHueBridge invokes selectHueBridge operation.
 	//
-	// Select Hue Bridge.
+	// Select Bridge.
 	//
 	// PUT /hue/bridge
-	SelectHueBridge(ctx context.Context, request *HueBridgeSelectionRequest) (SelectHueBridgeRes, error)
-	// StopSceneDemo invokes stop_scene_demo operation.
+	SelectHueBridge(ctx context.Context, request *BridgeSelectionRequest) (SelectHueBridgeRes, error)
+	// StartDaylightAlarm invokes startDaylightAlarm operation.
 	//
-	// Cut the running demo short. Only one runs at a time, so this ends it.
+	// Start.
 	//
-	// DELETE /rooms/{room_id}/scenes/{scene_id}/demo
-	StopSceneDemo(ctx context.Context, params StopSceneDemoParams) (StopSceneDemoRes, error)
-	// StreamEvents invokes streamEvents operation.
+	// POST /daylight-alarm/start
+	StartDaylightAlarm(ctx context.Context, request OptNilStartRequest) (StartDaylightAlarmRes, error)
+	// StopDaylightAlarm invokes stopDaylightAlarm operation.
 	//
-	// Server-sent events covering every change to alarms and to the run currently in
-	// progress, so a display can stay in sync without polling.
-	// Each frame carries the event id in `id:`, the discriminator in `event:` and the
-	// event itself as JSON in `data:`. Reconnect with `Last-Event-ID` to resume; if
-	// that id has rolled out of the buffer nothing is replayed, so resync over
-	// `GET /alarms` first. A `: keepalive` comment arrives whenever the stream is
-	// idle.
+	// Stop.
 	//
-	// GET /eventstream
-	StreamEvents(ctx context.Context, params StreamEventsParams) (StreamEventsRes, error)
-	// UpdateAlarm invokes updateAlarm operation.
-	//
-	// Update Alarm.
-	//
-	// PATCH /alarms/{alarm_id}
-	UpdateAlarm(ctx context.Context, request *AlarmUpdate, params UpdateAlarmParams) (UpdateAlarmRes, error)
+	// POST /daylight-alarm/stop
+	StopDaylightAlarm(ctx context.Context) error
 }
 
 // Client implements OAS client.
@@ -246,741 +117,17 @@ func (c *Client) requestURL(ctx context.Context) *url.URL {
 	return u
 }
 
-// ActivateScene invokes activate_scene operation.
-//
-// Preview a scene the way an alarm would start it.
-//
-// POST /rooms/{room_id}/scenes/{scene_id}/activate
-func (c *Client) ActivateScene(ctx context.Context, request OptNilSceneActivationRequest, params ActivateSceneParams) (ActivateSceneRes, error) {
-	res, err := c.sendActivateScene(ctx, request, params)
-	return res, err
-}
-
-func (c *Client) sendActivateScene(ctx context.Context, request OptNilSceneActivationRequest, params ActivateSceneParams) (res ActivateSceneRes, err error) {
-
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [5]string
-	pathParts[0] = "/rooms/"
-	{
-		// Encode "room_id" parameter.
-		e := uri.NewPathEncoder(uri.PathEncoderConfig{
-			Param:   "room_id",
-			Style:   uri.PathStyleSimple,
-			Explode: false,
-		})
-		if err := func() error {
-			return e.EncodeValue(conv.UUIDToString(params.RoomID))
-		}(); err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		encoded, err := e.Result()
-		if err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		pathParts[1] = encoded
-	}
-	pathParts[2] = "/scenes/"
-	{
-		// Encode "scene_id" parameter.
-		e := uri.NewPathEncoder(uri.PathEncoderConfig{
-			Param:   "scene_id",
-			Style:   uri.PathStyleSimple,
-			Explode: false,
-		})
-		if err := func() error {
-			return e.EncodeValue(conv.UUIDToString(params.SceneID))
-		}(); err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		encoded, err := e.Result()
-		if err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		pathParts[3] = encoded
-	}
-	pathParts[4] = "/activate"
-	uri.AddPathParts(u, pathParts[:]...)
-
-	r, err := ht.NewRequest(ctx, "POST", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-	if err := encodeActivateSceneRequest(request, r); err != nil {
-		return res, errors.Wrap(err, "encode request")
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-
-			switch err := c.securityAccessToken(ctx, ActivateSceneOperation, r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"AccessToken\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	body := resp.Body
-	defer body.Close()
-
-	result, err := decodeActivateSceneResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
-// CreateAlarm invokes create_alarm operation.
-//
-// Create Alarm.
-//
-// POST /alarms
-func (c *Client) CreateAlarm(ctx context.Context, request *AlarmCreate) (CreateAlarmRes, error) {
-	res, err := c.sendCreateAlarm(ctx, request)
-	return res, err
-}
-
-func (c *Client) sendCreateAlarm(ctx context.Context, request *AlarmCreate) (res CreateAlarmRes, err error) {
-
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [1]string
-	pathParts[0] = "/alarms"
-	uri.AddPathParts(u, pathParts[:]...)
-
-	r, err := ht.NewRequest(ctx, "POST", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-	if err := encodeCreateAlarmRequest(request, r); err != nil {
-		return res, errors.Wrap(err, "encode request")
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-
-			switch err := c.securityAccessToken(ctx, CreateAlarmOperation, r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"AccessToken\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	body := resp.Body
-	defer body.Close()
-
-	result, err := decodeCreateAlarmResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
-// CreateProfile invokes createProfile operation.
-//
-// Create Profile.
-//
-// POST /alarm-profiles
-func (c *Client) CreateProfile(ctx context.Context, request *ProfileCreate) (CreateProfileRes, error) {
-	res, err := c.sendCreateProfile(ctx, request)
-	return res, err
-}
-
-func (c *Client) sendCreateProfile(ctx context.Context, request *ProfileCreate) (res CreateProfileRes, err error) {
-
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [1]string
-	pathParts[0] = "/alarm-profiles"
-	uri.AddPathParts(u, pathParts[:]...)
-
-	r, err := ht.NewRequest(ctx, "POST", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-	if err := encodeCreateProfileRequest(request, r); err != nil {
-		return res, errors.Wrap(err, "encode request")
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-
-			switch err := c.securityAccessToken(ctx, CreateProfileOperation, r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"AccessToken\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	body := resp.Body
-	defer body.Close()
-
-	result, err := decodeCreateProfileResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
-// DeleteAlarm invokes deleteAlarm operation.
-//
-// Delete Alarm.
-//
-// DELETE /alarms/{alarm_id}
-func (c *Client) DeleteAlarm(ctx context.Context, params DeleteAlarmParams) (DeleteAlarmRes, error) {
-	res, err := c.sendDeleteAlarm(ctx, params)
-	return res, err
-}
-
-func (c *Client) sendDeleteAlarm(ctx context.Context, params DeleteAlarmParams) (res DeleteAlarmRes, err error) {
-
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [2]string
-	pathParts[0] = "/alarms/"
-	{
-		// Encode "alarm_id" parameter.
-		e := uri.NewPathEncoder(uri.PathEncoderConfig{
-			Param:   "alarm_id",
-			Style:   uri.PathStyleSimple,
-			Explode: false,
-		})
-		if err := func() error {
-			return e.EncodeValue(conv.UUIDToString(params.AlarmID))
-		}(); err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		encoded, err := e.Result()
-		if err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		pathParts[1] = encoded
-	}
-	uri.AddPathParts(u, pathParts[:]...)
-
-	r, err := ht.NewRequest(ctx, "DELETE", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-
-			switch err := c.securityAccessToken(ctx, DeleteAlarmOperation, r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"AccessToken\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	body := resp.Body
-	defer body.Close()
-
-	result, err := decodeDeleteAlarmResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
-// DeleteProfile invokes deleteProfile operation.
-//
-// Delete Profile.
-//
-// DELETE /alarm-profiles/{profile_id}
-func (c *Client) DeleteProfile(ctx context.Context, params DeleteProfileParams) (DeleteProfileRes, error) {
-	res, err := c.sendDeleteProfile(ctx, params)
-	return res, err
-}
-
-func (c *Client) sendDeleteProfile(ctx context.Context, params DeleteProfileParams) (res DeleteProfileRes, err error) {
-
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [2]string
-	pathParts[0] = "/alarm-profiles/"
-	{
-		// Encode "profile_id" parameter.
-		e := uri.NewPathEncoder(uri.PathEncoderConfig{
-			Param:   "profile_id",
-			Style:   uri.PathStyleSimple,
-			Explode: false,
-		})
-		if err := func() error {
-			return e.EncodeValue(conv.UUIDToString(params.ProfileID))
-		}(); err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		encoded, err := e.Result()
-		if err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		pathParts[1] = encoded
-	}
-	uri.AddPathParts(u, pathParts[:]...)
-
-	r, err := ht.NewRequest(ctx, "DELETE", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-
-			switch err := c.securityAccessToken(ctx, DeleteProfileOperation, r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"AccessToken\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	body := resp.Body
-	defer body.Close()
-
-	result, err := decodeDeleteProfileResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
-// DemoScene invokes demo_scene operation.
-//
-// Fast-forward a whole sunrise on this scene, lights only.
-// Returns as soon as the climb is under way, describing the run so a client
-// can follow along. The scene does not have to belong to a saved alarm.
-//
-// POST /rooms/{room_id}/scenes/{scene_id}/demo
-func (c *Client) DemoScene(ctx context.Context, request OptNilSunriseDemoRequest, params DemoSceneParams) (DemoSceneRes, error) {
-	res, err := c.sendDemoScene(ctx, request, params)
-	return res, err
-}
-
-func (c *Client) sendDemoScene(ctx context.Context, request OptNilSunriseDemoRequest, params DemoSceneParams) (res DemoSceneRes, err error) {
-
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [5]string
-	pathParts[0] = "/rooms/"
-	{
-		// Encode "room_id" parameter.
-		e := uri.NewPathEncoder(uri.PathEncoderConfig{
-			Param:   "room_id",
-			Style:   uri.PathStyleSimple,
-			Explode: false,
-		})
-		if err := func() error {
-			return e.EncodeValue(conv.UUIDToString(params.RoomID))
-		}(); err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		encoded, err := e.Result()
-		if err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		pathParts[1] = encoded
-	}
-	pathParts[2] = "/scenes/"
-	{
-		// Encode "scene_id" parameter.
-		e := uri.NewPathEncoder(uri.PathEncoderConfig{
-			Param:   "scene_id",
-			Style:   uri.PathStyleSimple,
-			Explode: false,
-		})
-		if err := func() error {
-			return e.EncodeValue(conv.UUIDToString(params.SceneID))
-		}(); err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		encoded, err := e.Result()
-		if err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		pathParts[3] = encoded
-	}
-	pathParts[4] = "/demo"
-	uri.AddPathParts(u, pathParts[:]...)
-
-	r, err := ht.NewRequest(ctx, "POST", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-	if err := encodeDemoSceneRequest(request, r); err != nil {
-		return res, errors.Wrap(err, "encode request")
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-
-			switch err := c.securityAccessToken(ctx, DemoSceneOperation, r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"AccessToken\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	body := resp.Body
-	defer body.Close()
-
-	result, err := decodeDemoSceneResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
-// DisableAlarm invokes disableAlarm operation.
-//
-// Disable Alarm.
-//
-// POST /alarms/{alarm_id}/disable
-func (c *Client) DisableAlarm(ctx context.Context, params DisableAlarmParams) (DisableAlarmRes, error) {
-	res, err := c.sendDisableAlarm(ctx, params)
-	return res, err
-}
-
-func (c *Client) sendDisableAlarm(ctx context.Context, params DisableAlarmParams) (res DisableAlarmRes, err error) {
-
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [3]string
-	pathParts[0] = "/alarms/"
-	{
-		// Encode "alarm_id" parameter.
-		e := uri.NewPathEncoder(uri.PathEncoderConfig{
-			Param:   "alarm_id",
-			Style:   uri.PathStyleSimple,
-			Explode: false,
-		})
-		if err := func() error {
-			return e.EncodeValue(conv.UUIDToString(params.AlarmID))
-		}(); err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		encoded, err := e.Result()
-		if err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		pathParts[1] = encoded
-	}
-	pathParts[2] = "/disable"
-	uri.AddPathParts(u, pathParts[:]...)
-
-	r, err := ht.NewRequest(ctx, "POST", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-
-			switch err := c.securityAccessToken(ctx, DisableAlarmOperation, r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"AccessToken\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	body := resp.Body
-	defer body.Close()
-
-	result, err := decodeDisableAlarmResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
-// DismissAlarm invokes dismissAlarm operation.
-//
-// Dismiss Alarm.
-//
-// POST /alarms/{alarm_id}/dismiss
-func (c *Client) DismissAlarm(ctx context.Context, params DismissAlarmParams) (DismissAlarmRes, error) {
-	res, err := c.sendDismissAlarm(ctx, params)
-	return res, err
-}
-
-func (c *Client) sendDismissAlarm(ctx context.Context, params DismissAlarmParams) (res DismissAlarmRes, err error) {
-
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [3]string
-	pathParts[0] = "/alarms/"
-	{
-		// Encode "alarm_id" parameter.
-		e := uri.NewPathEncoder(uri.PathEncoderConfig{
-			Param:   "alarm_id",
-			Style:   uri.PathStyleSimple,
-			Explode: false,
-		})
-		if err := func() error {
-			return e.EncodeValue(conv.UUIDToString(params.AlarmID))
-		}(); err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		encoded, err := e.Result()
-		if err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		pathParts[1] = encoded
-	}
-	pathParts[2] = "/dismiss"
-	uri.AddPathParts(u, pathParts[:]...)
-
-	r, err := ht.NewRequest(ctx, "POST", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-
-			switch err := c.securityAccessToken(ctx, DismissAlarmOperation, r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"AccessToken\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	body := resp.Body
-	defer body.Close()
-
-	result, err := decodeDismissAlarmResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
 // Doctor invokes doctor operation.
 //
 // Doctor.
 //
 // GET /doctor
-func (c *Client) Doctor(ctx context.Context) (*DoctorRead, error) {
+func (c *Client) Doctor(ctx context.Context) (DoctorRes, error) {
 	res, err := c.sendDoctor(ctx)
 	return res, err
 }
 
-func (c *Client) sendDoctor(ctx context.Context) (res *DoctorRead, err error) {
+func (c *Client) sendDoctor(ctx context.Context) (res DoctorRes, err error) {
 
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [1]string
@@ -997,13 +144,13 @@ func (c *Client) sendDoctor(ctx context.Context) (res *DoctorRead, err error) {
 		var satisfied bitset
 		{
 
-			switch err := c.securityAccessToken(ctx, DoctorOperation, r); {
+			switch err := c.securityAPIKeyHeader(ctx, DoctorOperation, r); {
 			case err == nil: // if NO error
 				satisfied[0] |= 1 << 0
 			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
 				// Skip this security.
 			default:
-				return res, errors.Wrap(err, "security \"AccessToken\"")
+				return res, errors.Wrap(err, "security \"APIKeyHeader\"")
 			}
 		}
 
@@ -1040,194 +187,17 @@ func (c *Client) sendDoctor(ctx context.Context) (res *DoctorRead, err error) {
 	return result, nil
 }
 
-// EnableAlarm invokes enableAlarm operation.
+// GetHueBridge invokes getHueBridge operation.
 //
-// Enable Alarm.
-//
-// POST /alarms/{alarm_id}/enable
-func (c *Client) EnableAlarm(ctx context.Context, params EnableAlarmParams) (EnableAlarmRes, error) {
-	res, err := c.sendEnableAlarm(ctx, params)
-	return res, err
-}
-
-func (c *Client) sendEnableAlarm(ctx context.Context, params EnableAlarmParams) (res EnableAlarmRes, err error) {
-
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [3]string
-	pathParts[0] = "/alarms/"
-	{
-		// Encode "alarm_id" parameter.
-		e := uri.NewPathEncoder(uri.PathEncoderConfig{
-			Param:   "alarm_id",
-			Style:   uri.PathStyleSimple,
-			Explode: false,
-		})
-		if err := func() error {
-			return e.EncodeValue(conv.UUIDToString(params.AlarmID))
-		}(); err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		encoded, err := e.Result()
-		if err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		pathParts[1] = encoded
-	}
-	pathParts[2] = "/enable"
-	uri.AddPathParts(u, pathParts[:]...)
-
-	r, err := ht.NewRequest(ctx, "POST", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-
-			switch err := c.securityAccessToken(ctx, EnableAlarmOperation, r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"AccessToken\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	body := resp.Body
-	defer body.Close()
-
-	result, err := decodeEnableAlarmResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
-// GetAlarm invokes getAlarm operation.
-//
-// Get Alarm.
-//
-// GET /alarms/{alarm_id}
-func (c *Client) GetAlarm(ctx context.Context, params GetAlarmParams) (GetAlarmRes, error) {
-	res, err := c.sendGetAlarm(ctx, params)
-	return res, err
-}
-
-func (c *Client) sendGetAlarm(ctx context.Context, params GetAlarmParams) (res GetAlarmRes, err error) {
-
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [2]string
-	pathParts[0] = "/alarms/"
-	{
-		// Encode "alarm_id" parameter.
-		e := uri.NewPathEncoder(uri.PathEncoderConfig{
-			Param:   "alarm_id",
-			Style:   uri.PathStyleSimple,
-			Explode: false,
-		})
-		if err := func() error {
-			return e.EncodeValue(conv.UUIDToString(params.AlarmID))
-		}(); err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		encoded, err := e.Result()
-		if err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		pathParts[1] = encoded
-	}
-	uri.AddPathParts(u, pathParts[:]...)
-
-	r, err := ht.NewRequest(ctx, "GET", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-
-			switch err := c.securityAccessToken(ctx, GetAlarmOperation, r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"AccessToken\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	body := resp.Body
-	defer body.Close()
-
-	result, err := decodeGetAlarmResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
-// GetHueBridge invokes get_hue_bridge operation.
-//
-// Get Hue Bridge.
+// Bridge Status.
 //
 // GET /hue/bridge
-func (c *Client) GetHueBridge(ctx context.Context) (*HueBridgeStatusRead, error) {
+func (c *Client) GetHueBridge(ctx context.Context) (GetHueBridgeRes, error) {
 	res, err := c.sendGetHueBridge(ctx)
 	return res, err
 }
 
-func (c *Client) sendGetHueBridge(ctx context.Context) (res *HueBridgeStatusRead, err error) {
+func (c *Client) sendGetHueBridge(ctx context.Context) (res GetHueBridgeRes, err error) {
 
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [1]string
@@ -1244,13 +214,13 @@ func (c *Client) sendGetHueBridge(ctx context.Context) (res *HueBridgeStatusRead
 		var satisfied bitset
 		{
 
-			switch err := c.securityAccessToken(ctx, GetHueBridgeOperation, r); {
+			switch err := c.securityAPIKeyHeader(ctx, GetHueBridgeOperation, r); {
 			case err == nil: // if NO error
 				satisfied[0] |= 1 << 0
 			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
 				// Skip this security.
 			default:
-				return res, errors.Wrap(err, "security \"AccessToken\"")
+				return res, errors.Wrap(err, "security \"APIKeyHeader\"")
 			}
 		}
 
@@ -1287,212 +257,17 @@ func (c *Client) sendGetHueBridge(ctx context.Context) (res *HueBridgeStatusRead
 	return result, nil
 }
 
-// GetRoom invokes get_room operation.
+// ListHueBridges invokes listHueBridges operation.
 //
-// Get Room.
-//
-// GET /rooms/{room_id}
-func (c *Client) GetRoom(ctx context.Context, params GetRoomParams) (GetRoomRes, error) {
-	res, err := c.sendGetRoom(ctx, params)
-	return res, err
-}
-
-func (c *Client) sendGetRoom(ctx context.Context, params GetRoomParams) (res GetRoomRes, err error) {
-
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [2]string
-	pathParts[0] = "/rooms/"
-	{
-		// Encode "room_id" parameter.
-		e := uri.NewPathEncoder(uri.PathEncoderConfig{
-			Param:   "room_id",
-			Style:   uri.PathStyleSimple,
-			Explode: false,
-		})
-		if err := func() error {
-			return e.EncodeValue(conv.UUIDToString(params.RoomID))
-		}(); err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		encoded, err := e.Result()
-		if err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		pathParts[1] = encoded
-	}
-	uri.AddPathParts(u, pathParts[:]...)
-
-	r, err := ht.NewRequest(ctx, "GET", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-
-			switch err := c.securityAccessToken(ctx, GetRoomOperation, r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"AccessToken\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	body := resp.Body
-	defer body.Close()
-
-	result, err := decodeGetRoomResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
-// Health invokes health operation.
-//
-// Health.
-//
-// GET /health
-func (c *Client) Health(ctx context.Context) (*HealthResponse, error) {
-	res, err := c.sendHealth(ctx)
-	return res, err
-}
-
-func (c *Client) sendHealth(ctx context.Context) (res *HealthResponse, err error) {
-
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [1]string
-	pathParts[0] = "/health"
-	uri.AddPathParts(u, pathParts[:]...)
-
-	r, err := ht.NewRequest(ctx, "GET", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	body := resp.Body
-	defer body.Close()
-
-	result, err := decodeHealthResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
-// ListAlarms invokes listAlarms operation.
-//
-// List Alarms.
-//
-// GET /alarms
-func (c *Client) ListAlarms(ctx context.Context) ([]AlarmRead, error) {
-	res, err := c.sendListAlarms(ctx)
-	return res, err
-}
-
-func (c *Client) sendListAlarms(ctx context.Context) (res []AlarmRead, err error) {
-
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [1]string
-	pathParts[0] = "/alarms"
-	uri.AddPathParts(u, pathParts[:]...)
-
-	r, err := ht.NewRequest(ctx, "GET", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-
-			switch err := c.securityAccessToken(ctx, ListAlarmsOperation, r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"AccessToken\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	body := resp.Body
-	defer body.Close()
-
-	result, err := decodeListAlarmsResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
-// ListHueBridges invokes list_hue_bridges operation.
-//
-// List Hue Bridges.
+// Discover Bridges.
 //
 // GET /hue/bridges
-func (c *Client) ListHueBridges(ctx context.Context) ([]HueBridgeRead, error) {
+func (c *Client) ListHueBridges(ctx context.Context) (ListHueBridgesRes, error) {
 	res, err := c.sendListHueBridges(ctx)
 	return res, err
 }
 
-func (c *Client) sendListHueBridges(ctx context.Context) (res []HueBridgeRead, err error) {
+func (c *Client) sendListHueBridges(ctx context.Context) (res ListHueBridgesRes, err error) {
 
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [1]string
@@ -1509,13 +284,13 @@ func (c *Client) sendListHueBridges(ctx context.Context) (res []HueBridgeRead, e
 		var satisfied bitset
 		{
 
-			switch err := c.securityAccessToken(ctx, ListHueBridgesOperation, r); {
+			switch err := c.securityAPIKeyHeader(ctx, ListHueBridgesOperation, r); {
 			case err == nil: // if NO error
 				satisfied[0] |= 1 << 0
 			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
 				// Skip this security.
 			default:
-				return res, errors.Wrap(err, "security \"AccessToken\"")
+				return res, errors.Wrap(err, "security \"APIKeyHeader\"")
 			}
 		}
 
@@ -1552,196 +327,17 @@ func (c *Client) sendListHueBridges(ctx context.Context) (res []HueBridgeRead, e
 	return result, nil
 }
 
-// ListOccurrences invokes listOccurrences operation.
+// ListRooms invokes listRooms operation.
 //
-// List Occurrences.
-//
-// GET /alarms/{alarm_id}/occurrences
-func (c *Client) ListOccurrences(ctx context.Context, params ListOccurrencesParams) (ListOccurrencesRes, error) {
-	res, err := c.sendListOccurrences(ctx, params)
-	return res, err
-}
-
-func (c *Client) sendListOccurrences(ctx context.Context, params ListOccurrencesParams) (res ListOccurrencesRes, err error) {
-
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [3]string
-	pathParts[0] = "/alarms/"
-	{
-		// Encode "alarm_id" parameter.
-		e := uri.NewPathEncoder(uri.PathEncoderConfig{
-			Param:   "alarm_id",
-			Style:   uri.PathStyleSimple,
-			Explode: false,
-		})
-		if err := func() error {
-			return e.EncodeValue(conv.UUIDToString(params.AlarmID))
-		}(); err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		encoded, err := e.Result()
-		if err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		pathParts[1] = encoded
-	}
-	pathParts[2] = "/occurrences"
-	uri.AddPathParts(u, pathParts[:]...)
-
-	q := uri.NewQueryEncoder()
-	{
-		// Encode "limit" parameter.
-		cfg := uri.QueryParameterEncodingConfig{
-			Name:    "limit",
-			Style:   uri.QueryStyleForm,
-			Explode: true,
-		}
-
-		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.Limit.Get(); ok {
-				return e.EncodeValue(conv.IntToString(val))
-			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode query")
-		}
-	}
-	u.RawQuery = q.Values().Encode()
-
-	r, err := ht.NewRequest(ctx, "GET", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-
-			switch err := c.securityAccessToken(ctx, ListOccurrencesOperation, r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"AccessToken\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	body := resp.Body
-	defer body.Close()
-
-	result, err := decodeListOccurrencesResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
-// ListProfiles invokes listProfiles operation.
-//
-// List Profiles.
-//
-// GET /alarm-profiles
-func (c *Client) ListProfiles(ctx context.Context) ([]ProfileRead, error) {
-	res, err := c.sendListProfiles(ctx)
-	return res, err
-}
-
-func (c *Client) sendListProfiles(ctx context.Context) (res []ProfileRead, err error) {
-
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [1]string
-	pathParts[0] = "/alarm-profiles"
-	uri.AddPathParts(u, pathParts[:]...)
-
-	r, err := ht.NewRequest(ctx, "GET", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-
-			switch err := c.securityAccessToken(ctx, ListProfilesOperation, r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"AccessToken\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	body := resp.Body
-	defer body.Close()
-
-	result, err := decodeListProfilesResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
-// ListRooms invokes list_rooms operation.
-//
-// List Rooms.
+// Rooms.
 //
 // GET /rooms
-func (c *Client) ListRooms(ctx context.Context) ([]RoomRead, error) {
+func (c *Client) ListRooms(ctx context.Context) (ListRoomsRes, error) {
 	res, err := c.sendListRooms(ctx)
 	return res, err
 }
 
-func (c *Client) sendListRooms(ctx context.Context) (res []RoomRead, err error) {
+func (c *Client) sendListRooms(ctx context.Context) (res ListRoomsRes, err error) {
 
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [1]string
@@ -1758,13 +354,13 @@ func (c *Client) sendListRooms(ctx context.Context) (res []RoomRead, err error) 
 		var satisfied bitset
 		{
 
-			switch err := c.securityAccessToken(ctx, ListRoomsOperation, r); {
+			switch err := c.securityAPIKeyHeader(ctx, ListRoomsOperation, r); {
 			case err == nil: // if NO error
 				satisfied[0] |= 1 << 0
 			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
 				// Skip this security.
 			default:
-				return res, errors.Wrap(err, "security \"AccessToken\"")
+				return res, errors.Wrap(err, "security \"APIKeyHeader\"")
 			}
 		}
 
@@ -1801,101 +397,21 @@ func (c *Client) sendListRooms(ctx context.Context) (res []RoomRead, err error) 
 	return result, nil
 }
 
-// Login invokes login operation.
+// ListScenes invokes listScenes operation.
 //
-// Login.
+// Scenes.
 //
-// POST /auth/login
-func (c *Client) Login(ctx context.Context, request *LoginRequest) (LoginRes, error) {
-	res, err := c.sendLogin(ctx, request)
+// GET /scenes
+func (c *Client) ListScenes(ctx context.Context) (ListScenesRes, error) {
+	res, err := c.sendListScenes(ctx)
 	return res, err
 }
 
-func (c *Client) sendLogin(ctx context.Context, request *LoginRequest) (res LoginRes, err error) {
+func (c *Client) sendListScenes(ctx context.Context) (res ListScenesRes, err error) {
 
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [1]string
-	pathParts[0] = "/auth/login"
-	uri.AddPathParts(u, pathParts[:]...)
-
-	r, err := ht.NewRequest(ctx, "POST", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-	if err := encodeLoginRequest(request, r); err != nil {
-		return res, errors.Wrap(err, "encode request")
-	}
-
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	body := resp.Body
-	defer body.Close()
-
-	result, err := decodeLoginResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
-// Logout invokes logout operation.
-//
-// Logout.
-//
-// POST /auth/logout
-func (c *Client) Logout(ctx context.Context, request *LogoutRequest) (LogoutRes, error) {
-	res, err := c.sendLogout(ctx, request)
-	return res, err
-}
-
-func (c *Client) sendLogout(ctx context.Context, request *LogoutRequest) (res LogoutRes, err error) {
-
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [1]string
-	pathParts[0] = "/auth/logout"
-	uri.AddPathParts(u, pathParts[:]...)
-
-	r, err := ht.NewRequest(ctx, "POST", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-	if err := encodeLogoutRequest(request, r); err != nil {
-		return res, errors.Wrap(err, "encode request")
-	}
-
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	body := resp.Body
-	defer body.Close()
-
-	result, err := decodeLogoutResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
-// Readiness invokes readiness operation.
-//
-// Readiness.
-//
-// GET /ready
-func (c *Client) Readiness(ctx context.Context) (*HealthResponse, error) {
-	res, err := c.sendReadiness(ctx)
-	return res, err
-}
-
-func (c *Client) sendReadiness(ctx context.Context) (res *HealthResponse, err error) {
-
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [1]string
-	pathParts[0] = "/ready"
+	pathParts[0] = "/scenes"
 	uri.AddPathParts(u, pathParts[:]...)
 
 	r, err := ht.NewRequest(ctx, "GET", u)
@@ -1903,44 +419,37 @@ func (c *Client) sendReadiness(ctx context.Context) (res *HealthResponse, err er
 		return res, errors.Wrap(err, "create request")
 	}
 
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	body := resp.Body
-	defer body.Close()
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
 
-	result, err := decodeReadinessResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
+			switch err := c.securityAPIKeyHeader(ctx, ListScenesOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"APIKeyHeader\"")
+			}
+		}
 
-	return result, nil
-}
-
-// Refresh invokes refresh operation.
-//
-// Refresh.
-//
-// POST /auth/refresh
-func (c *Client) Refresh(ctx context.Context, request *RefreshRequest) (RefreshRes, error) {
-	res, err := c.sendRefresh(ctx, request)
-	return res, err
-}
-
-func (c *Client) sendRefresh(ctx context.Context, request *RefreshRequest) (res RefreshRes, err error) {
-
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [1]string
-	pathParts[0] = "/auth/refresh"
-	uri.AddPathParts(u, pathParts[:]...)
-
-	r, err := ht.NewRequest(ctx, "POST", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-	if err := encodeRefreshRequest(request, r); err != nil {
-		return res, errors.Wrap(err, "encode request")
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
 	}
 
 	resp, err := c.cfg.Client.Do(r)
@@ -1950,7 +459,7 @@ func (c *Client) sendRefresh(ctx context.Context, request *RefreshRequest) (res 
 	body := resp.Body
 	defer body.Close()
 
-	result, err := decodeRefreshResponse(resp)
+	result, err := decodeListScenesResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -1958,57 +467,17 @@ func (c *Client) sendRefresh(ctx context.Context, request *RefreshRequest) (res 
 	return result, nil
 }
 
-// Register invokes register operation.
+// RegisterHueBridge invokes registerHueBridge operation.
 //
-// Register.
-//
-// POST /auth/register
-func (c *Client) Register(ctx context.Context, request *RegisterRequest) (RegisterRes, error) {
-	res, err := c.sendRegister(ctx, request)
-	return res, err
-}
-
-func (c *Client) sendRegister(ctx context.Context, request *RegisterRequest) (res RegisterRes, err error) {
-
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [1]string
-	pathParts[0] = "/auth/register"
-	uri.AddPathParts(u, pathParts[:]...)
-
-	r, err := ht.NewRequest(ctx, "POST", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-	if err := encodeRegisterRequest(request, r); err != nil {
-		return res, errors.Wrap(err, "encode request")
-	}
-
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	body := resp.Body
-	defer body.Close()
-
-	result, err := decodeRegisterResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
-// RegisterHueBridge invokes register_hue_bridge operation.
-//
-// Wait up to 60 seconds for the selected bridge's link button.
+// Register Bridge.
 //
 // POST /hue/bridge/register
-func (c *Client) RegisterHueBridge(ctx context.Context) (*HueBridgeStatusRead, error) {
+func (c *Client) RegisterHueBridge(ctx context.Context) (RegisterHueBridgeRes, error) {
 	res, err := c.sendRegisterHueBridge(ctx)
 	return res, err
 }
 
-func (c *Client) sendRegisterHueBridge(ctx context.Context) (res *HueBridgeStatusRead, err error) {
+func (c *Client) sendRegisterHueBridge(ctx context.Context) (res RegisterHueBridgeRes, err error) {
 
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [1]string
@@ -2025,13 +494,13 @@ func (c *Client) sendRegisterHueBridge(ctx context.Context) (res *HueBridgeStatu
 		var satisfied bitset
 		{
 
-			switch err := c.securityAccessToken(ctx, RegisterHueBridgeOperation, r); {
+			switch err := c.securityAPIKeyHeader(ctx, RegisterHueBridgeOperation, r); {
 			case err == nil: // if NO error
 				satisfied[0] |= 1 << 0
 			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
 				// Skip this security.
 			default:
-				return res, errors.Wrap(err, "security \"AccessToken\"")
+				return res, errors.Wrap(err, "security \"APIKeyHeader\"")
 			}
 		}
 
@@ -2068,17 +537,17 @@ func (c *Client) sendRegisterHueBridge(ctx context.Context) (res *HueBridgeStatu
 	return result, nil
 }
 
-// SelectHueBridge invokes select_hue_bridge operation.
+// SelectHueBridge invokes selectHueBridge operation.
 //
-// Select Hue Bridge.
+// Select Bridge.
 //
 // PUT /hue/bridge
-func (c *Client) SelectHueBridge(ctx context.Context, request *HueBridgeSelectionRequest) (SelectHueBridgeRes, error) {
+func (c *Client) SelectHueBridge(ctx context.Context, request *BridgeSelectionRequest) (SelectHueBridgeRes, error) {
 	res, err := c.sendSelectHueBridge(ctx, request)
 	return res, err
 }
 
-func (c *Client) sendSelectHueBridge(ctx context.Context, request *HueBridgeSelectionRequest) (res SelectHueBridgeRes, err error) {
+func (c *Client) sendSelectHueBridge(ctx context.Context, request *BridgeSelectionRequest) (res SelectHueBridgeRes, err error) {
 
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [1]string
@@ -2098,13 +567,13 @@ func (c *Client) sendSelectHueBridge(ctx context.Context, request *HueBridgeSele
 		var satisfied bitset
 		{
 
-			switch err := c.securityAccessToken(ctx, SelectHueBridgeOperation, r); {
+			switch err := c.securityAPIKeyHeader(ctx, SelectHueBridgeOperation, r); {
 			case err == nil: // if NO error
 				satisfied[0] |= 1 << 0
 			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
 				// Skip this security.
 			default:
-				return res, errors.Wrap(err, "security \"AccessToken\"")
+				return res, errors.Wrap(err, "security \"APIKeyHeader\"")
 			}
 		}
 
@@ -2141,246 +610,28 @@ func (c *Client) sendSelectHueBridge(ctx context.Context, request *HueBridgeSele
 	return result, nil
 }
 
-// StopSceneDemo invokes stop_scene_demo operation.
+// StartDaylightAlarm invokes startDaylightAlarm operation.
 //
-// Cut the running demo short. Only one runs at a time, so this ends it.
+// Start.
 //
-// DELETE /rooms/{room_id}/scenes/{scene_id}/demo
-func (c *Client) StopSceneDemo(ctx context.Context, params StopSceneDemoParams) (StopSceneDemoRes, error) {
-	res, err := c.sendStopSceneDemo(ctx, params)
+// POST /daylight-alarm/start
+func (c *Client) StartDaylightAlarm(ctx context.Context, request OptNilStartRequest) (StartDaylightAlarmRes, error) {
+	res, err := c.sendStartDaylightAlarm(ctx, request)
 	return res, err
 }
 
-func (c *Client) sendStopSceneDemo(ctx context.Context, params StopSceneDemoParams) (res StopSceneDemoRes, err error) {
-
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [5]string
-	pathParts[0] = "/rooms/"
-	{
-		// Encode "room_id" parameter.
-		e := uri.NewPathEncoder(uri.PathEncoderConfig{
-			Param:   "room_id",
-			Style:   uri.PathStyleSimple,
-			Explode: false,
-		})
-		if err := func() error {
-			return e.EncodeValue(conv.UUIDToString(params.RoomID))
-		}(); err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		encoded, err := e.Result()
-		if err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		pathParts[1] = encoded
-	}
-	pathParts[2] = "/scenes/"
-	{
-		// Encode "scene_id" parameter.
-		e := uri.NewPathEncoder(uri.PathEncoderConfig{
-			Param:   "scene_id",
-			Style:   uri.PathStyleSimple,
-			Explode: false,
-		})
-		if err := func() error {
-			return e.EncodeValue(conv.UUIDToString(params.SceneID))
-		}(); err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		encoded, err := e.Result()
-		if err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		pathParts[3] = encoded
-	}
-	pathParts[4] = "/demo"
-	uri.AddPathParts(u, pathParts[:]...)
-
-	r, err := ht.NewRequest(ctx, "DELETE", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-
-			switch err := c.securityAccessToken(ctx, StopSceneDemoOperation, r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"AccessToken\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	body := resp.Body
-	defer body.Close()
-
-	result, err := decodeStopSceneDemoResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
-// StreamEvents invokes streamEvents operation.
-//
-// Server-sent events covering every change to alarms and to the run currently in
-// progress, so a display can stay in sync without polling.
-// Each frame carries the event id in `id:`, the discriminator in `event:` and the
-// event itself as JSON in `data:`. Reconnect with `Last-Event-ID` to resume; if
-// that id has rolled out of the buffer nothing is replayed, so resync over
-// `GET /alarms` first. A `: keepalive` comment arrives whenever the stream is
-// idle.
-//
-// GET /eventstream
-func (c *Client) StreamEvents(ctx context.Context, params StreamEventsParams) (StreamEventsRes, error) {
-	res, err := c.sendStreamEvents(ctx, params)
-	return res, err
-}
-
-func (c *Client) sendStreamEvents(ctx context.Context, params StreamEventsParams) (res StreamEventsRes, err error) {
+func (c *Client) sendStartDaylightAlarm(ctx context.Context, request OptNilStartRequest) (res StartDaylightAlarmRes, err error) {
 
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [1]string
-	pathParts[0] = "/eventstream"
+	pathParts[0] = "/daylight-alarm/start"
 	uri.AddPathParts(u, pathParts[:]...)
 
-	r, err := ht.NewRequest(ctx, "GET", u)
+	r, err := ht.NewRequest(ctx, "POST", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
 	}
-
-	h := uri.NewHeaderEncoder(r.Header)
-	{
-		cfg := uri.HeaderParameterEncodingConfig{
-			Name:    "Last-Event-ID",
-			Explode: false,
-		}
-		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.LastEventID.Get(); ok {
-				return e.EncodeValue(conv.StringToString(val))
-			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode header")
-		}
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-
-			switch err := c.securityAccessToken(ctx, StreamEventsOperation, r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"AccessToken\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	body := resp.Body
-	defer body.Close()
-
-	result, err := decodeStreamEventsResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
-// UpdateAlarm invokes updateAlarm operation.
-//
-// Update Alarm.
-//
-// PATCH /alarms/{alarm_id}
-func (c *Client) UpdateAlarm(ctx context.Context, request *AlarmUpdate, params UpdateAlarmParams) (UpdateAlarmRes, error) {
-	res, err := c.sendUpdateAlarm(ctx, request, params)
-	return res, err
-}
-
-func (c *Client) sendUpdateAlarm(ctx context.Context, request *AlarmUpdate, params UpdateAlarmParams) (res UpdateAlarmRes, err error) {
-
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [2]string
-	pathParts[0] = "/alarms/"
-	{
-		// Encode "alarm_id" parameter.
-		e := uri.NewPathEncoder(uri.PathEncoderConfig{
-			Param:   "alarm_id",
-			Style:   uri.PathStyleSimple,
-			Explode: false,
-		})
-		if err := func() error {
-			return e.EncodeValue(conv.UUIDToString(params.AlarmID))
-		}(); err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		encoded, err := e.Result()
-		if err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		pathParts[1] = encoded
-	}
-	uri.AddPathParts(u, pathParts[:]...)
-
-	r, err := ht.NewRequest(ctx, "PATCH", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-	if err := encodeUpdateAlarmRequest(request, r); err != nil {
+	if err := encodeStartDaylightAlarmRequest(request, r); err != nil {
 		return res, errors.Wrap(err, "encode request")
 	}
 
@@ -2389,13 +640,13 @@ func (c *Client) sendUpdateAlarm(ctx context.Context, request *AlarmUpdate, para
 		var satisfied bitset
 		{
 
-			switch err := c.securityAccessToken(ctx, UpdateAlarmOperation, r); {
+			switch err := c.securityAPIKeyHeader(ctx, StartDaylightAlarmOperation, r); {
 			case err == nil: // if NO error
 				satisfied[0] |= 1 << 0
 			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
 				// Skip this security.
 			default:
-				return res, errors.Wrap(err, "security \"AccessToken\"")
+				return res, errors.Wrap(err, "security \"APIKeyHeader\"")
 			}
 		}
 
@@ -2424,7 +675,77 @@ func (c *Client) sendUpdateAlarm(ctx context.Context, request *AlarmUpdate, para
 	body := resp.Body
 	defer body.Close()
 
-	result, err := decodeUpdateAlarmResponse(resp)
+	result, err := decodeStartDaylightAlarmResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// StopDaylightAlarm invokes stopDaylightAlarm operation.
+//
+// Stop.
+//
+// POST /daylight-alarm/stop
+func (c *Client) StopDaylightAlarm(ctx context.Context) error {
+	_, err := c.sendStopDaylightAlarm(ctx)
+	return err
+}
+
+func (c *Client) sendStopDaylightAlarm(ctx context.Context) (res *StopDaylightAlarmNoContent, err error) {
+
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/daylight-alarm/stop"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	r, err := ht.NewRequest(ctx, "POST", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+
+			switch err := c.securityAPIKeyHeader(ctx, StopDaylightAlarmOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"APIKeyHeader\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer body.Close()
+
+	result, err := decodeStopDaylightAlarmResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

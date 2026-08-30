@@ -17,18 +17,17 @@ type commandTree struct {
 	JSON    bool   `help:"Emit stable JSON on stdout."`
 	Fields  string `help:"Comma-separated top-level fields to include; implies --json." placeholder:"FIELD,..."`
 	Compact bool   `help:"Emit compact rather than indented JSON."`
-	NoInput bool   `help:"Never prompt; fail with an actionable error instead."`
 	EnvFile string `help:"Path to a dotenv configuration file." default:".env" type:"path"`
 	APIURL  string `name:"api-url" help:"Override HUERISE_API_URL."`
-	Token   string `help:"Override HUERISE_API_TOKEN." hidden:""`
+	APIKey  string `name:"api-key" help:"Override HUERISE_API_KEY."`
 
-	Auth     authCommand     `cmd:"" help:"Register, log in, and manage local credentials."`
-	Rooms    roomsCommand    `cmd:"" help:"Browse rooms and Hue scenes."`
-	Hue      hueCommand      `cmd:"" help:"Configure the Hue Bridge."`
-	Profiles profilesCommand `cmd:"" help:"Manage alarm profiles."`
-	Alarms   alarmsCommand   `cmd:"" help:"Manage sunrise alarms."`
-	Doctor   doctorCommand   `cmd:"" help:"Check device configuration."`
-	Version  versionCommand  `cmd:"" help:"Print version information."`
+	Start   startCommand   `cmd:"" help:"Start the daylight alarm."`
+	Stop    stopCommand    `cmd:"" help:"Stop a running daylight alarm."`
+	Rooms   roomsCommand   `cmd:"" help:"List rooms and their Hue scenes."`
+	Scenes  scenesCommand  `cmd:"" help:"List every Hue scene."`
+	Hue     hueCommand     `cmd:"" help:"Configure the Hue Bridge."`
+	Doctor  doctorCommand  `cmd:"" help:"Check device configuration."`
+	Version versionCommand `cmd:"" help:"Print version information."`
 }
 
 type versionCommand struct{}
@@ -56,7 +55,7 @@ func Run(ctx context.Context, args []string, stdin io.Reader, stdout, stderr io.
 	parser, err := kong.New(
 		&root,
 		kong.Name("huerise"),
-		kong.Description("Control Huerise alarms from the terminal — readable by humans, predictable for agents."),
+		kong.Description("Control the Huerise daylight alarm from the terminal — readable by humans, predictable for agents."),
 		kong.UsageOnError(),
 		kong.Writers(stdout, stderr),
 		kong.Exit(func(code int) { panic(parserExit(code)) }),
@@ -79,8 +78,8 @@ func Run(ctx context.Context, args []string, stdin io.Reader, stdout, stderr io.
 	if root.APIURL != "" {
 		config.BaseURL = strings.TrimRight(root.APIURL, "/")
 	}
-	if root.Token != "" {
-		config.Token = root.Token
+	if root.APIKey != "" {
+		config.APIKey = root.APIKey
 	}
 	runtime := &Runtime{ctx: ctx, root: &root, config: config, stdin: stdin, stdout: stdout, stderr: stderr}
 	if err := parsed.Run(runtime); err != nil {

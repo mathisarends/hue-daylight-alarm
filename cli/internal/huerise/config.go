@@ -12,7 +12,7 @@ const DefaultBaseURL = "http://localhost:8000"
 
 type Config struct {
 	BaseURL string
-	Token   string
+	APIKey  string
 }
 
 // LoadConfig reads Huerise settings, using the dotenv file as a fallback.
@@ -25,7 +25,7 @@ func LoadConfig(dotEnvPath string) (Config, error) {
 		return Config{}, err
 	}
 	get := func(key string) string {
-		if value, ok := os.LookupEnv(key); ok {
+		if value := os.Getenv(key); value != "" {
 			return value
 		}
 		return values[key]
@@ -34,11 +34,7 @@ func LoadConfig(dotEnvPath string) (Config, error) {
 	if baseURL == "" {
 		baseURL = DefaultBaseURL
 	}
-	token := get("HUERISE_API_TOKEN")
-	if token == "" {
-		token = get("API_ACCESS_TOKEN")
-	}
-	return Config{BaseURL: strings.TrimRight(baseURL, "/"), Token: token}, nil
+	return Config{BaseURL: strings.TrimRight(baseURL, "/"), APIKey: get("HUERISE_API_KEY")}, nil
 }
 
 func readDotEnv(path string, values map[string]string) error {

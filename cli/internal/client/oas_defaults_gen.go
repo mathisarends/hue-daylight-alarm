@@ -3,49 +3,9 @@
 package client
 
 // setDefaults set default value of fields.
-func (s *HealthResponse) setDefaults() {
+func (s *AlarmStatusResponse) setDefaults() {
 	{
-		val := string("ok")
+		val := string("started")
 		s.Status.SetTo(val)
-	}
-}
-
-// setDefaults set default value of fields.
-func (s *ScheduleSchema) setDefaults() {
-	{
-		val := string("Europe/Berlin")
-		s.Timezone.SetTo(val)
-	}
-}
-
-// setDefaults set default value of fields.
-func (s *SunriseDemoRequest) setDefaults() {
-	{
-		val := float64(20)
-		s.DurationSeconds.SetTo(val)
-	}
-	{
-		val := int(1)
-		s.BrightnessStart.SetTo(val)
-	}
-	{
-		val := int(100)
-		s.BrightnessEnd.SetTo(val)
-	}
-}
-
-// setDefaults set default value of fields.
-func (s *SunriseSchema) setDefaults() {
-	{
-		val := int(7)
-		s.DurationMinutes.SetTo(val)
-	}
-	{
-		val := int(1)
-		s.BrightnessStart.SetTo(val)
-	}
-	{
-		val := int(100)
-		s.BrightnessEnd.SetTo(val)
 	}
 }

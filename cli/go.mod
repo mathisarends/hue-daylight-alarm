@@ -10,7 +10,6 @@ require (
 	github.com/go-faster/jx v1.2.0
 	github.com/google/uuid v1.6.0
 	github.com/ogen-go/ogen v1.20.3
-	golang.org/x/term v0.45.0
 )
 
 require (

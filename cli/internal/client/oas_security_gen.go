@@ -11,50 +11,35 @@ import (
 
 // SecuritySource is provider of security values (tokens, passwords, etc.).
 type SecuritySource interface {
-	// AccessToken provides AccessToken security value.
-	// Send the /auth/login access token as `Authorization: Bearer <token>`.
-	AccessToken(ctx context.Context, operationName OperationName) (AccessToken, error)
+	// APIKeyHeader provides APIKeyHeader security value.
+	APIKeyHeader(ctx context.Context, operationName OperationName) (APIKeyHeader, error)
 }
 
-// operationRolesAccessToken is a private map storing roles per operation.
-var operationRolesAccessToken = map[string][]string{
-	ActivateSceneOperation:     []string{},
-	CreateAlarmOperation:       []string{},
-	CreateProfileOperation:     []string{},
-	DeleteAlarmOperation:       []string{},
-	DeleteProfileOperation:     []string{},
-	DemoSceneOperation:         []string{},
-	DisableAlarmOperation:      []string{},
-	DismissAlarmOperation:      []string{},
-	DoctorOperation:            []string{},
-	EnableAlarmOperation:       []string{},
-	GetAlarmOperation:          []string{},
-	GetHueBridgeOperation:      []string{},
-	GetRoomOperation:           []string{},
-	ListAlarmsOperation:        []string{},
-	ListHueBridgesOperation:    []string{},
-	ListOccurrencesOperation:   []string{},
-	ListProfilesOperation:      []string{},
-	ListRoomsOperation:         []string{},
-	RegisterHueBridgeOperation: []string{},
-	SelectHueBridgeOperation:   []string{},
-	StopSceneDemoOperation:     []string{},
-	StreamEventsOperation:      []string{},
-	UpdateAlarmOperation:       []string{},
+// operationRolesAPIKeyHeader is a private map storing roles per operation.
+var operationRolesAPIKeyHeader = map[string][]string{
+	DoctorOperation:             []string{},
+	GetHueBridgeOperation:       []string{},
+	ListHueBridgesOperation:     []string{},
+	ListRoomsOperation:          []string{},
+	ListScenesOperation:         []string{},
+	RegisterHueBridgeOperation:  []string{},
+	SelectHueBridgeOperation:    []string{},
+	StartDaylightAlarmOperation: []string{},
+	StopDaylightAlarmOperation:  []string{},
 }
 
-// GetRolesForAccessToken returns the required roles for the given operation.
+// GetRolesForAPIKeyHeader returns the required roles for the given operation.
 //
 // This is useful for authorization scenarios where you need to know which roles
 // are required for an operation.
 //
 // Example:
 //
-//	requiredRoles := GetRolesForAccessToken(AddPetOperation)
+//	requiredRoles := GetRolesForAPIKeyHeader(AddPetOperation)
 //
 // Returns nil if the operation has no role requirements or if the operation is unknown.
-func GetRolesForAccessToken(operation string) []string {
-	roles, ok := operationRolesAccessToken[operation]
+func GetRolesForAPIKeyHeader(operation string) []string {
+	roles, ok := operationRolesAPIKeyHeader[operation]
 	if !ok {
 		return nil
 	}
@@ -64,11 +49,11 @@ func GetRolesForAccessToken(operation string) []string {
 	return result
 }
 
-func (s *Client) securityAccessToken(ctx context.Context, operationName OperationName, req *http.Request) error {
-	t, err := s.sec.AccessToken(ctx, operationName)
+func (s *Client) securityAPIKeyHeader(ctx context.Context, operationName OperationName, req *http.Request) error {
+	t, err := s.sec.APIKeyHeader(ctx, operationName)
 	if err != nil {
-		return errors.Wrap(err, "security source \"AccessToken\"")
+		return errors.Wrap(err, "security source \"APIKeyHeader\"")
 	}
-	req.Header.Set("Authorization", "Bearer "+t.Token)
+	req.Header.Set("X-API-Key", t.APIKey)
 	return nil
 }

@@ -1,8 +1,6 @@
 package commands
 
 import (
-	"fmt"
-
 	"github.com/mathisarends/huerise/cli/internal/client"
 )
 
@@ -13,18 +11,19 @@ func (doctorCommand) Run(runtime *Runtime) error {
 	if err != nil {
 		return err
 	}
-	result, err := apiClient.Doctor(runtime.ctx)
+	response, err := apiClient.Doctor(runtime.ctx)
 	if err != nil {
 		return err
 	}
-	return writeDoctor(runtime, result)
-}
-
-func writeDoctor(runtime *Runtime, result *client.DoctorRead) error {
+	result, ok := response.(*client.DoctorResponse)
+	if !ok {
+		return apiFailure("doctor", response)
+	}
 	return runtime.output(result, func() error {
-		return writeRecord(runtime.stdout,
-			recordField{Name: "configured", Value: fmt.Sprintf("%t", result.Configured)},
-			recordField{Name: "hue_bridge", Value: fmt.Sprintf("%t", result.HueBridge.Configured)},
-		)
+		rows := make([][]string, 0, len(result.Checks))
+		for _, check := range result.Checks {
+			rows = append(rows, []string{check.Name, check.Status})
+		}
+		return writeTable(runtime.stdout, []string{"CHECK", "STATUS"}, rows, "No checks reported.")
 	})
 }

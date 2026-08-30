@@ -3,718 +3,327 @@
 package client
 
 import (
-	"io"
-	"time"
-
 	"github.com/go-faster/errors"
 	"github.com/google/uuid"
 )
 
-type AccessToken struct {
-	Token string
-	Roles []string
+type APIKeyHeader struct {
+	APIKey string
+	Roles  []string
 }
 
-// GetToken returns the value of Token.
-func (s *AccessToken) GetToken() string {
-	return s.Token
+// GetAPIKey returns the value of APIKey.
+func (s *APIKeyHeader) GetAPIKey() string {
+	return s.APIKey
 }
 
 // GetRoles returns the value of Roles.
-func (s *AccessToken) GetRoles() []string {
+func (s *APIKeyHeader) GetRoles() []string {
 	return s.Roles
 }
 
-// SetToken sets the value of Token.
-func (s *AccessToken) SetToken(val string) {
-	s.Token = val
+// SetAPIKey sets the value of APIKey.
+func (s *APIKeyHeader) SetAPIKey(val string) {
+	s.APIKey = val
 }
 
 // SetRoles sets the value of Roles.
-func (s *AccessToken) SetRoles(val []string) {
+func (s *APIKeyHeader) SetRoles(val []string) {
 	s.Roles = val
 }
 
-// ActivateSceneNoContent is response for ActivateScene operation.
-type ActivateSceneNoContent struct{}
-
-func (*ActivateSceneNoContent) activateSceneRes() {}
-
-// Ref: #/components/schemas/AlarmCreate
-type AlarmCreate struct {
-	Label    string         `json:"label"`
-	Schedule ScheduleSchema `json:"schedule"`
-	RoomID   uuid.UUID      `json:"room_id"`
-	RoomName string         `json:"room_name"`
-	// Defaults to the default profile.
-	ProfileID OptNilUUID `json:"profile_id"`
-}
-
-// GetLabel returns the value of Label.
-func (s *AlarmCreate) GetLabel() string {
-	return s.Label
-}
-
-// GetSchedule returns the value of Schedule.
-func (s *AlarmCreate) GetSchedule() ScheduleSchema {
-	return s.Schedule
-}
-
-// GetRoomID returns the value of RoomID.
-func (s *AlarmCreate) GetRoomID() uuid.UUID {
-	return s.RoomID
-}
-
-// GetRoomName returns the value of RoomName.
-func (s *AlarmCreate) GetRoomName() string {
-	return s.RoomName
-}
-
-// GetProfileID returns the value of ProfileID.
-func (s *AlarmCreate) GetProfileID() OptNilUUID {
-	return s.ProfileID
-}
-
-// SetLabel sets the value of Label.
-func (s *AlarmCreate) SetLabel(val string) {
-	s.Label = val
-}
-
-// SetSchedule sets the value of Schedule.
-func (s *AlarmCreate) SetSchedule(val ScheduleSchema) {
-	s.Schedule = val
-}
-
-// SetRoomID sets the value of RoomID.
-func (s *AlarmCreate) SetRoomID(val uuid.UUID) {
-	s.RoomID = val
-}
-
-// SetRoomName sets the value of RoomName.
-func (s *AlarmCreate) SetRoomName(val string) {
-	s.RoomName = val
-}
-
-// SetProfileID sets the value of ProfileID.
-func (s *AlarmCreate) SetProfileID(val OptNilUUID) {
-	s.ProfileID = val
-}
-
-// Why an alarm cannot currently light a room.
-// Set when a Hue resource an alarm points at stops resolving and could not be
-// replaced, so a client can say so long before the wake-up is due.
-// Ref: #/components/schemas/AlarmDefect
-type AlarmDefect string
-
-const (
-	AlarmDefectRoomMissing  AlarmDefect = "room_missing"
-	AlarmDefectSceneMissing AlarmDefect = "scene_missing"
-)
-
-// AllValues returns all AlarmDefect values.
-func (AlarmDefect) AllValues() []AlarmDefect {
-	return []AlarmDefect{
-		AlarmDefectRoomMissing,
-		AlarmDefectSceneMissing,
-	}
-}
-
-// MarshalText implements encoding.TextMarshaler.
-func (s AlarmDefect) MarshalText() ([]byte, error) {
-	switch s {
-	case AlarmDefectRoomMissing:
-		return []byte(s), nil
-	case AlarmDefectSceneMissing:
-		return []byte(s), nil
-	default:
-		return nil, errors.Errorf("invalid value: %q", s)
-	}
-}
-
-// UnmarshalText implements encoding.TextUnmarshaler.
-func (s *AlarmDefect) UnmarshalText(data []byte) error {
-	switch AlarmDefect(data) {
-	case AlarmDefectRoomMissing:
-		*s = AlarmDefectRoomMissing
-		return nil
-	case AlarmDefectSceneMissing:
-		*s = AlarmDefectSceneMissing
-		return nil
-	default:
-		return errors.Errorf("invalid value: %q", data)
-	}
-}
-
-// Ref: #/components/schemas/AlarmRead
-type AlarmRead struct {
-	ID             uuid.UUID      `json:"id"`
-	Label          string         `json:"label"`
-	Schedule       ScheduleSchema `json:"schedule"`
-	RoomID         uuid.UUID      `json:"room_id"`
-	RoomName       string         `json:"room_name"`
-	ProfileID      uuid.UUID      `json:"profile_id"`
-	IsEnabled      bool           `json:"is_enabled"`
-	CreatedAt      time.Time      `json:"created_at"`
-	NextOccurrence NilDateTime    `json:"next_occurrence"`
-	// Set when the room or scene this alarm points at no longer exists on the bridge and could not be
-	// replaced automatically.
-	Defect OptNilAlarmDefect `json:"defect"`
-}
-
-// GetID returns the value of ID.
-func (s *AlarmRead) GetID() uuid.UUID {
-	return s.ID
-}
-
-// GetLabel returns the value of Label.
-func (s *AlarmRead) GetLabel() string {
-	return s.Label
-}
-
-// GetSchedule returns the value of Schedule.
-func (s *AlarmRead) GetSchedule() ScheduleSchema {
-	return s.Schedule
-}
-
-// GetRoomID returns the value of RoomID.
-func (s *AlarmRead) GetRoomID() uuid.UUID {
-	return s.RoomID
-}
-
-// GetRoomName returns the value of RoomName.
-func (s *AlarmRead) GetRoomName() string {
-	return s.RoomName
-}
-
-// GetProfileID returns the value of ProfileID.
-func (s *AlarmRead) GetProfileID() uuid.UUID {
-	return s.ProfileID
-}
-
-// GetIsEnabled returns the value of IsEnabled.
-func (s *AlarmRead) GetIsEnabled() bool {
-	return s.IsEnabled
-}
-
-// GetCreatedAt returns the value of CreatedAt.
-func (s *AlarmRead) GetCreatedAt() time.Time {
-	return s.CreatedAt
-}
-
-// GetNextOccurrence returns the value of NextOccurrence.
-func (s *AlarmRead) GetNextOccurrence() NilDateTime {
-	return s.NextOccurrence
-}
-
-// GetDefect returns the value of Defect.
-func (s *AlarmRead) GetDefect() OptNilAlarmDefect {
-	return s.Defect
-}
-
-// SetID sets the value of ID.
-func (s *AlarmRead) SetID(val uuid.UUID) {
-	s.ID = val
-}
-
-// SetLabel sets the value of Label.
-func (s *AlarmRead) SetLabel(val string) {
-	s.Label = val
-}
-
-// SetSchedule sets the value of Schedule.
-func (s *AlarmRead) SetSchedule(val ScheduleSchema) {
-	s.Schedule = val
-}
-
-// SetRoomID sets the value of RoomID.
-func (s *AlarmRead) SetRoomID(val uuid.UUID) {
-	s.RoomID = val
-}
-
-// SetRoomName sets the value of RoomName.
-func (s *AlarmRead) SetRoomName(val string) {
-	s.RoomName = val
-}
-
-// SetProfileID sets the value of ProfileID.
-func (s *AlarmRead) SetProfileID(val uuid.UUID) {
-	s.ProfileID = val
-}
-
-// SetIsEnabled sets the value of IsEnabled.
-func (s *AlarmRead) SetIsEnabled(val bool) {
-	s.IsEnabled = val
-}
-
-// SetCreatedAt sets the value of CreatedAt.
-func (s *AlarmRead) SetCreatedAt(val time.Time) {
-	s.CreatedAt = val
-}
-
-// SetNextOccurrence sets the value of NextOccurrence.
-func (s *AlarmRead) SetNextOccurrence(val NilDateTime) {
-	s.NextOccurrence = val
-}
-
-// SetDefect sets the value of Defect.
-func (s *AlarmRead) SetDefect(val OptNilAlarmDefect) {
-	s.Defect = val
-}
-
-func (*AlarmRead) createAlarmRes()  {}
-func (*AlarmRead) disableAlarmRes() {}
-func (*AlarmRead) enableAlarmRes()  {}
-func (*AlarmRead) getAlarmRes()     {}
-func (*AlarmRead) updateAlarmRes()  {}
-
-// A partial change. Omitted fields keep their current value.
-// Ref: #/components/schemas/AlarmUpdate
-type AlarmUpdate struct {
-	Label     OptNilString         `json:"label"`
-	Schedule  OptNilScheduleSchema `json:"schedule"`
-	RoomID    OptNilUUID           `json:"room_id"`
-	RoomName  OptNilString         `json:"room_name"`
-	ProfileID OptNilUUID           `json:"profile_id"`
-}
-
-// GetLabel returns the value of Label.
-func (s *AlarmUpdate) GetLabel() OptNilString {
-	return s.Label
-}
-
-// GetSchedule returns the value of Schedule.
-func (s *AlarmUpdate) GetSchedule() OptNilScheduleSchema {
-	return s.Schedule
-}
-
-// GetRoomID returns the value of RoomID.
-func (s *AlarmUpdate) GetRoomID() OptNilUUID {
-	return s.RoomID
-}
-
-// GetRoomName returns the value of RoomName.
-func (s *AlarmUpdate) GetRoomName() OptNilString {
-	return s.RoomName
-}
-
-// GetProfileID returns the value of ProfileID.
-func (s *AlarmUpdate) GetProfileID() OptNilUUID {
-	return s.ProfileID
-}
-
-// SetLabel sets the value of Label.
-func (s *AlarmUpdate) SetLabel(val OptNilString) {
-	s.Label = val
-}
-
-// SetSchedule sets the value of Schedule.
-func (s *AlarmUpdate) SetSchedule(val OptNilScheduleSchema) {
-	s.Schedule = val
-}
-
-// SetRoomID sets the value of RoomID.
-func (s *AlarmUpdate) SetRoomID(val OptNilUUID) {
-	s.RoomID = val
-}
-
-// SetRoomName sets the value of RoomName.
-func (s *AlarmUpdate) SetRoomName(val OptNilString) {
-	s.RoomName = val
-}
-
-// SetProfileID sets the value of ProfileID.
-func (s *AlarmUpdate) SetProfileID(val OptNilUUID) {
-	s.ProfileID = val
-}
-
-// DeleteAlarmNoContent is response for DeleteAlarm operation.
-type DeleteAlarmNoContent struct{}
-
-func (*DeleteAlarmNoContent) deleteAlarmRes() {}
-
-// DeleteProfileNoContent is response for DeleteProfile operation.
-type DeleteProfileNoContent struct{}
-
-func (*DeleteProfileNoContent) deleteProfileRes() {}
-
-// Ref: #/components/schemas/DoctorCheckRead
-type DoctorCheckRead struct {
-	Configured bool `json:"configured"`
-}
-
-// GetConfigured returns the value of Configured.
-func (s *DoctorCheckRead) GetConfigured() bool {
-	return s.Configured
-}
-
-// SetConfigured sets the value of Configured.
-func (s *DoctorCheckRead) SetConfigured(val bool) {
-	s.Configured = val
-}
-
-// Ref: #/components/schemas/DoctorRead
-type DoctorRead struct {
-	Configured bool            `json:"configured"`
-	HueBridge  DoctorCheckRead `json:"hue_bridge"`
-}
-
-// GetConfigured returns the value of Configured.
-func (s *DoctorRead) GetConfigured() bool {
-	return s.Configured
-}
-
-// GetHueBridge returns the value of HueBridge.
-func (s *DoctorRead) GetHueBridge() DoctorCheckRead {
-	return s.HueBridge
-}
-
-// SetConfigured sets the value of Configured.
-func (s *DoctorRead) SetConfigured(val bool) {
-	s.Configured = val
-}
-
-// SetHueBridge sets the value of HueBridge.
-func (s *DoctorRead) SetHueBridge(val DoctorCheckRead) {
-	s.HueBridge = val
-}
-
-// Ref: #/components/schemas/HTTPValidationError
-type HTTPValidationError struct {
-	Detail []ValidationError `json:"detail"`
-}
-
-// GetDetail returns the value of Detail.
-func (s *HTTPValidationError) GetDetail() []ValidationError {
-	return s.Detail
-}
-
-// SetDetail sets the value of Detail.
-func (s *HTTPValidationError) SetDetail(val []ValidationError) {
-	s.Detail = val
-}
-
-func (*HTTPValidationError) activateSceneRes()   {}
-func (*HTTPValidationError) createAlarmRes()     {}
-func (*HTTPValidationError) createProfileRes()   {}
-func (*HTTPValidationError) deleteAlarmRes()     {}
-func (*HTTPValidationError) deleteProfileRes()   {}
-func (*HTTPValidationError) demoSceneRes()       {}
-func (*HTTPValidationError) disableAlarmRes()    {}
-func (*HTTPValidationError) dismissAlarmRes()    {}
-func (*HTTPValidationError) enableAlarmRes()     {}
-func (*HTTPValidationError) getAlarmRes()        {}
-func (*HTTPValidationError) getRoomRes()         {}
-func (*HTTPValidationError) listOccurrencesRes() {}
-func (*HTTPValidationError) loginRes()           {}
-func (*HTTPValidationError) logoutRes()          {}
-func (*HTTPValidationError) refreshRes()         {}
-func (*HTTPValidationError) registerRes()        {}
-func (*HTTPValidationError) selectHueBridgeRes() {}
-func (*HTTPValidationError) stopSceneDemoRes()   {}
-func (*HTTPValidationError) streamEventsRes()    {}
-func (*HTTPValidationError) updateAlarmRes()     {}
-
-// Ref: #/components/schemas/HealthResponse
-type HealthResponse struct {
-	Status OptString `json:"status"`
+// Ref: #/components/schemas/AlarmStatusResponse
+type AlarmStatusResponse struct {
+	Status          OptString `json:"status"`
+	DurationSeconds int       `json:"duration_seconds"`
 }
 
 // GetStatus returns the value of Status.
-func (s *HealthResponse) GetStatus() OptString {
+func (s *AlarmStatusResponse) GetStatus() OptString {
 	return s.Status
 }
 
+// GetDurationSeconds returns the value of DurationSeconds.
+func (s *AlarmStatusResponse) GetDurationSeconds() int {
+	return s.DurationSeconds
+}
+
 // SetStatus sets the value of Status.
-func (s *HealthResponse) SetStatus(val OptString) {
+func (s *AlarmStatusResponse) SetStatus(val OptString) {
 	s.Status = val
 }
 
-// Ref: #/components/schemas/HueBridgeRead
-type HueBridgeRead struct {
-	// Stable Philips Hue Bridge ID.
-	ID string `json:"id"`
-	// Current, replaceable network address.
+// SetDurationSeconds sets the value of DurationSeconds.
+func (s *AlarmStatusResponse) SetDurationSeconds(val int) {
+	s.DurationSeconds = val
+}
+
+func (*AlarmStatusResponse) startDaylightAlarmRes() {}
+
+// Ref: #/components/schemas/AvailableSceneResponse
+type AvailableSceneResponse struct {
+	ID       uuid.UUID `json:"id"`
+	Name     string    `json:"name"`
+	RoomID   uuid.UUID `json:"room_id"`
+	RoomName string    `json:"room_name"`
+}
+
+// GetID returns the value of ID.
+func (s *AvailableSceneResponse) GetID() uuid.UUID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *AvailableSceneResponse) GetName() string {
+	return s.Name
+}
+
+// GetRoomID returns the value of RoomID.
+func (s *AvailableSceneResponse) GetRoomID() uuid.UUID {
+	return s.RoomID
+}
+
+// GetRoomName returns the value of RoomName.
+func (s *AvailableSceneResponse) GetRoomName() string {
+	return s.RoomName
+}
+
+// SetID sets the value of ID.
+func (s *AvailableSceneResponse) SetID(val uuid.UUID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *AvailableSceneResponse) SetName(val string) {
+	s.Name = val
+}
+
+// SetRoomID sets the value of RoomID.
+func (s *AvailableSceneResponse) SetRoomID(val uuid.UUID) {
+	s.RoomID = val
+}
+
+// SetRoomName sets the value of RoomName.
+func (s *AvailableSceneResponse) SetRoomName(val string) {
+	s.RoomName = val
+}
+
+// Ref: #/components/schemas/BridgeResponse
+type BridgeResponse struct {
+	ID        string `json:"id"`
 	IPAddress string `json:"ip_address"`
 	Selected  bool   `json:"selected"`
 }
 
 // GetID returns the value of ID.
-func (s *HueBridgeRead) GetID() string {
+func (s *BridgeResponse) GetID() string {
 	return s.ID
 }
 
 // GetIPAddress returns the value of IPAddress.
-func (s *HueBridgeRead) GetIPAddress() string {
+func (s *BridgeResponse) GetIPAddress() string {
 	return s.IPAddress
 }
 
 // GetSelected returns the value of Selected.
-func (s *HueBridgeRead) GetSelected() bool {
+func (s *BridgeResponse) GetSelected() bool {
 	return s.Selected
 }
 
 // SetID sets the value of ID.
-func (s *HueBridgeRead) SetID(val string) {
+func (s *BridgeResponse) SetID(val string) {
 	s.ID = val
 }
 
 // SetIPAddress sets the value of IPAddress.
-func (s *HueBridgeRead) SetIPAddress(val string) {
+func (s *BridgeResponse) SetIPAddress(val string) {
 	s.IPAddress = val
 }
 
 // SetSelected sets the value of Selected.
-func (s *HueBridgeRead) SetSelected(val bool) {
+func (s *BridgeResponse) SetSelected(val bool) {
 	s.Selected = val
 }
 
-// Ref: #/components/schemas/HueBridgeSelectionRequest
-type HueBridgeSelectionRequest struct {
-	// Stable discovered bridge ID.
+// Ref: #/components/schemas/BridgeSelectionRequest
+type BridgeSelectionRequest struct {
 	BridgeID string `json:"bridge_id"`
 }
 
 // GetBridgeID returns the value of BridgeID.
-func (s *HueBridgeSelectionRequest) GetBridgeID() string {
+func (s *BridgeSelectionRequest) GetBridgeID() string {
 	return s.BridgeID
 }
 
 // SetBridgeID sets the value of BridgeID.
-func (s *HueBridgeSelectionRequest) SetBridgeID(val string) {
+func (s *BridgeSelectionRequest) SetBridgeID(val string) {
 	s.BridgeID = val
 }
 
-// Ref: #/components/schemas/HueBridgeStatusRead
-type HueBridgeStatusRead struct {
-	BridgeID   NilString                 `json:"bridge_id"`
-	IPAddress  NilString                 `json:"ip_address"`
-	Configured bool                      `json:"configured"`
-	Source     NilHueConfigurationSource `json:"source"`
+// Ref: #/components/schemas/ConfigurationErrorResponse
+type ConfigurationErrorResponse struct {
+	Detail string               `json:"detail"`
+	Issues []ConfigurationIssue `json:"issues"`
 }
 
-// GetBridgeID returns the value of BridgeID.
-func (s *HueBridgeStatusRead) GetBridgeID() NilString {
-	return s.BridgeID
+// GetDetail returns the value of Detail.
+func (s *ConfigurationErrorResponse) GetDetail() string {
+	return s.Detail
 }
 
-// GetIPAddress returns the value of IPAddress.
-func (s *HueBridgeStatusRead) GetIPAddress() NilString {
-	return s.IPAddress
+// GetIssues returns the value of Issues.
+func (s *ConfigurationErrorResponse) GetIssues() []ConfigurationIssue {
+	return s.Issues
 }
 
-// GetConfigured returns the value of Configured.
-func (s *HueBridgeStatusRead) GetConfigured() bool {
-	return s.Configured
+// SetDetail sets the value of Detail.
+func (s *ConfigurationErrorResponse) SetDetail(val string) {
+	s.Detail = val
 }
 
-// GetSource returns the value of Source.
-func (s *HueBridgeStatusRead) GetSource() NilHueConfigurationSource {
-	return s.Source
+// SetIssues sets the value of Issues.
+func (s *ConfigurationErrorResponse) SetIssues(val []ConfigurationIssue) {
+	s.Issues = val
 }
 
-// SetBridgeID sets the value of BridgeID.
-func (s *HueBridgeStatusRead) SetBridgeID(val NilString) {
-	s.BridgeID = val
+func (*ConfigurationErrorResponse) doctorRes()             {}
+func (*ConfigurationErrorResponse) getHueBridgeRes()       {}
+func (*ConfigurationErrorResponse) listHueBridgesRes()     {}
+func (*ConfigurationErrorResponse) listRoomsRes()          {}
+func (*ConfigurationErrorResponse) listScenesRes()         {}
+func (*ConfigurationErrorResponse) registerHueBridgeRes()  {}
+func (*ConfigurationErrorResponse) selectHueBridgeRes()    {}
+func (*ConfigurationErrorResponse) startDaylightAlarmRes() {}
+
+// Ref: #/components/schemas/ConfigurationIssue
+type ConfigurationIssue struct {
+	Location string `json:"location"`
+	Message  string `json:"message"`
+	Type     string `json:"type"`
 }
 
-// SetIPAddress sets the value of IPAddress.
-func (s *HueBridgeStatusRead) SetIPAddress(val NilString) {
-	s.IPAddress = val
+// GetLocation returns the value of Location.
+func (s *ConfigurationIssue) GetLocation() string {
+	return s.Location
 }
 
-// SetConfigured sets the value of Configured.
-func (s *HueBridgeStatusRead) SetConfigured(val bool) {
-	s.Configured = val
+// GetMessage returns the value of Message.
+func (s *ConfigurationIssue) GetMessage() string {
+	return s.Message
 }
 
-// SetSource sets the value of Source.
-func (s *HueBridgeStatusRead) SetSource(val NilHueConfigurationSource) {
-	s.Source = val
+// GetType returns the value of Type.
+func (s *ConfigurationIssue) GetType() string {
+	return s.Type
 }
 
-func (*HueBridgeStatusRead) selectHueBridgeRes() {}
-
-// Ref: #/components/schemas/HueConfigurationSource
-type HueConfigurationSource string
-
-const (
-	HueConfigurationSourceEnvironment HueConfigurationSource = "environment"
-	HueConfigurationSourceDatabase    HueConfigurationSource = "database"
-)
-
-// AllValues returns all HueConfigurationSource values.
-func (HueConfigurationSource) AllValues() []HueConfigurationSource {
-	return []HueConfigurationSource{
-		HueConfigurationSourceEnvironment,
-		HueConfigurationSourceDatabase,
-	}
+// SetLocation sets the value of Location.
+func (s *ConfigurationIssue) SetLocation(val string) {
+	s.Location = val
 }
 
-// MarshalText implements encoding.TextMarshaler.
-func (s HueConfigurationSource) MarshalText() ([]byte, error) {
-	switch s {
-	case HueConfigurationSourceEnvironment:
-		return []byte(s), nil
-	case HueConfigurationSourceDatabase:
-		return []byte(s), nil
-	default:
-		return nil, errors.Errorf("invalid value: %q", s)
-	}
+// SetMessage sets the value of Message.
+func (s *ConfigurationIssue) SetMessage(val string) {
+	s.Message = val
 }
 
-// UnmarshalText implements encoding.TextUnmarshaler.
-func (s *HueConfigurationSource) UnmarshalText(data []byte) error {
-	switch HueConfigurationSource(data) {
-	case HueConfigurationSourceEnvironment:
-		*s = HueConfigurationSourceEnvironment
-		return nil
-	case HueConfigurationSourceDatabase:
-		*s = HueConfigurationSourceDatabase
-		return nil
-	default:
-		return errors.Errorf("invalid value: %q", data)
-	}
+// SetType sets the value of Type.
+func (s *ConfigurationIssue) SetType(val string) {
+	s.Type = val
 }
 
-type ListOccurrencesOKApplicationJSON []OccurrenceRead
-
-func (*ListOccurrencesOKApplicationJSON) listOccurrencesRes() {}
-
-// Ref: #/components/schemas/LoginRequest
-type LoginRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+// Ref: #/components/schemas/DoctorCheckResponse
+type DoctorCheckResponse struct {
+	Name   string `json:"name"`
+	Status string `json:"status"`
 }
 
-// GetUsername returns the value of Username.
-func (s *LoginRequest) GetUsername() string {
-	return s.Username
+// GetName returns the value of Name.
+func (s *DoctorCheckResponse) GetName() string {
+	return s.Name
 }
 
-// GetPassword returns the value of Password.
-func (s *LoginRequest) GetPassword() string {
-	return s.Password
+// GetStatus returns the value of Status.
+func (s *DoctorCheckResponse) GetStatus() string {
+	return s.Status
 }
 
-// SetUsername sets the value of Username.
-func (s *LoginRequest) SetUsername(val string) {
-	s.Username = val
+// SetName sets the value of Name.
+func (s *DoctorCheckResponse) SetName(val string) {
+	s.Name = val
 }
 
-// SetPassword sets the value of Password.
-func (s *LoginRequest) SetPassword(val string) {
-	s.Password = val
+// SetStatus sets the value of Status.
+func (s *DoctorCheckResponse) SetStatus(val string) {
+	s.Status = val
 }
 
-// LogoutNoContent is response for Logout operation.
-type LogoutNoContent struct{}
+type DoctorNotFound ErrorResponse
 
-func (*LogoutNoContent) logoutRes() {}
+func (*DoctorNotFound) doctorRes() {}
 
-// Ref: #/components/schemas/LogoutRequest
-type LogoutRequest struct {
-	RefreshToken string `json:"refresh_token"`
+// Ref: #/components/schemas/DoctorResponse
+type DoctorResponse struct {
+	Status string                `json:"status"`
+	Checks []DoctorCheckResponse `json:"checks"`
 }
 
-// GetRefreshToken returns the value of RefreshToken.
-func (s *LogoutRequest) GetRefreshToken() string {
-	return s.RefreshToken
+// GetStatus returns the value of Status.
+func (s *DoctorResponse) GetStatus() string {
+	return s.Status
 }
 
-// SetRefreshToken sets the value of RefreshToken.
-func (s *LogoutRequest) SetRefreshToken(val string) {
-	s.RefreshToken = val
+// GetChecks returns the value of Checks.
+func (s *DoctorResponse) GetChecks() []DoctorCheckResponse {
+	return s.Checks
 }
 
-// NewNilDateTime returns new NilDateTime with value set to v.
-func NewNilDateTime(v time.Time) NilDateTime {
-	return NilDateTime{
-		Value: v,
-	}
+// SetStatus sets the value of Status.
+func (s *DoctorResponse) SetStatus(val string) {
+	s.Status = val
 }
 
-// NilDateTime is nullable time.Time.
-type NilDateTime struct {
-	Value time.Time
-	Null  bool
+// SetChecks sets the value of Checks.
+func (s *DoctorResponse) SetChecks(val []DoctorCheckResponse) {
+	s.Checks = val
 }
 
-// SetTo sets value to v.
-func (o *NilDateTime) SetTo(v time.Time) {
-	o.Null = false
-	o.Value = v
+func (*DoctorResponse) doctorRes() {}
+
+type DoctorServiceUnavailable ErrorResponse
+
+func (*DoctorServiceUnavailable) doctorRes() {}
+
+// Ref: #/components/schemas/ErrorResponse
+type ErrorResponse struct {
+	Detail string `json:"detail"`
 }
 
-// IsNull returns true if value is Null.
-func (o NilDateTime) IsNull() bool { return o.Null }
-
-// SetToNull sets value to null.
-func (o *NilDateTime) SetToNull() {
-	o.Null = true
-	var v time.Time
-	o.Value = v
+// GetDetail returns the value of Detail.
+func (s *ErrorResponse) GetDetail() string {
+	return s.Detail
 }
 
-// Get returns value and boolean that denotes whether value was set.
-func (o NilDateTime) Get() (v time.Time, ok bool) {
-	if o.Null {
-		return v, false
-	}
-	return o.Value, true
+// SetDetail sets the value of Detail.
+func (s *ErrorResponse) SetDetail(val string) {
+	s.Detail = val
 }
 
-// Or returns value if set, or given parameter if does not.
-func (o NilDateTime) Or(d time.Time) time.Time {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
+func (*ErrorResponse) listHueBridgesRes() {}
+func (*ErrorResponse) listRoomsRes()      {}
+func (*ErrorResponse) listScenesRes()     {}
 
-// NewNilHueConfigurationSource returns new NilHueConfigurationSource with value set to v.
-func NewNilHueConfigurationSource(v HueConfigurationSource) NilHueConfigurationSource {
-	return NilHueConfigurationSource{
-		Value: v,
-	}
-}
+type ListHueBridgesOKApplicationJSON []BridgeResponse
 
-// NilHueConfigurationSource is nullable HueConfigurationSource.
-type NilHueConfigurationSource struct {
-	Value HueConfigurationSource
-	Null  bool
-}
+func (*ListHueBridgesOKApplicationJSON) listHueBridgesRes() {}
 
-// SetTo sets value to v.
-func (o *NilHueConfigurationSource) SetTo(v HueConfigurationSource) {
-	o.Null = false
-	o.Value = v
-}
+type ListRoomsOKApplicationJSON []RoomResponse
 
-// IsNull returns true if value is Null.
-func (o NilHueConfigurationSource) IsNull() bool { return o.Null }
+func (*ListRoomsOKApplicationJSON) listRoomsRes() {}
 
-// SetToNull sets value to null.
-func (o *NilHueConfigurationSource) SetToNull() {
-	o.Null = true
-	var v HueConfigurationSource
-	o.Value = v
-}
+type ListScenesOKApplicationJSON []AvailableSceneResponse
 
-// Get returns value and boolean that denotes whether value was set.
-func (o NilHueConfigurationSource) Get() (v HueConfigurationSource, ok bool) {
-	if o.Null {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o NilHueConfigurationSource) Or(d HueConfigurationSource) HueConfigurationSource {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
+func (*ListScenesOKApplicationJSON) listScenesRes() {}
 
 // NewNilString returns new NilString with value set to v.
 func NewNilString(v string) NilString {
@@ -761,123 +370,32 @@ func (o NilString) Or(d string) string {
 	return d
 }
 
-// Ref: #/components/schemas/OccurrenceRead
-type OccurrenceRead struct {
-	ID            uuid.UUID       `json:"id"`
-	AlarmID       uuid.UUID       `json:"alarm_id"`
-	ScheduledFor  time.Time       `json:"scheduled_for"`
-	State         OccurrenceState `json:"state"`
-	TriggeredAt   NilDateTime     `json:"triggered_at"`
-	FinishedAt    NilDateTime     `json:"finished_at"`
-	FailureReason NilString       `json:"failure_reason"`
-}
-
-// GetID returns the value of ID.
-func (s *OccurrenceRead) GetID() uuid.UUID {
-	return s.ID
-}
-
-// GetAlarmID returns the value of AlarmID.
-func (s *OccurrenceRead) GetAlarmID() uuid.UUID {
-	return s.AlarmID
-}
-
-// GetScheduledFor returns the value of ScheduledFor.
-func (s *OccurrenceRead) GetScheduledFor() time.Time {
-	return s.ScheduledFor
-}
-
-// GetState returns the value of State.
-func (s *OccurrenceRead) GetState() OccurrenceState {
-	return s.State
-}
-
-// GetTriggeredAt returns the value of TriggeredAt.
-func (s *OccurrenceRead) GetTriggeredAt() NilDateTime {
-	return s.TriggeredAt
-}
-
-// GetFinishedAt returns the value of FinishedAt.
-func (s *OccurrenceRead) GetFinishedAt() NilDateTime {
-	return s.FinishedAt
-}
-
-// GetFailureReason returns the value of FailureReason.
-func (s *OccurrenceRead) GetFailureReason() NilString {
-	return s.FailureReason
-}
-
-// SetID sets the value of ID.
-func (s *OccurrenceRead) SetID(val uuid.UUID) {
-	s.ID = val
-}
-
-// SetAlarmID sets the value of AlarmID.
-func (s *OccurrenceRead) SetAlarmID(val uuid.UUID) {
-	s.AlarmID = val
-}
-
-// SetScheduledFor sets the value of ScheduledFor.
-func (s *OccurrenceRead) SetScheduledFor(val time.Time) {
-	s.ScheduledFor = val
-}
-
-// SetState sets the value of State.
-func (s *OccurrenceRead) SetState(val OccurrenceState) {
-	s.State = val
-}
-
-// SetTriggeredAt sets the value of TriggeredAt.
-func (s *OccurrenceRead) SetTriggeredAt(val NilDateTime) {
-	s.TriggeredAt = val
-}
-
-// SetFinishedAt sets the value of FinishedAt.
-func (s *OccurrenceRead) SetFinishedAt(val NilDateTime) {
-	s.FinishedAt = val
-}
-
-// SetFailureReason sets the value of FailureReason.
-func (s *OccurrenceRead) SetFailureReason(val NilString) {
-	s.FailureReason = val
-}
-
-func (*OccurrenceRead) dismissAlarmRes() {}
-
-// Ref: #/components/schemas/OccurrenceState
-type OccurrenceState string
+// Ref: #/components/schemas/OnboardingState
+type OnboardingState string
 
 const (
-	OccurrenceStatePending   OccurrenceState = "pending"
-	OccurrenceStateSunrise   OccurrenceState = "sunrise"
-	OccurrenceStateDismissed OccurrenceState = "dismissed"
-	OccurrenceStateSkipped   OccurrenceState = "skipped"
-	OccurrenceStateFailed    OccurrenceState = "failed"
+	OnboardingStateNotSelected        OnboardingState = "not_selected"
+	OnboardingStateLinkButtonRequired OnboardingState = "link_button_required"
+	OnboardingStateReady              OnboardingState = "ready"
 )
 
-// AllValues returns all OccurrenceState values.
-func (OccurrenceState) AllValues() []OccurrenceState {
-	return []OccurrenceState{
-		OccurrenceStatePending,
-		OccurrenceStateSunrise,
-		OccurrenceStateDismissed,
-		OccurrenceStateSkipped,
-		OccurrenceStateFailed,
+// AllValues returns all OnboardingState values.
+func (OnboardingState) AllValues() []OnboardingState {
+	return []OnboardingState{
+		OnboardingStateNotSelected,
+		OnboardingStateLinkButtonRequired,
+		OnboardingStateReady,
 	}
 }
 
 // MarshalText implements encoding.TextMarshaler.
-func (s OccurrenceState) MarshalText() ([]byte, error) {
+func (s OnboardingState) MarshalText() ([]byte, error) {
 	switch s {
-	case OccurrenceStatePending:
+	case OnboardingStateNotSelected:
 		return []byte(s), nil
-	case OccurrenceStateSunrise:
+	case OnboardingStateLinkButtonRequired:
 		return []byte(s), nil
-	case OccurrenceStateDismissed:
-		return []byte(s), nil
-	case OccurrenceStateSkipped:
-		return []byte(s), nil
-	case OccurrenceStateFailed:
+	case OnboardingStateReady:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -885,166 +403,120 @@ func (s OccurrenceState) MarshalText() ([]byte, error) {
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
-func (s *OccurrenceState) UnmarshalText(data []byte) error {
-	switch OccurrenceState(data) {
-	case OccurrenceStatePending:
-		*s = OccurrenceStatePending
+func (s *OnboardingState) UnmarshalText(data []byte) error {
+	switch OnboardingState(data) {
+	case OnboardingStateNotSelected:
+		*s = OnboardingStateNotSelected
 		return nil
-	case OccurrenceStateSunrise:
-		*s = OccurrenceStateSunrise
+	case OnboardingStateLinkButtonRequired:
+		*s = OnboardingStateLinkButtonRequired
 		return nil
-	case OccurrenceStateDismissed:
-		*s = OccurrenceStateDismissed
-		return nil
-	case OccurrenceStateSkipped:
-		*s = OccurrenceStateSkipped
-		return nil
-	case OccurrenceStateFailed:
-		*s = OccurrenceStateFailed
+	case OnboardingStateReady:
+		*s = OnboardingStateReady
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
 	}
 }
 
-// NewOptFloat64 returns new OptFloat64 with value set to v.
-func NewOptFloat64(v float64) OptFloat64 {
-	return OptFloat64{
+// Ref: #/components/schemas/OnboardingStatusResponse
+type OnboardingStatusResponse struct {
+	State     OnboardingState `json:"state"`
+	BridgeID  NilString       `json:"bridge_id"`
+	IPAddress NilString       `json:"ip_address"`
+	ReadOnly  bool            `json:"read_only"`
+}
+
+// GetState returns the value of State.
+func (s *OnboardingStatusResponse) GetState() OnboardingState {
+	return s.State
+}
+
+// GetBridgeID returns the value of BridgeID.
+func (s *OnboardingStatusResponse) GetBridgeID() NilString {
+	return s.BridgeID
+}
+
+// GetIPAddress returns the value of IPAddress.
+func (s *OnboardingStatusResponse) GetIPAddress() NilString {
+	return s.IPAddress
+}
+
+// GetReadOnly returns the value of ReadOnly.
+func (s *OnboardingStatusResponse) GetReadOnly() bool {
+	return s.ReadOnly
+}
+
+// SetState sets the value of State.
+func (s *OnboardingStatusResponse) SetState(val OnboardingState) {
+	s.State = val
+}
+
+// SetBridgeID sets the value of BridgeID.
+func (s *OnboardingStatusResponse) SetBridgeID(val NilString) {
+	s.BridgeID = val
+}
+
+// SetIPAddress sets the value of IPAddress.
+func (s *OnboardingStatusResponse) SetIPAddress(val NilString) {
+	s.IPAddress = val
+}
+
+// SetReadOnly sets the value of ReadOnly.
+func (s *OnboardingStatusResponse) SetReadOnly(val bool) {
+	s.ReadOnly = val
+}
+
+func (*OnboardingStatusResponse) getHueBridgeRes()      {}
+func (*OnboardingStatusResponse) registerHueBridgeRes() {}
+func (*OnboardingStatusResponse) selectHueBridgeRes()   {}
+
+// NewOptNilStartRequest returns new OptNilStartRequest with value set to v.
+func NewOptNilStartRequest(v StartRequest) OptNilStartRequest {
+	return OptNilStartRequest{
 		Value: v,
 		Set:   true,
 	}
 }
 
-// OptFloat64 is optional float64.
-type OptFloat64 struct {
-	Value float64
-	Set   bool
-}
-
-// IsSet returns true if OptFloat64 was set.
-func (o OptFloat64) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptFloat64) Reset() {
-	var v float64
-	o.Value = v
-	o.Set = false
-}
-
-// SetTo sets value to v.
-func (o *OptFloat64) SetTo(v float64) {
-	o.Set = true
-	o.Value = v
-}
-
-// Get returns value and boolean that denotes whether value was set.
-func (o OptFloat64) Get() (v float64, ok bool) {
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o OptFloat64) Or(d float64) float64 {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
-
-// NewOptInt returns new OptInt with value set to v.
-func NewOptInt(v int) OptInt {
-	return OptInt{
-		Value: v,
-		Set:   true,
-	}
-}
-
-// OptInt is optional int.
-type OptInt struct {
-	Value int
-	Set   bool
-}
-
-// IsSet returns true if OptInt was set.
-func (o OptInt) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptInt) Reset() {
-	var v int
-	o.Value = v
-	o.Set = false
-}
-
-// SetTo sets value to v.
-func (o *OptInt) SetTo(v int) {
-	o.Set = true
-	o.Value = v
-}
-
-// Get returns value and boolean that denotes whether value was set.
-func (o OptInt) Get() (v int, ok bool) {
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o OptInt) Or(d int) int {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
-
-// NewOptNilAlarmDefect returns new OptNilAlarmDefect with value set to v.
-func NewOptNilAlarmDefect(v AlarmDefect) OptNilAlarmDefect {
-	return OptNilAlarmDefect{
-		Value: v,
-		Set:   true,
-	}
-}
-
-// OptNilAlarmDefect is optional nullable AlarmDefect.
-type OptNilAlarmDefect struct {
-	Value AlarmDefect
+// OptNilStartRequest is optional nullable StartRequest.
+type OptNilStartRequest struct {
+	Value StartRequest
 	Set   bool
 	Null  bool
 }
 
-// IsSet returns true if OptNilAlarmDefect was set.
-func (o OptNilAlarmDefect) IsSet() bool { return o.Set }
+// IsSet returns true if OptNilStartRequest was set.
+func (o OptNilStartRequest) IsSet() bool { return o.Set }
 
 // Reset unsets value.
-func (o *OptNilAlarmDefect) Reset() {
-	var v AlarmDefect
+func (o *OptNilStartRequest) Reset() {
+	var v StartRequest
 	o.Value = v
 	o.Set = false
 	o.Null = false
 }
 
 // SetTo sets value to v.
-func (o *OptNilAlarmDefect) SetTo(v AlarmDefect) {
+func (o *OptNilStartRequest) SetTo(v StartRequest) {
 	o.Set = true
 	o.Null = false
 	o.Value = v
 }
 
 // IsNull returns true if value is Null.
-func (o OptNilAlarmDefect) IsNull() bool { return o.Null }
+func (o OptNilStartRequest) IsNull() bool { return o.Null }
 
 // SetToNull sets value to null.
-func (o *OptNilAlarmDefect) SetToNull() {
+func (o *OptNilStartRequest) SetToNull() {
 	o.Set = true
 	o.Null = true
-	var v AlarmDefect
+	var v StartRequest
 	o.Value = v
 }
 
 // Get returns value and boolean that denotes whether value was set.
-func (o OptNilAlarmDefect) Get() (v AlarmDefect, ok bool) {
+func (o OptNilStartRequest) Get() (v StartRequest, ok bool) {
 	if o.Null {
 		return v, false
 	}
@@ -1055,385 +527,7 @@ func (o OptNilAlarmDefect) Get() (v AlarmDefect, ok bool) {
 }
 
 // Or returns value if set, or given parameter if does not.
-func (o OptNilAlarmDefect) Or(d AlarmDefect) AlarmDefect {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
-
-// NewOptNilFloat64 returns new OptNilFloat64 with value set to v.
-func NewOptNilFloat64(v float64) OptNilFloat64 {
-	return OptNilFloat64{
-		Value: v,
-		Set:   true,
-	}
-}
-
-// OptNilFloat64 is optional nullable float64.
-type OptNilFloat64 struct {
-	Value float64
-	Set   bool
-	Null  bool
-}
-
-// IsSet returns true if OptNilFloat64 was set.
-func (o OptNilFloat64) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptNilFloat64) Reset() {
-	var v float64
-	o.Value = v
-	o.Set = false
-	o.Null = false
-}
-
-// SetTo sets value to v.
-func (o *OptNilFloat64) SetTo(v float64) {
-	o.Set = true
-	o.Null = false
-	o.Value = v
-}
-
-// IsNull returns true if value is Null.
-func (o OptNilFloat64) IsNull() bool { return o.Null }
-
-// SetToNull sets value to null.
-func (o *OptNilFloat64) SetToNull() {
-	o.Set = true
-	o.Null = true
-	var v float64
-	o.Value = v
-}
-
-// Get returns value and boolean that denotes whether value was set.
-func (o OptNilFloat64) Get() (v float64, ok bool) {
-	if o.Null {
-		return v, false
-	}
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o OptNilFloat64) Or(d float64) float64 {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
-
-// NewOptNilSceneActivationRequest returns new OptNilSceneActivationRequest with value set to v.
-func NewOptNilSceneActivationRequest(v SceneActivationRequest) OptNilSceneActivationRequest {
-	return OptNilSceneActivationRequest{
-		Value: v,
-		Set:   true,
-	}
-}
-
-// OptNilSceneActivationRequest is optional nullable SceneActivationRequest.
-type OptNilSceneActivationRequest struct {
-	Value SceneActivationRequest
-	Set   bool
-	Null  bool
-}
-
-// IsSet returns true if OptNilSceneActivationRequest was set.
-func (o OptNilSceneActivationRequest) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptNilSceneActivationRequest) Reset() {
-	var v SceneActivationRequest
-	o.Value = v
-	o.Set = false
-	o.Null = false
-}
-
-// SetTo sets value to v.
-func (o *OptNilSceneActivationRequest) SetTo(v SceneActivationRequest) {
-	o.Set = true
-	o.Null = false
-	o.Value = v
-}
-
-// IsNull returns true if value is Null.
-func (o OptNilSceneActivationRequest) IsNull() bool { return o.Null }
-
-// SetToNull sets value to null.
-func (o *OptNilSceneActivationRequest) SetToNull() {
-	o.Set = true
-	o.Null = true
-	var v SceneActivationRequest
-	o.Value = v
-}
-
-// Get returns value and boolean that denotes whether value was set.
-func (o OptNilSceneActivationRequest) Get() (v SceneActivationRequest, ok bool) {
-	if o.Null {
-		return v, false
-	}
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o OptNilSceneActivationRequest) Or(d SceneActivationRequest) SceneActivationRequest {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
-
-// NewOptNilScheduleSchema returns new OptNilScheduleSchema with value set to v.
-func NewOptNilScheduleSchema(v ScheduleSchema) OptNilScheduleSchema {
-	return OptNilScheduleSchema{
-		Value: v,
-		Set:   true,
-	}
-}
-
-// OptNilScheduleSchema is optional nullable ScheduleSchema.
-type OptNilScheduleSchema struct {
-	Value ScheduleSchema
-	Set   bool
-	Null  bool
-}
-
-// IsSet returns true if OptNilScheduleSchema was set.
-func (o OptNilScheduleSchema) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptNilScheduleSchema) Reset() {
-	var v ScheduleSchema
-	o.Value = v
-	o.Set = false
-	o.Null = false
-}
-
-// SetTo sets value to v.
-func (o *OptNilScheduleSchema) SetTo(v ScheduleSchema) {
-	o.Set = true
-	o.Null = false
-	o.Value = v
-}
-
-// IsNull returns true if value is Null.
-func (o OptNilScheduleSchema) IsNull() bool { return o.Null }
-
-// SetToNull sets value to null.
-func (o *OptNilScheduleSchema) SetToNull() {
-	o.Set = true
-	o.Null = true
-	var v ScheduleSchema
-	o.Value = v
-}
-
-// Get returns value and boolean that denotes whether value was set.
-func (o OptNilScheduleSchema) Get() (v ScheduleSchema, ok bool) {
-	if o.Null {
-		return v, false
-	}
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o OptNilScheduleSchema) Or(d ScheduleSchema) ScheduleSchema {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
-
-// NewOptNilString returns new OptNilString with value set to v.
-func NewOptNilString(v string) OptNilString {
-	return OptNilString{
-		Value: v,
-		Set:   true,
-	}
-}
-
-// OptNilString is optional nullable string.
-type OptNilString struct {
-	Value string
-	Set   bool
-	Null  bool
-}
-
-// IsSet returns true if OptNilString was set.
-func (o OptNilString) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptNilString) Reset() {
-	var v string
-	o.Value = v
-	o.Set = false
-	o.Null = false
-}
-
-// SetTo sets value to v.
-func (o *OptNilString) SetTo(v string) {
-	o.Set = true
-	o.Null = false
-	o.Value = v
-}
-
-// IsNull returns true if value is Null.
-func (o OptNilString) IsNull() bool { return o.Null }
-
-// SetToNull sets value to null.
-func (o *OptNilString) SetToNull() {
-	o.Set = true
-	o.Null = true
-	var v string
-	o.Value = v
-}
-
-// Get returns value and boolean that denotes whether value was set.
-func (o OptNilString) Get() (v string, ok bool) {
-	if o.Null {
-		return v, false
-	}
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o OptNilString) Or(d string) string {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
-
-// NewOptNilSunriseDemoRequest returns new OptNilSunriseDemoRequest with value set to v.
-func NewOptNilSunriseDemoRequest(v SunriseDemoRequest) OptNilSunriseDemoRequest {
-	return OptNilSunriseDemoRequest{
-		Value: v,
-		Set:   true,
-	}
-}
-
-// OptNilSunriseDemoRequest is optional nullable SunriseDemoRequest.
-type OptNilSunriseDemoRequest struct {
-	Value SunriseDemoRequest
-	Set   bool
-	Null  bool
-}
-
-// IsSet returns true if OptNilSunriseDemoRequest was set.
-func (o OptNilSunriseDemoRequest) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptNilSunriseDemoRequest) Reset() {
-	var v SunriseDemoRequest
-	o.Value = v
-	o.Set = false
-	o.Null = false
-}
-
-// SetTo sets value to v.
-func (o *OptNilSunriseDemoRequest) SetTo(v SunriseDemoRequest) {
-	o.Set = true
-	o.Null = false
-	o.Value = v
-}
-
-// IsNull returns true if value is Null.
-func (o OptNilSunriseDemoRequest) IsNull() bool { return o.Null }
-
-// SetToNull sets value to null.
-func (o *OptNilSunriseDemoRequest) SetToNull() {
-	o.Set = true
-	o.Null = true
-	var v SunriseDemoRequest
-	o.Value = v
-}
-
-// Get returns value and boolean that denotes whether value was set.
-func (o OptNilSunriseDemoRequest) Get() (v SunriseDemoRequest, ok bool) {
-	if o.Null {
-		return v, false
-	}
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o OptNilSunriseDemoRequest) Or(d SunriseDemoRequest) SunriseDemoRequest {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
-
-// NewOptNilUUID returns new OptNilUUID with value set to v.
-func NewOptNilUUID(v uuid.UUID) OptNilUUID {
-	return OptNilUUID{
-		Value: v,
-		Set:   true,
-	}
-}
-
-// OptNilUUID is optional nullable uuid.UUID.
-type OptNilUUID struct {
-	Value uuid.UUID
-	Set   bool
-	Null  bool
-}
-
-// IsSet returns true if OptNilUUID was set.
-func (o OptNilUUID) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptNilUUID) Reset() {
-	var v uuid.UUID
-	o.Value = v
-	o.Set = false
-	o.Null = false
-}
-
-// SetTo sets value to v.
-func (o *OptNilUUID) SetTo(v uuid.UUID) {
-	o.Set = true
-	o.Null = false
-	o.Value = v
-}
-
-// IsNull returns true if value is Null.
-func (o OptNilUUID) IsNull() bool { return o.Null }
-
-// SetToNull sets value to null.
-func (o *OptNilUUID) SetToNull() {
-	o.Set = true
-	o.Null = true
-	var v uuid.UUID
-	o.Value = v
-}
-
-// Get returns value and boolean that denotes whether value was set.
-func (o OptNilUUID) Get() (v uuid.UUID, ok bool) {
-	if o.Null {
-		return v, false
-	}
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o OptNilUUID) Or(d uuid.UUID) uuid.UUID {
+func (o OptNilStartRequest) Or(d StartRequest) StartRequest {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -1486,658 +580,115 @@ func (o OptString) Or(d string) string {
 	return d
 }
 
-// Ref: #/components/schemas/ProfileCreate
-type ProfileCreate struct {
-	Name    string        `json:"name"`
-	Sunrise SunriseSchema `json:"sunrise"`
-}
+type RegisterHueBridgeConflict ErrorResponse
 
-// GetName returns the value of Name.
-func (s *ProfileCreate) GetName() string {
-	return s.Name
-}
+func (*RegisterHueBridgeConflict) registerHueBridgeRes() {}
 
-// GetSunrise returns the value of Sunrise.
-func (s *ProfileCreate) GetSunrise() SunriseSchema {
-	return s.Sunrise
-}
+type RegisterHueBridgeServiceUnavailable ErrorResponse
 
-// SetName sets the value of Name.
-func (s *ProfileCreate) SetName(val string) {
-	s.Name = val
-}
+func (*RegisterHueBridgeServiceUnavailable) registerHueBridgeRes() {}
 
-// SetSunrise sets the value of Sunrise.
-func (s *ProfileCreate) SetSunrise(val SunriseSchema) {
-	s.Sunrise = val
-}
-
-// Everything a profile is created with, plus what the server owns.
-// Ref: #/components/schemas/ProfileRead
-type ProfileRead struct {
-	Name      string        `json:"name"`
-	Sunrise   SunriseSchema `json:"sunrise"`
-	ID        uuid.UUID     `json:"id"`
-	IsDefault bool          `json:"is_default"`
-}
-
-// GetName returns the value of Name.
-func (s *ProfileRead) GetName() string {
-	return s.Name
-}
-
-// GetSunrise returns the value of Sunrise.
-func (s *ProfileRead) GetSunrise() SunriseSchema {
-	return s.Sunrise
+// Ref: #/components/schemas/RoomResponse
+type RoomResponse struct {
+	ID     uuid.UUID       `json:"id"`
+	Name   string          `json:"name"`
+	Scenes []SceneResponse `json:"scenes"`
 }
 
 // GetID returns the value of ID.
-func (s *ProfileRead) GetID() uuid.UUID {
-	return s.ID
-}
-
-// GetIsDefault returns the value of IsDefault.
-func (s *ProfileRead) GetIsDefault() bool {
-	return s.IsDefault
-}
-
-// SetName sets the value of Name.
-func (s *ProfileRead) SetName(val string) {
-	s.Name = val
-}
-
-// SetSunrise sets the value of Sunrise.
-func (s *ProfileRead) SetSunrise(val SunriseSchema) {
-	s.Sunrise = val
-}
-
-// SetID sets the value of ID.
-func (s *ProfileRead) SetID(val uuid.UUID) {
-	s.ID = val
-}
-
-// SetIsDefault sets the value of IsDefault.
-func (s *ProfileRead) SetIsDefault(val bool) {
-	s.IsDefault = val
-}
-
-func (*ProfileRead) createProfileRes() {}
-
-// Ref: #/components/schemas/RefreshRequest
-type RefreshRequest struct {
-	RefreshToken string `json:"refresh_token"`
-}
-
-// GetRefreshToken returns the value of RefreshToken.
-func (s *RefreshRequest) GetRefreshToken() string {
-	return s.RefreshToken
-}
-
-// SetRefreshToken sets the value of RefreshToken.
-func (s *RefreshRequest) SetRefreshToken(val string) {
-	s.RefreshToken = val
-}
-
-// Ref: #/components/schemas/RegisterRequest
-type RegisterRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-// GetUsername returns the value of Username.
-func (s *RegisterRequest) GetUsername() string {
-	return s.Username
-}
-
-// GetPassword returns the value of Password.
-func (s *RegisterRequest) GetPassword() string {
-	return s.Password
-}
-
-// SetUsername sets the value of Username.
-func (s *RegisterRequest) SetUsername(val string) {
-	s.Username = val
-}
-
-// SetPassword sets the value of Password.
-func (s *RegisterRequest) SetPassword(val string) {
-	s.Password = val
-}
-
-// Ref: #/components/schemas/RoomRead
-type RoomRead struct {
-	ID     uuid.UUID   `json:"id"`
-	Name   string      `json:"name"`
-	Scenes []SceneRead `json:"scenes"`
-}
-
-// GetID returns the value of ID.
-func (s *RoomRead) GetID() uuid.UUID {
+func (s *RoomResponse) GetID() uuid.UUID {
 	return s.ID
 }
 
 // GetName returns the value of Name.
-func (s *RoomRead) GetName() string {
+func (s *RoomResponse) GetName() string {
 	return s.Name
 }
 
 // GetScenes returns the value of Scenes.
-func (s *RoomRead) GetScenes() []SceneRead {
+func (s *RoomResponse) GetScenes() []SceneResponse {
 	return s.Scenes
 }
 
 // SetID sets the value of ID.
-func (s *RoomRead) SetID(val uuid.UUID) {
+func (s *RoomResponse) SetID(val uuid.UUID) {
 	s.ID = val
 }
 
 // SetName sets the value of Name.
-func (s *RoomRead) SetName(val string) {
+func (s *RoomResponse) SetName(val string) {
 	s.Name = val
 }
 
 // SetScenes sets the value of Scenes.
-func (s *RoomRead) SetScenes(val []SceneRead) {
+func (s *RoomResponse) SetScenes(val []SceneResponse) {
 	s.Scenes = val
 }
 
-func (*RoomRead) getRoomRes() {}
-
-// Ref: #/components/schemas/SceneActivationRequest
-type SceneActivationRequest struct {
-	Brightness OptNilFloat64 `json:"brightness"`
-}
-
-// GetBrightness returns the value of Brightness.
-func (s *SceneActivationRequest) GetBrightness() OptNilFloat64 {
-	return s.Brightness
-}
-
-// SetBrightness sets the value of Brightness.
-func (s *SceneActivationRequest) SetBrightness(val OptNilFloat64) {
-	s.Brightness = val
-}
-
-// Ref: #/components/schemas/SceneRead
-type SceneRead struct {
+// Ref: #/components/schemas/SceneResponse
+type SceneResponse struct {
 	ID   uuid.UUID `json:"id"`
 	Name string    `json:"name"`
 }
 
 // GetID returns the value of ID.
-func (s *SceneRead) GetID() uuid.UUID {
+func (s *SceneResponse) GetID() uuid.UUID {
 	return s.ID
 }
 
 // GetName returns the value of Name.
-func (s *SceneRead) GetName() string {
+func (s *SceneResponse) GetName() string {
 	return s.Name
 }
 
 // SetID sets the value of ID.
-func (s *SceneRead) SetID(val uuid.UUID) {
+func (s *SceneResponse) SetID(val uuid.UUID) {
 	s.ID = val
 }
 
 // SetName sets the value of Name.
-func (s *SceneRead) SetName(val string) {
+func (s *SceneResponse) SetName(val string) {
 	s.Name = val
 }
 
-// When an alarm fires, as wall-clock time in a named zone.
-// Ref: #/components/schemas/ScheduleSchema
-type ScheduleSchema struct {
-	Hour   int `json:"hour"`
-	Minute int `json:"minute"`
-	// IANA zone. The alarm keeps its wall-clock time across DST.
-	Timezone OptString `json:"timezone"`
-	// Empty means the alarm fires once, then disables itself.
-	Days []Weekday `json:"days"`
-}
+type SelectHueBridgeConflict ErrorResponse
 
-// GetHour returns the value of Hour.
-func (s *ScheduleSchema) GetHour() int {
-	return s.Hour
-}
+func (*SelectHueBridgeConflict) selectHueBridgeRes() {}
 
-// GetMinute returns the value of Minute.
-func (s *ScheduleSchema) GetMinute() int {
-	return s.Minute
-}
+type SelectHueBridgeNotFound ErrorResponse
 
-// GetTimezone returns the value of Timezone.
-func (s *ScheduleSchema) GetTimezone() OptString {
-	return s.Timezone
-}
+func (*SelectHueBridgeNotFound) selectHueBridgeRes() {}
 
-// GetDays returns the value of Days.
-func (s *ScheduleSchema) GetDays() []Weekday {
-	return s.Days
-}
+type SelectHueBridgeServiceUnavailable ErrorResponse
 
-// SetHour sets the value of Hour.
-func (s *ScheduleSchema) SetHour(val int) {
-	s.Hour = val
-}
+func (*SelectHueBridgeServiceUnavailable) selectHueBridgeRes() {}
 
-// SetMinute sets the value of Minute.
-func (s *ScheduleSchema) SetMinute(val int) {
-	s.Minute = val
-}
+type StartDaylightAlarmConflict ErrorResponse
 
-// SetTimezone sets the value of Timezone.
-func (s *ScheduleSchema) SetTimezone(val OptString) {
-	s.Timezone = val
-}
+func (*StartDaylightAlarmConflict) startDaylightAlarmRes() {}
 
-// SetDays sets the value of Days.
-func (s *ScheduleSchema) SetDays(val []Weekday) {
-	s.Days = val
-}
+type StartDaylightAlarmNotFound ErrorResponse
 
-// StopSceneDemoNoContent is response for StopSceneDemo operation.
-type StopSceneDemoNoContent struct{}
+func (*StartDaylightAlarmNotFound) startDaylightAlarmRes() {}
 
-func (*StopSceneDemoNoContent) stopSceneDemoRes() {}
+type StartDaylightAlarmServiceUnavailable ErrorResponse
 
-type StreamEventsOK struct {
-	Data io.Reader
-}
+func (*StartDaylightAlarmServiceUnavailable) startDaylightAlarmRes() {}
 
-// Read reads data from the Data reader.
-//
-// Kept to satisfy the io.Reader interface.
-func (s StreamEventsOK) Read(p []byte) (n int, err error) {
-	if s.Data == nil {
-		return 0, io.EOF
-	}
-	return s.Data.Read(p)
-}
-
-func (*StreamEventsOK) streamEventsRes() {}
-
-// The demo now running, in enough detail for a client to mirror it.
-// Ref: #/components/schemas/SunriseDemoRead
-type SunriseDemoRead struct {
-	RoomID          uuid.UUID `json:"room_id"`
-	RoomName        string    `json:"room_name"`
-	SceneID         uuid.UUID `json:"scene_id"`
-	SceneName       string    `json:"scene_name"`
-	BrightnessStart int       `json:"brightness_start"`
-	BrightnessEnd   int       `json:"brightness_end"`
-	// Brightness changes this demo will send.
-	Steps               int     `json:"steps"`
-	StepIntervalSeconds float64 `json:"step_interval_seconds"`
-	DurationSeconds     float64 `json:"duration_seconds"`
-}
-
-// GetRoomID returns the value of RoomID.
-func (s *SunriseDemoRead) GetRoomID() uuid.UUID {
-	return s.RoomID
-}
-
-// GetRoomName returns the value of RoomName.
-func (s *SunriseDemoRead) GetRoomName() string {
-	return s.RoomName
-}
-
-// GetSceneID returns the value of SceneID.
-func (s *SunriseDemoRead) GetSceneID() uuid.UUID {
-	return s.SceneID
-}
-
-// GetSceneName returns the value of SceneName.
-func (s *SunriseDemoRead) GetSceneName() string {
-	return s.SceneName
-}
-
-// GetBrightnessStart returns the value of BrightnessStart.
-func (s *SunriseDemoRead) GetBrightnessStart() int {
-	return s.BrightnessStart
-}
-
-// GetBrightnessEnd returns the value of BrightnessEnd.
-func (s *SunriseDemoRead) GetBrightnessEnd() int {
-	return s.BrightnessEnd
-}
-
-// GetSteps returns the value of Steps.
-func (s *SunriseDemoRead) GetSteps() int {
-	return s.Steps
-}
-
-// GetStepIntervalSeconds returns the value of StepIntervalSeconds.
-func (s *SunriseDemoRead) GetStepIntervalSeconds() float64 {
-	return s.StepIntervalSeconds
+// Ref: #/components/schemas/StartRequest
+type StartRequest struct {
+	DurationSeconds int `json:"duration_seconds"`
 }
 
 // GetDurationSeconds returns the value of DurationSeconds.
-func (s *SunriseDemoRead) GetDurationSeconds() float64 {
+func (s *StartRequest) GetDurationSeconds() int {
 	return s.DurationSeconds
 }
 
-// SetRoomID sets the value of RoomID.
-func (s *SunriseDemoRead) SetRoomID(val uuid.UUID) {
-	s.RoomID = val
-}
-
-// SetRoomName sets the value of RoomName.
-func (s *SunriseDemoRead) SetRoomName(val string) {
-	s.RoomName = val
-}
-
-// SetSceneID sets the value of SceneID.
-func (s *SunriseDemoRead) SetSceneID(val uuid.UUID) {
-	s.SceneID = val
-}
-
-// SetSceneName sets the value of SceneName.
-func (s *SunriseDemoRead) SetSceneName(val string) {
-	s.SceneName = val
-}
-
-// SetBrightnessStart sets the value of BrightnessStart.
-func (s *SunriseDemoRead) SetBrightnessStart(val int) {
-	s.BrightnessStart = val
-}
-
-// SetBrightnessEnd sets the value of BrightnessEnd.
-func (s *SunriseDemoRead) SetBrightnessEnd(val int) {
-	s.BrightnessEnd = val
-}
-
-// SetSteps sets the value of Steps.
-func (s *SunriseDemoRead) SetSteps(val int) {
-	s.Steps = val
-}
-
-// SetStepIntervalSeconds sets the value of StepIntervalSeconds.
-func (s *SunriseDemoRead) SetStepIntervalSeconds(val float64) {
-	s.StepIntervalSeconds = val
-}
-
 // SetDurationSeconds sets the value of DurationSeconds.
-func (s *SunriseDemoRead) SetDurationSeconds(val float64) {
+func (s *StartRequest) SetDurationSeconds(val int) {
 	s.DurationSeconds = val
 }
 
-func (*SunriseDemoRead) demoSceneRes() {}
-
-// The sunrise to replay, compressed into a handful of seconds.
-// Ref: #/components/schemas/SunriseDemoRequest
-type SunriseDemoRequest struct {
-	// How long the whole climb should take.
-	DurationSeconds OptFloat64 `json:"duration_seconds"`
-	BrightnessStart OptInt     `json:"brightness_start"`
-	BrightnessEnd   OptInt     `json:"brightness_end"`
-}
-
-// GetDurationSeconds returns the value of DurationSeconds.
-func (s *SunriseDemoRequest) GetDurationSeconds() OptFloat64 {
-	return s.DurationSeconds
-}
-
-// GetBrightnessStart returns the value of BrightnessStart.
-func (s *SunriseDemoRequest) GetBrightnessStart() OptInt {
-	return s.BrightnessStart
-}
-
-// GetBrightnessEnd returns the value of BrightnessEnd.
-func (s *SunriseDemoRequest) GetBrightnessEnd() OptInt {
-	return s.BrightnessEnd
-}
-
-// SetDurationSeconds sets the value of DurationSeconds.
-func (s *SunriseDemoRequest) SetDurationSeconds(val OptFloat64) {
-	s.DurationSeconds = val
-}
-
-// SetBrightnessStart sets the value of BrightnessStart.
-func (s *SunriseDemoRequest) SetBrightnessStart(val OptInt) {
-	s.BrightnessStart = val
-}
-
-// SetBrightnessEnd sets the value of BrightnessEnd.
-func (s *SunriseDemoRequest) SetBrightnessEnd(val OptInt) {
-	s.BrightnessEnd = val
-}
-
-// Ref: #/components/schemas/SunriseSchema
-type SunriseSchema struct {
-	// Stable Hue scene UUID returned by GET /rooms.
-	SceneID uuid.UUID `json:"scene_id"`
-	// Display metadata for the selected Hue scene.
-	SceneName       string `json:"scene_name"`
-	DurationMinutes OptInt `json:"duration_minutes"`
-	BrightnessStart OptInt `json:"brightness_start"`
-	BrightnessEnd   OptInt `json:"brightness_end"`
-}
-
-// GetSceneID returns the value of SceneID.
-func (s *SunriseSchema) GetSceneID() uuid.UUID {
-	return s.SceneID
-}
-
-// GetSceneName returns the value of SceneName.
-func (s *SunriseSchema) GetSceneName() string {
-	return s.SceneName
-}
-
-// GetDurationMinutes returns the value of DurationMinutes.
-func (s *SunriseSchema) GetDurationMinutes() OptInt {
-	return s.DurationMinutes
-}
-
-// GetBrightnessStart returns the value of BrightnessStart.
-func (s *SunriseSchema) GetBrightnessStart() OptInt {
-	return s.BrightnessStart
-}
-
-// GetBrightnessEnd returns the value of BrightnessEnd.
-func (s *SunriseSchema) GetBrightnessEnd() OptInt {
-	return s.BrightnessEnd
-}
-
-// SetSceneID sets the value of SceneID.
-func (s *SunriseSchema) SetSceneID(val uuid.UUID) {
-	s.SceneID = val
-}
-
-// SetSceneName sets the value of SceneName.
-func (s *SunriseSchema) SetSceneName(val string) {
-	s.SceneName = val
-}
-
-// SetDurationMinutes sets the value of DurationMinutes.
-func (s *SunriseSchema) SetDurationMinutes(val OptInt) {
-	s.DurationMinutes = val
-}
-
-// SetBrightnessStart sets the value of BrightnessStart.
-func (s *SunriseSchema) SetBrightnessStart(val OptInt) {
-	s.BrightnessStart = val
-}
-
-// SetBrightnessEnd sets the value of BrightnessEnd.
-func (s *SunriseSchema) SetBrightnessEnd(val OptInt) {
-	s.BrightnessEnd = val
-}
-
-// Ref: #/components/schemas/TokenResponse
-type TokenResponse struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	TokenType    string `json:"token_type"`
-	ExpiresIn    int    `json:"expires_in"`
-}
-
-// GetAccessToken returns the value of AccessToken.
-func (s *TokenResponse) GetAccessToken() string {
-	return s.AccessToken
-}
-
-// GetRefreshToken returns the value of RefreshToken.
-func (s *TokenResponse) GetRefreshToken() string {
-	return s.RefreshToken
-}
-
-// GetTokenType returns the value of TokenType.
-func (s *TokenResponse) GetTokenType() string {
-	return s.TokenType
-}
-
-// GetExpiresIn returns the value of ExpiresIn.
-func (s *TokenResponse) GetExpiresIn() int {
-	return s.ExpiresIn
-}
-
-// SetAccessToken sets the value of AccessToken.
-func (s *TokenResponse) SetAccessToken(val string) {
-	s.AccessToken = val
-}
-
-// SetRefreshToken sets the value of RefreshToken.
-func (s *TokenResponse) SetRefreshToken(val string) {
-	s.RefreshToken = val
-}
-
-// SetTokenType sets the value of TokenType.
-func (s *TokenResponse) SetTokenType(val string) {
-	s.TokenType = val
-}
-
-// SetExpiresIn sets the value of ExpiresIn.
-func (s *TokenResponse) SetExpiresIn(val int) {
-	s.ExpiresIn = val
-}
-
-func (*TokenResponse) loginRes()    {}
-func (*TokenResponse) refreshRes()  {}
-func (*TokenResponse) registerRes() {}
-
-// Ref: #/components/schemas/ValidationError
-type ValidationError struct {
-	Loc  []ValidationErrorLocItem `json:"loc"`
-	Msg  string                   `json:"msg"`
-	Type string                   `json:"type"`
-}
-
-// GetLoc returns the value of Loc.
-func (s *ValidationError) GetLoc() []ValidationErrorLocItem {
-	return s.Loc
-}
-
-// GetMsg returns the value of Msg.
-func (s *ValidationError) GetMsg() string {
-	return s.Msg
-}
-
-// GetType returns the value of Type.
-func (s *ValidationError) GetType() string {
-	return s.Type
-}
-
-// SetLoc sets the value of Loc.
-func (s *ValidationError) SetLoc(val []ValidationErrorLocItem) {
-	s.Loc = val
-}
-
-// SetMsg sets the value of Msg.
-func (s *ValidationError) SetMsg(val string) {
-	s.Msg = val
-}
-
-// SetType sets the value of Type.
-func (s *ValidationError) SetType(val string) {
-	s.Type = val
-}
-
-// ValidationErrorLocItem represents sum type.
-type ValidationErrorLocItem struct {
-	Type   ValidationErrorLocItemType // switch on this field
-	String string
-	Int    int
-}
-
-// ValidationErrorLocItemType is oneOf type of ValidationErrorLocItem.
-type ValidationErrorLocItemType string
-
-// Possible values for ValidationErrorLocItemType.
-const (
-	StringValidationErrorLocItem ValidationErrorLocItemType = "string"
-	IntValidationErrorLocItem    ValidationErrorLocItemType = "int"
-)
-
-// IsString reports whether ValidationErrorLocItem is string.
-func (s ValidationErrorLocItem) IsString() bool { return s.Type == StringValidationErrorLocItem }
-
-// IsInt reports whether ValidationErrorLocItem is int.
-func (s ValidationErrorLocItem) IsInt() bool { return s.Type == IntValidationErrorLocItem }
-
-// SetString sets ValidationErrorLocItem to string.
-func (s *ValidationErrorLocItem) SetString(v string) {
-	s.Type = StringValidationErrorLocItem
-	s.String = v
-}
-
-// GetString returns string and true boolean if ValidationErrorLocItem is string.
-func (s ValidationErrorLocItem) GetString() (v string, ok bool) {
-	if !s.IsString() {
-		return v, false
-	}
-	return s.String, true
-}
-
-// NewStringValidationErrorLocItem returns new ValidationErrorLocItem from string.
-func NewStringValidationErrorLocItem(v string) ValidationErrorLocItem {
-	var s ValidationErrorLocItem
-	s.SetString(v)
-	return s
-}
-
-// SetInt sets ValidationErrorLocItem to int.
-func (s *ValidationErrorLocItem) SetInt(v int) {
-	s.Type = IntValidationErrorLocItem
-	s.Int = v
-}
-
-// GetInt returns int and true boolean if ValidationErrorLocItem is int.
-func (s ValidationErrorLocItem) GetInt() (v int, ok bool) {
-	if !s.IsInt() {
-		return v, false
-	}
-	return s.Int, true
-}
-
-// NewIntValidationErrorLocItem returns new ValidationErrorLocItem from int.
-func NewIntValidationErrorLocItem(v int) ValidationErrorLocItem {
-	var s ValidationErrorLocItem
-	s.SetInt(v)
-	return s
-}
-
-// Ref: #/components/schemas/Weekday
-type Weekday int
-
-const (
-	Weekday0 Weekday = 0
-	Weekday1 Weekday = 1
-	Weekday2 Weekday = 2
-	Weekday3 Weekday = 3
-	Weekday4 Weekday = 4
-	Weekday5 Weekday = 5
-	Weekday6 Weekday = 6
-)
-
-// AllValues returns all Weekday values.
-func (Weekday) AllValues() []Weekday {
-	return []Weekday{
-		Weekday0,
-		Weekday1,
-		Weekday2,
-		Weekday3,
-		Weekday4,
-		Weekday5,
-		Weekday6,
-	}
-}
+// StopDaylightAlarmNoContent is response for StopDaylightAlarm operation.
+type StopDaylightAlarmNoContent struct{}
