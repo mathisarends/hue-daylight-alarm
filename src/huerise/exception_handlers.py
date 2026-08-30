@@ -3,7 +3,8 @@ from dataclasses import dataclass
 from functools import wraps
 from typing import Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
@@ -31,6 +32,23 @@ type RouteDecorator = Callable[[Endpoint], Endpoint]
 
 def error(status_code: int, description: str) -> Error:
     return Error(status_code, description)
+
+
+async def request_validation_error(
+    _: Request, exception: RequestValidationError
+) -> JSONResponse:
+    issues = [
+        {
+            "location": ".".join(str(part) for part in issue["loc"]),
+            "message": issue["msg"],
+            "type": issue["type"],
+        }
+        for issue in exception.errors()
+    ]
+    return JSONResponse(
+        status_code=422,
+        content={"detail": "Request validation failed", "issues": issues},
+    )
 
 
 class ExceptionRouter(APIRouter):

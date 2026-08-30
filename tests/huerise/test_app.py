@@ -209,6 +209,26 @@ def test_rejects_a_second_alarm_with_the_documented_error(client: TestClient) ->
     assert second.json() == {"detail": "Daylight alarm is already running"}
 
 
+def test_request_validation_matches_documented_error(client: TestClient) -> None:
+    response = client.post(
+        "/daylight-alarm/start",
+        headers=AUTH,
+        json={"duration_seconds": 0},
+    )
+
+    assert response.status_code == 422
+    assert response.json() == {
+        "detail": "Request validation failed",
+        "issues": [
+            {
+                "location": "body.duration_seconds",
+                "message": "Input should be greater than or equal to 1",
+                "type": "greater_than_equal",
+            }
+        ],
+    }
+
+
 def test_exposes_onboarding_state(client: TestClient) -> None:
     response = client.get("/hue/bridge", headers=AUTH)
 
