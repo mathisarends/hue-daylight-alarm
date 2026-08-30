@@ -8,16 +8,16 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from pydantic import SecretStr
 
-from huerise.features.devices.application import (
+from huerise.features.lighting.application import (
     DiscoveredHueBridge,
     HueBridgeService,
     HueBridgeStatus,
     HueConfigurationSource,
 )
-from huerise.features.devices.domain import HueBridge, HueBridgeNotSelectedError
-from huerise.features.devices.presentation import (
+from huerise.features.lighting.domain import HueBridge, HueBridgeNotSelectedError
+from huerise.features.lighting.presentation import (
     hue_router,
-    register_device_exception_handlers,
+    register_lighting_exception_handlers,
 )
 from huerise.infrastructure.auth import encode_access_token
 from huerise.presentation import auth
@@ -71,7 +71,7 @@ def client(service: HueBridgeService, monkeypatch: pytest.MonkeyPatch) -> TestCl
     monkeypatch.setattr(auth._settings, "jwt_secret", SecretStr(SECRET))
     app = FastAPI()
     app.include_router(hue_router)
-    register_device_exception_handlers(app)
+    register_lighting_exception_handlers(app)
     setup_dishka(make_async_container(StubProvider(service)), app=app)
     return TestClient(app)
 

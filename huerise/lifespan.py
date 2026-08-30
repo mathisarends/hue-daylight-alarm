@@ -5,8 +5,8 @@ from dishka import Provider, Scope, provide
 from fastapi import FastAPI
 
 from huerise.features.alarm.application import LightReferenceSync
-from huerise.features.devices.application import LightEvents
 from huerise.features.events.application import NextAlarmTracker
+from huerise.features.lighting.application import LightEvents
 from huerise.features.scheduler.application import AlarmScheduler
 from huerise.lifecycle import Runnable
 

@@ -1,6 +1,6 @@
 from unittest.mock import AsyncMock, MagicMock
 
-from huerise.features.devices.application import DoctorService, HueBridgeStatus
+from huerise.features.lighting.application import DoctorService, HueBridgeStatus
 
 
 async def test_reports_configured_when_hue_bridge_is_configured() -> None:

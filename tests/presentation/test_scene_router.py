@@ -7,14 +7,14 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from pydantic import SecretStr
 
-from huerise.features.devices.application import (
+from huerise.features.lighting.application import (
     DEMO_DURATION,
     SceneService,
     SunriseDemoRunner,
 )
-from huerise.features.devices.domain import Room, Scene
-from huerise.features.devices.presentation import (
-    register_device_exception_handlers,
+from huerise.features.lighting.domain import Room, Scene
+from huerise.features.lighting.presentation import (
+    register_lighting_exception_handlers,
     scene_router,
 )
 from huerise.infrastructure.auth import encode_access_token
@@ -56,7 +56,7 @@ def client(monkeypatch: pytest.MonkeyPatch) -> TestClient:
 
     app = FastAPI()
     app.include_router(scene_router)
-    register_device_exception_handlers(app)
+    register_lighting_exception_handlers(app)
     setup_dishka(make_async_container(StubProvider(service)), app=app)
     return TestClient(app)
 

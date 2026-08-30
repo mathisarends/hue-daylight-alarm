@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from huerise.features.devices.infrastructure.settings import HueEnvironment
+from huerise.features.lighting.infrastructure.settings import HueEnvironment
 
 
 def test_hue_environment_can_be_unconfigured() -> None:

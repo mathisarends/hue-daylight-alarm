@@ -1,8 +1,8 @@
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
 from fastapi import APIRouter, Depends
 
-from huerise.features.devices.application import HueBridgeService
-from huerise.features.devices.presentation.hue_schemas import (
+from huerise.features.lighting.application import HueBridgeService
+from huerise.features.lighting.presentation.hue_schemas import (
     HueBridgeRead,
     HueBridgeSelectionRequest,
     HueBridgeStatusRead,

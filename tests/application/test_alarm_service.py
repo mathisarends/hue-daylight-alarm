@@ -13,7 +13,6 @@ from huerise.features.alarm.domain import (
     Schedule,
     Weekday,
 )
-from huerise.features.devices.domain import Room, SceneNotFoundError
 from huerise.features.events.domain import (
     AlarmCreated,
     AlarmDeleted,
@@ -21,6 +20,7 @@ from huerise.features.events.domain import (
     OccurrenceDismissed,
     OccurrenceSkipped,
 )
+from huerise.features.lighting.domain import Room, SceneNotFoundError
 from tests.application.conftest import (
     ROOM_ID,
     InMemoryAlarmRepository,

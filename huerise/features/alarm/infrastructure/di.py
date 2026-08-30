@@ -18,8 +18,8 @@ from huerise.features.alarm.infrastructure.persistence import (
     SQLAlarmRepository,
     SQLAlarmUnitOfWorkFactory,
 )
-from huerise.features.devices.application import LightEvents, Lights
 from huerise.features.events.application import EventPublisher
+from huerise.features.lighting.application import LightEvents, Lights
 
 
 class AlarmProvider(Provider):

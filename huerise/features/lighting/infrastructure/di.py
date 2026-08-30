@@ -1,7 +1,7 @@
 from dishka import Provider, Scope, provide
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from huerise.features.devices.application import (
+from huerise.features.lighting.application import (
     DoctorService,
     HueBridgeService,
     LightEvents,
@@ -9,17 +9,17 @@ from huerise.features.devices.application import (
     SceneService,
     SunriseDemoRunner,
 )
-from huerise.features.devices.application.ports import HueOnboarding
-from huerise.features.devices.domain import HueBridgeRepository
-from huerise.features.devices.infrastructure.hue import (
+from huerise.features.lighting.application.ports import HueOnboarding
+from huerise.features.lighting.domain import HueBridgeRepository
+from huerise.features.lighting.infrastructure.hue import (
     ConfigurableHue,
     HueifyOnboarding,
 )
-from huerise.features.devices.infrastructure.persistence import SQLHueBridgeRepository
-from huerise.features.devices.infrastructure.settings import HueEnvironment
+from huerise.features.lighting.infrastructure.persistence import SQLHueBridgeRepository
+from huerise.features.lighting.infrastructure.settings import HueEnvironment
 
 
-class DevicesProvider(Provider):
+class LightingProvider(Provider):
     scope = Scope.APP
 
     @provide

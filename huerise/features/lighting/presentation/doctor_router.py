@@ -1,8 +1,8 @@
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
 from fastapi import APIRouter, Depends
 
-from huerise.features.devices.application import DoctorService
-from huerise.features.devices.presentation.doctor_schemas import DoctorRead
+from huerise.features.lighting.application import DoctorService
+from huerise.features.lighting.presentation.doctor_schemas import DoctorRead
 from huerise.presentation import get_current_user
 
 doctor_router = APIRouter(

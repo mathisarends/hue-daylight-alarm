@@ -20,17 +20,17 @@ from hueify.models import (
     Scene as HueScene,
 )
 
-from huerise.features.devices.domain import (
+from huerise.features.lighting.domain import (
     HueUnavailableError,
     LightChange,
     LightResource,
 )
-from huerise.features.devices.infrastructure.hue import (
+from huerise.features.lighting.infrastructure.hue import (
     ConfigurableHue,
     HueLightEvents,
     HueLights,
 )
-from huerise.features.devices.infrastructure.settings import HueEnvironment
+from huerise.features.lighting.infrastructure.settings import HueEnvironment
 
 ROOM_ID = UUID("11111111-1111-4111-8111-111111111111")
 SCENE_ID = UUID("22222222-2222-4222-8222-222222222222")

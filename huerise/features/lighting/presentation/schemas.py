@@ -4,8 +4,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
-from huerise.features.devices.application import DEMO_DURATION, SunriseDemo
-from huerise.features.devices.domain import Room, SunriseRamp
+from huerise.features.lighting.application import DEMO_DURATION, SunriseDemo
+from huerise.features.lighting.domain import Room, SunriseRamp
 
 
 class SceneRead(BaseModel):

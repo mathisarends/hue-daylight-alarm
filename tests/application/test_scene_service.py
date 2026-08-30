@@ -5,12 +5,12 @@ from uuid import uuid4
 
 import pytest
 
-from huerise.features.devices.application import (
+from huerise.features.lighting.application import (
     DEMO_STEP_INTERVAL,
     SceneService,
     SunriseDemoRunner,
 )
-from huerise.features.devices.domain import (
+from huerise.features.lighting.domain import (
     Room,
     RoomNotFoundError,
     Scene,

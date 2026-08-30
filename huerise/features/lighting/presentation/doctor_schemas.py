@@ -2,7 +2,7 @@ from typing import Self
 
 from pydantic import BaseModel
 
-from huerise.features.devices.application import DoctorStatus
+from huerise.features.lighting.application import DoctorStatus
 
 
 class DoctorCheckRead(BaseModel):

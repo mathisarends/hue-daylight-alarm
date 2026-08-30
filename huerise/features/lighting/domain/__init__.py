@@ -1,5 +1,4 @@
 from .exceptions import (
-    DeviceError,
     HueBridgeNotFoundError,
     HueBridgeNotSelectedError,
     HueDiscoveryError,
@@ -7,6 +6,7 @@ from .exceptions import (
     HueLinkButtonTimeoutError,
     HueRegistrationError,
     HueUnavailableError,
+    LightingError,
     RoomNotFoundError,
     SceneNotFoundError,
 )
@@ -18,7 +18,6 @@ from .sunrise import STEP_INTERVAL, SunriseRamp, SunriseStep, sunrise_steps
 
 __all__ = [
     "STEP_INTERVAL",
-    "DeviceError",
     "HueBridge",
     "HueBridgeNotFoundError",
     "HueBridgeNotSelectedError",
@@ -31,6 +30,7 @@ __all__ = [
     "HueUnavailableError",
     "LightChange",
     "LightResource",
+    "LightingError",
     "Room",
     "RoomNotFoundError",
     "Scene",

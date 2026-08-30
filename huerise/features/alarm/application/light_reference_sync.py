@@ -11,8 +11,6 @@ from huerise.features.alarm.domain import (
     ProfileField,
     SunriseConfig,
 )
-from huerise.features.devices.application import LightEvents, Lights
-from huerise.features.devices.domain import LightChange, LightResource, Room, Scene
 from huerise.features.events.application import EventPublisher
 from huerise.features.events.domain import (
     AlarmSnapshot,
@@ -21,6 +19,8 @@ from huerise.features.events.domain import (
     ProfileSnapshot,
     ProfileUpdated,
 )
+from huerise.features.lighting.application import LightEvents, Lights
+from huerise.features.lighting.domain import LightChange, LightResource, Room, Scene
 from huerise.lifecycle import Runnable
 
 logger = logging.getLogger(__name__)

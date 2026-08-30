@@ -1,7 +1,7 @@
 from pydantic import SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from huerise.features.devices.application.ports import HueEnvironmentOverride
+from huerise.features.lighting.application.ports import HueEnvironmentOverride
 
 
 class HueEnvironment(BaseSettings, HueEnvironmentOverride):

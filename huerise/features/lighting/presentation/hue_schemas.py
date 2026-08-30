@@ -2,7 +2,7 @@ from typing import Self
 
 from pydantic import BaseModel, Field
 
-from huerise.features.devices.application import (
+from huerise.features.lighting.application import (
     DiscoveredHueBridge,
     HueBridgeStatus,
     HueConfigurationSource,

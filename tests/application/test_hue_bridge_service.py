@@ -3,8 +3,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from huerise.features.devices.application.hue_bridge_service import HueBridgeService
-from huerise.features.devices.domain import (
+from huerise.features.lighting.application.hue_bridge_service import HueBridgeService
+from huerise.features.lighting.domain import (
     HueBridge,
     HueBridgeNotFoundError,
     HueBridgeSelection,

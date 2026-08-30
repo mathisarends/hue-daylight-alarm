@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from huerise.features.devices.application.hue_bridge_service import HueBridgeService
+from huerise.features.lighting.application.hue_bridge_service import HueBridgeService
 
 
 @dataclass(frozen=True, slots=True)

@@ -2,7 +2,7 @@ from datetime import timedelta
 
 import pytest
 
-from huerise.features.devices.domain import SunriseRamp, sunrise_steps
+from huerise.features.lighting.domain import SunriseRamp, sunrise_steps
 
 STEP = timedelta(seconds=6)
 

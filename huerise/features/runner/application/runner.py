@@ -12,15 +12,6 @@ from huerise.features.alarm.domain import (
     AlarmUnitOfWorkFactory,
     OccurrenceState,
 )
-from huerise.features.devices.application import Lights
-from huerise.features.devices.domain import (
-    STEP_INTERVAL,
-    RoomNotFoundError,
-    Scene,
-    SceneNotFoundError,
-    SunriseRamp,
-    sunrise_steps,
-)
 from huerise.features.events.application import EventPublisher
 from huerise.features.events.domain import (
     AlarmSnapshot,
@@ -30,6 +21,15 @@ from huerise.features.events.domain import (
     OccurrenceProgress,
     OccurrenceSnapshot,
     OccurrenceStarted,
+)
+from huerise.features.lighting.application import Lights
+from huerise.features.lighting.domain import (
+    STEP_INTERVAL,
+    RoomNotFoundError,
+    Scene,
+    SceneNotFoundError,
+    SunriseRamp,
+    sunrise_steps,
 )
 from huerise.features.runner.application.runner_port import (
     AlarmRunner as AlarmRunnerPort,

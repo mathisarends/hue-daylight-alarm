@@ -19,10 +19,10 @@ from huerise.features.alarm.domain import (
     SunriseConfig,
     Weekday,
 )
-from huerise.features.devices.application import Lights
-from huerise.features.devices.domain import Room, Scene
 from huerise.features.events.application import EventPublisher
 from huerise.features.events.domain import HueriseEvent
+from huerise.features.lighting.application import Lights
+from huerise.features.lighting.domain import Room, Scene
 
 BERLIN = ZoneInfo("Europe/Berlin")
 ROOM_ID = UUID("11111111-1111-4111-8111-111111111111")

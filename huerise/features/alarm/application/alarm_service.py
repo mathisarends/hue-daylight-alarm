@@ -15,8 +15,6 @@ from huerise.features.alarm.domain import (
     OccurrenceState,
     Schedule,
 )
-from huerise.features.devices.application import Lights
-from huerise.features.devices.domain import RoomNotFoundError, SceneNotFoundError
 from huerise.features.events.application import EventPublisher
 from huerise.features.events.domain import (
     AlarmCreated,
@@ -27,6 +25,8 @@ from huerise.features.events.domain import (
     OccurrenceSkipped,
     OccurrenceSnapshot,
 )
+from huerise.features.lighting.application import Lights
+from huerise.features.lighting.domain import RoomNotFoundError, SceneNotFoundError
 
 logger = logging.getLogger(__name__)
 

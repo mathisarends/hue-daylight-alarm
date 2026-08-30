@@ -3,8 +3,8 @@ from uuid import UUID
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
 from fastapi import APIRouter, Depends
 
-from huerise.features.devices.application import SceneService
-from huerise.features.devices.presentation.schemas import (
+from huerise.features.lighting.application import SceneService
+from huerise.features.lighting.presentation.schemas import (
     RoomRead,
     SceneActivationRequest,
     SunriseDemoRead,

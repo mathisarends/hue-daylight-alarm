@@ -9,8 +9,8 @@ from huerise.features.alarm.infrastructure.persistence import (
     SQLAlarmRepository,
     SQLAlarmUnitOfWorkFactory,
 )
-from huerise.features.devices.domain import HueBridgeSelection
-from huerise.features.devices.infrastructure.persistence import SQLHueBridgeRepository
+from huerise.features.lighting.domain import HueBridgeSelection
+from huerise.features.lighting.infrastructure.persistence import SQLHueBridgeRepository
 from huerise.infrastructure.database.models import ALARM_DEFECTS, OCCURRENCE_STATES
 from tests.application.conftest import make_alarm, make_occurrence, make_profile
 

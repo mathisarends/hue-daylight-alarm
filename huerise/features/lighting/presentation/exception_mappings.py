@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from huerise.features.devices.domain import (
+from huerise.features.lighting.domain import (
     HueBridgeNotFoundError,
     HueBridgeNotSelectedError,
     HueDiscoveryError,

@@ -1,8 +1,8 @@
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
-from huerise.features.devices.domain import HueBridge
-from huerise.features.devices.infrastructure.hue import HueifyOnboarding
+from huerise.features.lighting.domain import HueBridge
+from huerise.features.lighting.infrastructure.hue import HueifyOnboarding
 
 
 async def test_maps_hueify_discovery_to_domain_bridges(monkeypatch) -> None:
@@ -10,7 +10,7 @@ async def test_maps_hueify_discovery_to_domain_bridges(monkeypatch) -> None:
         return_value=[SimpleNamespace(id="bridge-1", internalipaddress="10.0.0.2")]
     )
     monkeypatch.setattr(
-        "huerise.features.devices.infrastructure.hue.discover_bridges", discover
+        "huerise.features.lighting.infrastructure.hue.discover_bridges", discover
     )
 
     bridges = await HueifyOnboarding().discover()
@@ -21,7 +21,7 @@ async def test_maps_hueify_discovery_to_domain_bridges(monkeypatch) -> None:
 async def test_registers_a_named_huerise_device(monkeypatch) -> None:
     register = AsyncMock(return_value="secret")
     monkeypatch.setattr(
-        "huerise.features.devices.infrastructure.hue.register_app_key", register
+        "huerise.features.lighting.infrastructure.hue.register_app_key", register
     )
 
     app_key = await HueifyOnboarding().register("10.0.0.2")

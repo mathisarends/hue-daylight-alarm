@@ -8,13 +8,13 @@ from hueify.models import ResourceType, RoomEvent, SceneEvent
 from hueify.models import Scene as HueScene
 from hueify.onboarding import discover_bridges, register_app_key
 
-from huerise.features.devices.application import (
+from huerise.features.lighting.application import (
     LightChangeHandler,
     LightEvents,
     Lights,
 )
-from huerise.features.devices.application.ports import HueConfigurator, HueOnboarding
-from huerise.features.devices.domain import (
+from huerise.features.lighting.application.ports import HueConfigurator, HueOnboarding
+from huerise.features.lighting.domain import (
     HueBridge,
     HueBridgeRepository,
     HueBridgeSelection,
@@ -24,7 +24,7 @@ from huerise.features.devices.domain import (
     Room,
     Scene,
 )
-from huerise.features.devices.infrastructure.settings import HueEnvironment
+from huerise.features.lighting.infrastructure.settings import HueEnvironment
 
 logger = logging.getLogger(__name__)
 

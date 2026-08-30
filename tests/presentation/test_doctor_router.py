@@ -8,12 +8,12 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from pydantic import SecretStr
 
-from huerise.features.devices.application import (
+from huerise.features.lighting.application import (
     DoctorService,
     DoctorStatus,
     SetupCheck,
 )
-from huerise.features.devices.presentation import doctor_router
+from huerise.features.lighting.presentation import doctor_router
 from huerise.infrastructure.auth import encode_access_token
 from huerise.presentation import auth
 

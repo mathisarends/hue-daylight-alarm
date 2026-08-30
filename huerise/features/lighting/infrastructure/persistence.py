@@ -2,7 +2,7 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from huerise.features.devices.domain import HueBridgeRepository, HueBridgeSelection
+from huerise.features.lighting.domain import HueBridgeRepository, HueBridgeSelection
 from huerise.infrastructure.database import HueBridgeSelectionModel
 
 _HUE_SELECTION_ID = UUID("0198f9b4-0000-7000-8000-000000000002")

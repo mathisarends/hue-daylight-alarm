@@ -1,8 +1,8 @@
 from dishka import Provider, Scope, provide
 
 from huerise.features.alarm.domain import AlarmUnitOfWorkFactory
-from huerise.features.devices.application import Lights
 from huerise.features.events.application import EventPublisher
+from huerise.features.lighting.application import Lights
 from huerise.features.runner.application import AlarmRunner
 from huerise.features.runner.application.runner_port import (
     AlarmRunner as AlarmRunnerPort,

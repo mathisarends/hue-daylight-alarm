@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable
 from uuid import UUID
 
-from huerise.features.devices.domain import (
+from huerise.features.lighting.domain import (
     HueBridge,
     HueBridgeSelection,
     LightChange,

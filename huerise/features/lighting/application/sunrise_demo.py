@@ -4,8 +4,8 @@ from contextlib import suppress
 from datetime import timedelta
 from uuid import UUID
 
-from huerise.features.devices.application.ports import Lights
-from huerise.features.devices.domain import SunriseRamp, SunriseStep, sunrise_steps
+from huerise.features.lighting.application.ports import Lights
+from huerise.features.lighting.domain import SunriseRamp, SunriseStep, sunrise_steps
 
 logger = logging.getLogger(__name__)
 

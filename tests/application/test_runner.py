@@ -2,7 +2,6 @@ from datetime import UTC, datetime, timedelta
 from unittest.mock import call, patch
 
 from huerise.features.alarm.domain import AlarmDefect, AlarmField, OccurrenceState
-from huerise.features.devices.domain import Room, Scene, SunriseRamp, sunrise_steps
 from huerise.features.events.domain import (
     AlarmUpdated,
     OccurrenceDismissed,
@@ -10,6 +9,7 @@ from huerise.features.events.domain import (
     OccurrenceProgress,
     OccurrenceStarted,
 )
+from huerise.features.lighting.domain import Room, Scene, SunriseRamp, sunrise_steps
 from huerise.features.runner.application import AlarmRunner
 from tests.application.conftest import (
     ROOM_ID,

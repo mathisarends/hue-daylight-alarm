@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from huerise.features.devices.domain.hue_bridge import HueBridgeSelection
+from huerise.features.lighting.domain.hue_bridge import HueBridgeSelection
 
 
 class HueBridgeRepository(ABC):

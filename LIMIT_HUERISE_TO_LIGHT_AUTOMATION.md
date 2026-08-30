@@ -14,7 +14,7 @@ und dann die Sunrise-Ramp (Licht langsam hochfahren, nicht abschalten) fährt.
 
 ## Vollständig zu entfernende Dateien
 
-**`features/devices` — Sound/Sonos/Audio:**
+**`features/lighting` — Sound/Sonos/Audio:**
 - `application/sonos_speaker_service.py`
 - `application/sound_service.py`
 - `application/audio_output.py` (`AudioOutputService`, `SwitchableAudioPlayer`)
@@ -51,17 +51,17 @@ und dann die Sunrise-Ramp (Licht langsam hochfahren, nicht abschalten) fährt.
   komplett entfernt wird oder nur unbenutzt bleibt (siehe offene Fragen).
 
 **Sonstiges:**
-- `features/devices/application/doctor_service.py`: `sonos_speaker`-Check
+- `features/lighting/application/doctor_service.py`: `sonos_speaker`-Check
   entfernen, `DoctorStatus.configured` nur noch von `hue_bridge` abhängig.
-- `features/devices/infrastructure/settings.py`: `AudioSettings`,
+- `features/lighting/infrastructure/settings.py`: `AudioSettings`,
   `SonosSettings` entfernen.
-- `features/devices/infrastructure/di.py` (`DevicesProvider`): alle
+- `features/lighting/infrastructure/di.py` (`LightingProvider`): alle
   Sound-/Sonos-/Audio-Provider entfernen (`sound_repository`,
   `sonos_speaker_repository`, `audio_settings`, `sonos_settings`,
   `switchable_audio`, `audio` alias, `sound_service`, `audio_output_service`,
   `sonos_speaker_service`), `doctor_service`-Provider anpassen (kein
   `SonosSpeakerRepository`-Param mehr).
-- `features/devices/presentation/schemas.py`, `exception_mappings.py`,
+- `features/lighting/presentation/schemas.py`, `exception_mappings.py`,
   `doctor_schemas.py`: Sound-/Sonos-bezogene Schemas/Exception-Mappings
   entfernen.
 - `infrastructure/storage/*`: prüfen, ob `StorageBackend` nur für
@@ -83,9 +83,9 @@ und dann die Sunrise-Ramp (Licht langsam hochfahren, nicht abschalten) fährt.
 
 ## Was unverändert bleibt
 
-- `features/devices/application/hue_bridge_service.py`, `scene_service.py`,
+- `features/lighting/application/hue_bridge_service.py`, `scene_service.py`,
   `sunrise_demo.py` (reine Licht-Logik, kein Sound).
-- `features/devices/infrastructure/hue.py`, `domain/hue_bridge*.py`,
+- `features/lighting/infrastructure/hue.py`, `domain/hue_bridge*.py`,
   `domain/room.py`, `domain/light_change.py`, `domain/sunrise.py`.
 - `features/scheduler/application/scheduler.py` — der Intervall-Tick
   (`_TICK_INTERVAL`, `_LOOKAHEAD`, `_GRACE_PERIOD`), der Occurrences

@@ -1,12 +1,12 @@
 from dataclasses import dataclass
 from enum import StrEnum
 
-from huerise.features.devices.application.ports import (
+from huerise.features.lighting.application.ports import (
     HueConfigurator,
     HueEnvironmentOverride,
     HueOnboarding,
 )
-from huerise.features.devices.domain import (
+from huerise.features.lighting.domain import (
     HueBridge,
     HueBridgeNotFoundError,
     HueBridgeNotSelectedError,
