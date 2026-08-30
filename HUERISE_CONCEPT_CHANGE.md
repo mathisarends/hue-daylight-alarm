@@ -149,6 +149,7 @@ zu behalten, werden sie in einem optionalen `hue`-Abschnitt derselben
 
 ```yaml
 hue:
+  bridge_id: "001788fffe000001"
   bridge_ip: "192.0.2.10"
   app_key: "secret"
 
