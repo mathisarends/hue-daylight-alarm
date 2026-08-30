@@ -1,7 +1,37 @@
 # Huerise
 
-Huerise runs one YAML-configured daylight alarm on a Philips Hue Bridge. It has
-no database, users, schedules, alarm profiles, history, or recovery state.
+Huerise wakes you up with light. It drives a Philips Hue Bridge through a
+gradual sunrise: the configured scene comes up at its dimmest, then brightens
+smoothly to full over the duration you choose, so the room is bright by the time
+the alarm ends.
+
+A single YAML file describes the alarm, and an HTTP API plus a `huerise` CLI
+start it, stop it, and check that everything is wired up. Scheduling stays with
+whatever already runs on time for you — cron, a home automation system, a phone
+shortcut — which calls `POST /daylight-alarm/start`.
+
+## How it works
+
+Starting an alarm runs one linear brightness ramp:
+
+1. The YAML file is read fresh, so the latest configuration always applies.
+2. The room owning `scene_id` is resolved from the Bridge.
+3. The scene is activated at `start_brightness`, setting the colors of the
+   sunrise at their dimmest.
+4. A background task then steps the room's brightness once per second, moving
+   linearly from `start_brightness` to `end_brightness` across
+   `duration_seconds`.
+5. When the ramp completes the lights simply stay where they are. Huerise sends
+   no final command and never switches anything off.
+
+Because the configuration is read at start time, a running alarm keeps the
+snapshot it began with; editing the YAML mid-run affects only the next one.
+Exactly one alarm can be active at a time, and `stop` cancels the ramp in place
+— the lights hold their current brightness rather than jumping back.
+
+`GET /doctor` runs the same preconditions ahead of time: the YAML parses and
+validates, Hue credentials exist, the Bridge answers and accepts them, and the
+configured scene still exists.
 
 ## Configuration
 
@@ -77,9 +107,23 @@ curl -X POST http://localhost:8000/daylight-alarm/start \
 ```
 
 Omit the body to use the configured duration. The request may override only the
-duration of that run; scene and brightness always come from YAML. Only one run
-can be active. A second start returns `409 Conflict`. Stopping is idempotent and
-never sends a final Hue command.
+duration of that run; scene and brightness always come from YAML. A second start
+while an alarm is running returns `409 Conflict`, and stopping is idempotent.
+
+## CLI
+
+The `huerise` CLI in [`cli/`](cli) talks to the same API and is documented in
+[`docs/cli.md`](docs/cli.md).
+
+```bash
+huerise doctor
+huerise start --duration-seconds 900
+huerise stop
+```
+
+It reads `HUERISE_API_URL` and `HUERISE_API_KEY` from the environment or a
+dotenv file (`--env-file`). Every command also prints machine-readable output
+with `--json`.
 
 ## Local development
 
