@@ -45,9 +45,7 @@ class TestGetCurrentUser:
         assert response.headers["WWW-Authenticate"] == "Bearer"
 
     def test_rejects_a_garbage_token(self, client: TestClient) -> None:
-        response = client.get(
-            "/protected", headers={"Authorization": "Bearer nope"}
-        )
+        response = client.get("/protected", headers={"Authorization": "Bearer nope"})
 
         assert response.status_code == 401
 

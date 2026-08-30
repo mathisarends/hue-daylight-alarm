@@ -16,9 +16,7 @@ class AuthProvider(Provider):
         return AuthSettings()
 
     @provide
-    def refresh_token_repository(
-        self, session: AsyncSession
-    ) -> RefreshTokenRepository:
+    def refresh_token_repository(self, session: AsyncSession) -> RefreshTokenRepository:
         return SQLRefreshTokenRepository(session)
 
     @provide

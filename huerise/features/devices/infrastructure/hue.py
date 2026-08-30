@@ -128,11 +128,7 @@ class ConfigurableHue(Lights, LightEvents, HueConfigurator):
         try:
             bridges = await self._onboarding.discover()
             resolved = next(
-                (
-                    item.ip_address
-                    for item in bridges
-                    if item.id == selected.bridge_id
-                ),
+                (item.ip_address for item in bridges if item.id == selected.bridge_id),
                 selected.ip_address,
             )
         except Exception:

@@ -49,9 +49,7 @@ def test_health_reports_ok_without_checking_dependencies(
     engine.connect.assert_not_called()
 
 
-def test_readiness_checks_the_database(
-    client: TestClient, engine: AsyncEngine
-) -> None:
+def test_readiness_checks_the_database(client: TestClient, engine: AsyncEngine) -> None:
     response = client.get("/ready")
 
     assert response.status_code == 200

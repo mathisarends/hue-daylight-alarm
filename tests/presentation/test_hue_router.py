@@ -52,9 +52,7 @@ def service() -> MagicMock:
     service = MagicMock(spec=HueBridgeService)
     service.status = AsyncMock(return_value=status)
     service.discover = AsyncMock(
-        return_value=(
-            DiscoveredHueBridge(HueBridge("bridge-1", "10.0.0.2"), True),
-        )
+        return_value=(DiscoveredHueBridge(HueBridge("bridge-1", "10.0.0.2"), True),)
     )
     service.select = AsyncMock(return_value=status)
     service.register = AsyncMock(
@@ -88,9 +86,7 @@ def test_lists_discovered_bridges(client: TestClient) -> None:
 
 
 def test_selects_bridge_by_stable_id(client: TestClient, service: MagicMock) -> None:
-    response = client.put(
-        "/hue/bridge", headers=AUTH, json={"bridge_id": "bridge-1"}
-    )
+    response = client.put("/hue/bridge", headers=AUTH, json={"bridge_id": "bridge-1"})
 
     assert response.status_code == 200
     service.select.assert_awaited_once_with("bridge-1")

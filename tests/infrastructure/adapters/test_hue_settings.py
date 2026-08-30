@@ -16,9 +16,7 @@ def test_hue_environment_requires_the_complete_override_pair() -> None:
 
 
 def test_hue_environment_accepts_a_complete_override() -> None:
-    settings = HueEnvironment(
-        bridge_ip="10.0.0.2", app_key="secret", _env_file=None
-    )
+    settings = HueEnvironment(bridge_ip="10.0.0.2", app_key="secret", _env_file=None)
 
     assert settings.configured is True
     assert settings.app_key is not None

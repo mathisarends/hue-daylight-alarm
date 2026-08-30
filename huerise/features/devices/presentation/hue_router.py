@@ -16,6 +16,7 @@ hue_router = APIRouter(
     dependencies=[Depends(get_current_user)],
 )
 
+
 @hue_router.get(
     "/bridges", response_model=list[HueBridgeRead], operation_id="list_hue_bridges"
 )

@@ -157,9 +157,7 @@ async def test_unconfigured_runtime_starts_but_hue_operations_are_unavailable() 
     repository = MagicMock()
     repository.get_selected = AsyncMock(return_value=None)
     onboarding = MagicMock()
-    runtime = ConfigurableHue(
-        repository, HueEnvironment(_env_file=None), onboarding
-    )
+    runtime = ConfigurableHue(repository, HueEnvironment(_env_file=None), onboarding)
 
     await runtime.start()
 

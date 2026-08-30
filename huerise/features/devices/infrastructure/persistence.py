@@ -17,9 +17,7 @@ class SQLHueBridgeRepository(HueBridgeRepository):
             orm = await session.get(HueBridgeSelectionModel, _HUE_SELECTION_ID)
         return self._to_domain(orm) if orm is not None else None
 
-    async def save_selected(
-        self, selection: HueBridgeSelection
-    ) -> HueBridgeSelection:
+    async def save_selected(self, selection: HueBridgeSelection) -> HueBridgeSelection:
         async with self._session_factory.begin() as session:
             orm = await session.merge(
                 HueBridgeSelectionModel(

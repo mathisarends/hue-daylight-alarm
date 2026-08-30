@@ -32,9 +32,7 @@ class HueBridgeNotSelectedError(DeviceError):
 
 class HueEnvironmentOverrideError(DeviceError):
     def __init__(self) -> None:
-        super().__init__(
-            "Hue setup is controlled by HUE_BRIDGE_IP and HUE_APP_KEY"
-        )
+        super().__init__("Hue setup is controlled by HUE_BRIDGE_IP and HUE_APP_KEY")
 
 
 class RoomNotFoundError(DeviceError):

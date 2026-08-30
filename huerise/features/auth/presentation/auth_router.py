@@ -42,7 +42,5 @@ async def refresh(
 @auth_router.post(
     "/logout", status_code=204, response_model=None, operation_id="logout"
 )
-async def logout(
-    body: LogoutRequest, auth_service: FromDishka[AuthService]
-) -> None:
+async def logout(body: LogoutRequest, auth_service: FromDishka[AuthService]) -> None:
     await auth_service.logout(body.refresh_token)
