@@ -44,6 +44,11 @@ omit = [
 [tool.ruff]
 line-length = 88
 target-version = "py314"
+extend-exclude = [
+    ".venv",
+    "alembic/versions",
+    "dist",
+]
 
 [tool.ruff.lint]
 select = [
@@ -57,6 +62,16 @@ select = [
     "SIM", # flake8-simplify
     "RUF", # ruff-specific rules
 ]
+
+[tool.ruff.lint.isort]
+known-first-party = ["huerise", "tests"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
+skip-magic-trailing-comma = false
+docstring-code-format = true
 
 [build-system]
 requires = ["hatchling"]

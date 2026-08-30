@@ -1,4 +1,4 @@
-.PHONY: build fmt test vet generate check-generated
+.PHONY: build fmt test vet generate check-generated lint lint-fix format format-check
 
 build:
 	mkdir -p bin
@@ -12,6 +12,19 @@ test:
 
 vet:
 	go -C cli vet ./...
+
+lint:
+	uv run --group dev ruff check .
+	uv run --group dev ruff format --check .
+
+lint-fix:
+	uv run --group dev ruff check --fix .
+	uv run --group dev ruff format .
+
+format: lint-fix
+
+format-check:
+	uv run --group dev ruff format --check .
 
 generate:
 	uv run python scripts/export_openapi.py
