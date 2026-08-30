@@ -1,9 +1,9 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Huerise Light Automation API",
-    "description": "API for gradual, Hue-based sunrise light automation. Register or log in via `/auth`, then send the returned access token as `Authorization: Bearer <token>`.",
-    "version": "1.0.0"
+    "title": "Huerise Daylight Alarm API",
+    "description": "Run one YAML-configured Philips Hue daylight alarm.",
+    "version": "2.0.0"
   },
   "paths": {
     "/health": {
@@ -12,7 +12,7 @@
           "health"
         ],
         "summary": "Health",
-        "operationId": "health",
+        "operationId": "health_health_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -27,202 +27,20 @@
         }
       }
     },
-    "/ready": {
+    "/doctor": {
       "get": {
         "tags": [
           "health"
         ],
-        "summary": "Readiness",
-        "operationId": "readiness",
+        "summary": "Doctor",
+        "operationId": "doctor_doctor_get",
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HealthResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/auth/register": {
-      "post": {
-        "tags": [
-          "auth"
-        ],
-        "summary": "Register",
-        "operationId": "register",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RegisterRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TokenResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/auth/login": {
-      "post": {
-        "tags": [
-          "auth"
-        ],
-        "summary": "Login",
-        "operationId": "login",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LoginRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TokenResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/auth/refresh": {
-      "post": {
-        "tags": [
-          "auth"
-        ],
-        "summary": "Refresh",
-        "operationId": "refresh",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RefreshRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TokenResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/auth/logout": {
-      "post": {
-        "tags": [
-          "auth"
-        ],
-        "summary": "Logout",
-        "operationId": "logout",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LogoutRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "204": {
-            "description": "Successful Response"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/alarms": {
-      "get": {
-        "tags": [
-          "alarms"
-        ],
-        "summary": "List Alarms",
-        "operationId": "listAlarms",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/AlarmRead"
-                  },
-                  "type": "array",
-                  "title": "Response Listalarms"
+                  "$ref": "#/components/schemas/DoctorResponse"
                 }
               }
             }
@@ -230,526 +48,18 @@
         },
         "security": [
           {
-            "AccessToken": []
+            "APIKeyHeader": []
           }
         ]
-      },
-      "post": {
-        "tags": [
-          "alarms"
-        ],
-        "summary": "Create Alarm",
-        "operationId": "create_alarm",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AlarmCreate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AlarmRead"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "AccessToken": []
-          }
-        ]
-      }
-    },
-    "/alarms/{alarm_id}": {
-      "get": {
-        "tags": [
-          "alarms"
-        ],
-        "summary": "Get Alarm",
-        "operationId": "getAlarm",
-        "security": [
-          {
-            "AccessToken": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "alarm_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Alarm Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AlarmRead"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "patch": {
-        "tags": [
-          "alarms"
-        ],
-        "summary": "Update Alarm",
-        "operationId": "updateAlarm",
-        "security": [
-          {
-            "AccessToken": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "alarm_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Alarm Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AlarmUpdate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AlarmRead"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "alarms"
-        ],
-        "summary": "Delete Alarm",
-        "operationId": "deleteAlarm",
-        "security": [
-          {
-            "AccessToken": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "alarm_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Alarm Id"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Successful Response"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/alarms/{alarm_id}/enable": {
-      "post": {
-        "tags": [
-          "alarms"
-        ],
-        "summary": "Enable Alarm",
-        "operationId": "enableAlarm",
-        "security": [
-          {
-            "AccessToken": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "alarm_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Alarm Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AlarmRead"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/alarms/{alarm_id}/disable": {
-      "post": {
-        "tags": [
-          "alarms"
-        ],
-        "summary": "Disable Alarm",
-        "operationId": "disableAlarm",
-        "security": [
-          {
-            "AccessToken": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "alarm_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Alarm Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AlarmRead"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/alarms/{alarm_id}/dismiss": {
-      "post": {
-        "tags": [
-          "alarms"
-        ],
-        "summary": "Dismiss Alarm",
-        "operationId": "dismissAlarm",
-        "security": [
-          {
-            "AccessToken": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "alarm_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Alarm Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OccurrenceRead"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/alarms/{alarm_id}/occurrences": {
-      "get": {
-        "tags": [
-          "alarms"
-        ],
-        "summary": "List Occurrences",
-        "operationId": "listOccurrences",
-        "security": [
-          {
-            "AccessToken": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "alarm_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Alarm Id"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 20,
-              "title": "Limit"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/OccurrenceRead"
-                  },
-                  "title": "Response Listoccurrences"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/alarm-profiles": {
-      "get": {
-        "tags": [
-          "alarm-profiles"
-        ],
-        "summary": "List Profiles",
-        "operationId": "listProfiles",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/ProfileRead"
-                  },
-                  "type": "array",
-                  "title": "Response Listprofiles"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "AccessToken": []
-          }
-        ]
-      },
-      "post": {
-        "tags": [
-          "alarm-profiles"
-        ],
-        "summary": "Create Profile",
-        "operationId": "createProfile",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ProfileCreate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProfileRead"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "AccessToken": []
-          }
-        ]
-      }
-    },
-    "/alarm-profiles/{profile_id}": {
-      "delete": {
-        "tags": [
-          "alarm-profiles"
-        ],
-        "summary": "Delete Profile",
-        "operationId": "deleteProfile",
-        "security": [
-          {
-            "AccessToken": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "profile_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Profile Id"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Successful Response"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
       }
     },
     "/rooms": {
       "get": {
         "tags": [
-          "scenes"
+          "lighting"
         ],
-        "summary": "List Rooms",
-        "operationId": "list_rooms",
+        "summary": "Rooms",
+        "operationId": "rooms_rooms_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -757,10 +67,10 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/RoomRead"
+                    "$ref": "#/components/schemas/RoomResponse"
                   },
                   "type": "array",
-                  "title": "Response List Rooms"
+                  "title": "Response Rooms Rooms Get"
                 }
               }
             }
@@ -768,139 +78,21 @@
         },
         "security": [
           {
-            "AccessToken": []
+            "APIKeyHeader": []
           }
         ]
-      }
-    },
-    "/rooms/{room_id}": {
-      "get": {
-        "tags": [
-          "scenes"
-        ],
-        "summary": "Get Room",
-        "operationId": "get_room",
-        "security": [
-          {
-            "AccessToken": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "room_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Room Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RoomRead"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/rooms/{room_id}/scenes/{scene_id}/activate": {
-      "post": {
-        "tags": [
-          "scenes"
-        ],
-        "summary": "Activate Scene",
-        "description": "Preview a scene the way an alarm would start it.",
-        "operationId": "activate_scene",
-        "security": [
-          {
-            "AccessToken": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "room_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Room Id"
-            }
-          },
-          {
-            "name": "scene_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Scene Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "anyOf": [
-                  {
-                    "$ref": "#/components/schemas/SceneActivationRequest"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "title": "Body"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": {
-            "description": "Successful Response"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
       }
     },
     "/rooms/{room_id}/scenes/{scene_id}/demo": {
       "post": {
         "tags": [
-          "scenes"
+          "lighting"
         ],
-        "summary": "Demo Scene",
-        "description": "Fast-forward a whole sunrise on this scene, lights only.\n\nReturns as soon as the climb is under way, describing the run so a client\ncan follow along. The scene does not have to belong to a saved alarm.",
-        "operationId": "demo_scene",
+        "summary": "Demo",
+        "operationId": "demo_rooms__room_id__scenes__scene_id__demo_post",
         "security": [
           {
-            "AccessToken": []
+            "APIKeyHeader": []
           }
         ],
         "parameters": [
@@ -925,30 +117,13 @@
             }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "anyOf": [
-                  {
-                    "$ref": "#/components/schemas/SunriseDemoRequest"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "title": "Body"
-              }
-            }
-          }
-        },
         "responses": {
           "202": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SunriseDemoRead"
+                  "$ref": "#/components/schemas/DemoResponse"
                 }
               }
             }
@@ -967,14 +142,13 @@
       },
       "delete": {
         "tags": [
-          "scenes"
+          "lighting"
         ],
-        "summary": "Stop Scene Demo",
-        "description": "Cut the running demo short. Only one runs at a time, so this ends it.",
-        "operationId": "stop_scene_demo",
+        "summary": "Stop Demo",
+        "operationId": "stop_demo_rooms__room_id__scenes__scene_id__demo_delete",
         "security": [
           {
-            "AccessToken": []
+            "APIKeyHeader": []
           }
         ],
         "parameters": [
@@ -1021,8 +195,8 @@
         "tags": [
           "hue-setup"
         ],
-        "summary": "List Hue Bridges",
-        "operationId": "list_hue_bridges",
+        "summary": "Discover Bridges",
+        "operationId": "discover_bridges_hue_bridges_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -1030,10 +204,10 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/HueBridgeRead"
+                    "$ref": "#/components/schemas/BridgeResponse"
                   },
                   "type": "array",
-                  "title": "Response List Hue Bridges"
+                  "title": "Response Discover Bridges Hue Bridges Get"
                 }
               }
             }
@@ -1041,7 +215,7 @@
         },
         "security": [
           {
-            "AccessToken": []
+            "APIKeyHeader": []
           }
         ]
       }
@@ -1051,15 +225,15 @@
         "tags": [
           "hue-setup"
         ],
-        "summary": "Get Hue Bridge",
-        "operationId": "get_hue_bridge",
+        "summary": "Bridge Status",
+        "operationId": "bridge_status_hue_bridge_get",
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HueBridgeStatusRead"
+                  "$ref": "#/components/schemas/OnboardingStatusResponse"
                 }
               }
             }
@@ -1067,7 +241,7 @@
         },
         "security": [
           {
-            "AccessToken": []
+            "APIKeyHeader": []
           }
         ]
       },
@@ -1075,13 +249,13 @@
         "tags": [
           "hue-setup"
         ],
-        "summary": "Select Hue Bridge",
-        "operationId": "select_hue_bridge",
+        "summary": "Select Bridge",
+        "operationId": "select_bridge_hue_bridge_put",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/HueBridgeSelectionRequest"
+                "$ref": "#/components/schemas/BridgeSelectionRequest"
               }
             }
           },
@@ -1093,7 +267,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HueBridgeStatusRead"
+                  "$ref": "#/components/schemas/OnboardingStatusResponse"
                 }
               }
             }
@@ -1111,7 +285,7 @@
         },
         "security": [
           {
-            "AccessToken": []
+            "APIKeyHeader": []
           }
         ]
       }
@@ -1121,16 +295,15 @@
         "tags": [
           "hue-setup"
         ],
-        "summary": "Register Hue Bridge",
-        "description": "Wait up to 60 seconds for the selected bridge's link button.",
-        "operationId": "register_hue_bridge",
+        "summary": "Register Bridge",
+        "operationId": "register_bridge_hue_bridge_register_post",
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HueBridgeStatusRead"
+                  "$ref": "#/components/schemas/OnboardingStatusResponse"
                 }
               }
             }
@@ -1138,25 +311,25 @@
         },
         "security": [
           {
-            "AccessToken": []
+            "APIKeyHeader": []
           }
         ]
       }
     },
-    "/doctor": {
-      "get": {
+    "/daylight-alarm/start": {
+      "post": {
         "tags": [
-          "health"
+          "daylight-alarm"
         ],
-        "summary": "Doctor",
-        "operationId": "doctor",
+        "summary": "Start",
+        "operationId": "start_daylight_alarm_start_post",
         "responses": {
-          "200": {
+          "202": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DoctorRead"
+                  "$ref": "#/components/schemas/AlarmStatusResponse"
                 }
               }
             }
@@ -1164,588 +337,141 @@
         },
         "security": [
           {
-            "AccessToken": []
+            "APIKeyHeader": []
           }
         ]
       }
     },
-    "/eventstream": {
-      "get": {
+    "/daylight-alarm/stop": {
+      "post": {
         "tags": [
-          "events"
+          "daylight-alarm"
         ],
-        "summary": "Subscribe to the alarm event stream",
-        "description": "Server-sent events covering every change to alarms and to the run currently in\nprogress, so a display can stay in sync without polling.\n\nEach frame carries the event id in `id:`, the discriminator in `event:` and the\nevent itself as JSON in `data:`. Reconnect with `Last-Event-ID` to resume; if\nthat id has rolled out of the buffer nothing is replayed, so resync over\n`GET /alarms` first. A `: keepalive` comment arrives whenever the stream is\nidle.",
-        "operationId": "streamEvents",
+        "summary": "Stop",
+        "operationId": "stop_daylight_alarm_stop_post",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
         "security": [
           {
-            "AccessToken": []
+            "APIKeyHeader": []
           }
-        ],
-        "parameters": [
-          {
-            "name": "Last-Event-ID",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "title": "Last-Event-Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "text/event-stream": {
-                "schema": {
-                  "type": "string",
-                  "discriminator": {
-                    "mapping": {
-                      "alarm.created": "#/components/schemas/AlarmCreated",
-                      "alarm.deleted": "#/components/schemas/AlarmDeleted",
-                      "alarm.next_changed": "#/components/schemas/NextAlarmChanged",
-                      "alarm.updated": "#/components/schemas/AlarmUpdated",
-                      "occurrence.dismissed": "#/components/schemas/OccurrenceDismissed",
-                      "occurrence.failed": "#/components/schemas/OccurrenceFailed",
-                      "occurrence.progress": "#/components/schemas/OccurrenceProgress",
-                      "occurrence.scheduled": "#/components/schemas/OccurrenceScheduled",
-                      "occurrence.skipped": "#/components/schemas/OccurrenceSkipped",
-                      "occurrence.started": "#/components/schemas/OccurrenceStarted",
-                      "profile.updated": "#/components/schemas/ProfileUpdated"
-                    },
-                    "propertyName": "type"
-                  },
-                  "oneOf": [
-                    {
-                      "$ref": "#/components/schemas/AlarmCreated"
-                    },
-                    {
-                      "$ref": "#/components/schemas/AlarmUpdated"
-                    },
-                    {
-                      "$ref": "#/components/schemas/AlarmDeleted"
-                    },
-                    {
-                      "$ref": "#/components/schemas/NextAlarmChanged"
-                    },
-                    {
-                      "$ref": "#/components/schemas/ProfileUpdated"
-                    },
-                    {
-                      "$ref": "#/components/schemas/OccurrenceScheduled"
-                    },
-                    {
-                      "$ref": "#/components/schemas/OccurrenceStarted"
-                    },
-                    {
-                      "$ref": "#/components/schemas/OccurrenceProgress"
-                    },
-                    {
-                      "$ref": "#/components/schemas/OccurrenceDismissed"
-                    },
-                    {
-                      "$ref": "#/components/schemas/OccurrenceSkipped"
-                    },
-                    {
-                      "$ref": "#/components/schemas/OccurrenceFailed"
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
+        ]
       }
     }
   },
   "components": {
     "schemas": {
-      "AlarmCreate": {
+      "AlarmStatusResponse": {
         "properties": {
-          "label": {
+          "status": {
             "type": "string",
-            "title": "Label"
-          },
-          "schedule": {
-            "$ref": "#/components/schemas/ScheduleSchema"
-          },
-          "room_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Room Id"
-          },
-          "room_name": {
-            "type": "string",
-            "title": "Room Name"
-          },
-          "profile_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Profile Id",
-            "description": "Defaults to the default profile."
+            "title": "Status"
           }
         },
         "type": "object",
         "required": [
-          "label",
-          "schedule",
-          "room_id",
-          "room_name"
+          "status"
         ],
-        "title": "AlarmCreate"
+        "title": "AlarmStatusResponse"
       },
-      "AlarmCreated": {
+      "BridgeResponse": {
         "properties": {
           "id": {
             "type": "string",
             "title": "Id"
           },
-          "parent_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Parent Id"
-          },
-          "created_at": {
+          "ip_address": {
             "type": "string",
-            "format": "date-time",
-            "title": "Created At"
+            "title": "Ip Address"
           },
-          "type": {
-            "type": "string",
-            "const": "alarm.created",
-            "title": "Type",
-            "default": "alarm.created"
-          },
-          "alarm": {
-            "$ref": "#/components/schemas/AlarmSnapshot"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "alarm"
-        ],
-        "title": "AlarmCreated"
-      },
-      "AlarmDefect": {
-        "type": "string",
-        "enum": [
-          "room_missing",
-          "scene_missing"
-        ],
-        "title": "AlarmDefect",
-        "description": "Why an alarm cannot currently light a room.\n\nSet when a Hue resource an alarm points at stops resolving and could not be\nreplaced, so a client can say so long before the wake-up is due."
-      },
-      "AlarmDeleted": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "parent_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Parent Id"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "type": {
-            "type": "string",
-            "const": "alarm.deleted",
-            "title": "Type",
-            "default": "alarm.deleted"
-          },
-          "alarm_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Alarm Id"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "alarm_id"
-        ],
-        "title": "AlarmDeleted"
-      },
-      "AlarmField": {
-        "type": "string",
-        "enum": [
-          "label",
-          "schedule",
-          "room",
-          "profile_id",
-          "is_enabled",
-          "defect"
-        ],
-        "title": "AlarmField",
-        "description": "A field of an alarm rule that a change can be reported against."
-      },
-      "AlarmRead": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "label": {
-            "type": "string",
-            "title": "Label"
-          },
-          "schedule": {
-            "$ref": "#/components/schemas/ScheduleSchema"
-          },
-          "room_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Room Id"
-          },
-          "room_name": {
-            "type": "string",
-            "title": "Room Name"
-          },
-          "profile_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Profile Id"
-          },
-          "is_enabled": {
+          "selected": {
             "type": "boolean",
-            "title": "Is Enabled"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "next_occurrence": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Next Occurrence"
-          },
-          "defect": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/AlarmDefect"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Set when the room or scene this alarm points at no longer exists on the bridge and could not be replaced automatically."
+            "title": "Selected"
           }
         },
         "type": "object",
         "required": [
           "id",
-          "label",
-          "schedule",
-          "room_id",
-          "room_name",
-          "profile_id",
-          "is_enabled",
-          "created_at",
-          "next_occurrence"
+          "ip_address",
+          "selected"
         ],
-        "title": "AlarmRead"
+        "title": "BridgeResponse"
       },
-      "AlarmSnapshot": {
+      "BridgeSelectionRequest": {
         "properties": {
-          "id": {
+          "bridge_id": {
             "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "label": {
-            "type": "string",
-            "title": "Label"
-          },
-          "schedule": {
-            "$ref": "#/components/schemas/ScheduleSnapshot"
-          },
-          "room_name": {
-            "type": "string",
-            "title": "Room Name"
-          },
-          "profile_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Profile Id"
-          },
-          "is_enabled": {
-            "type": "boolean",
-            "title": "Is Enabled"
-          },
-          "next_occurrence": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Next Occurrence"
-          },
-          "defect": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/AlarmDefect"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Why this alarm cannot light its room."
+            "minLength": 1,
+            "title": "Bridge Id"
           }
         },
         "type": "object",
         "required": [
-          "id",
-          "label",
-          "schedule",
-          "room_name",
-          "profile_id",
-          "is_enabled",
-          "next_occurrence"
+          "bridge_id"
         ],
-        "title": "AlarmSnapshot",
-        "description": "An alarm rule as of the moment an event fired.\n\nCarries enough to render a row without a follow-up GET, so a display can\nstay in sync from the stream alone."
+        "title": "BridgeSelectionRequest"
       },
-      "AlarmUpdate": {
+      "DemoResponse": {
         "properties": {
-          "label": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Label"
+          "status": {
+            "type": "string",
+            "const": "started",
+            "title": "Status",
+            "default": "started"
           },
-          "schedule": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ScheduleSchema"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "room_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Room Id"
-          },
-          "room_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Room Name"
-          },
-          "profile_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Profile Id"
+          "duration_seconds": {
+            "type": "integer",
+            "const": 10,
+            "title": "Duration Seconds",
+            "default": 10
           }
         },
         "type": "object",
-        "title": "AlarmUpdate",
-        "description": "A partial change. Omitted fields keep their current value."
+        "title": "DemoResponse"
       },
-      "AlarmUpdated": {
+      "DoctorCheckResponse": {
         "properties": {
-          "id": {
+          "name": {
             "type": "string",
-            "title": "Id"
+            "title": "Name"
           },
-          "parent_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Parent Id"
-          },
-          "created_at": {
+          "status": {
             "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "type": {
+            "const": "ok",
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "status"
+        ],
+        "title": "DoctorCheckResponse"
+      },
+      "DoctorResponse": {
+        "properties": {
+          "status": {
             "type": "string",
-            "const": "alarm.updated",
-            "title": "Type",
-            "default": "alarm.updated"
+            "const": "ok",
+            "title": "Status"
           },
-          "alarm": {
-            "$ref": "#/components/schemas/AlarmSnapshot"
-          },
-          "changed": {
+          "checks": {
             "items": {
-              "$ref": "#/components/schemas/AlarmField"
+              "$ref": "#/components/schemas/DoctorCheckResponse"
             },
             "type": "array",
-            "title": "Changed",
-            "description": "The fields this update actually moved."
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "alarm",
-          "changed"
-        ],
-        "title": "AlarmUpdated"
-      },
-      "AnyHueriseEvent": {
-        "oneOf": [
-          {
-            "$ref": "#/components/schemas/AlarmCreated"
-          },
-          {
-            "$ref": "#/components/schemas/AlarmUpdated"
-          },
-          {
-            "$ref": "#/components/schemas/AlarmDeleted"
-          },
-          {
-            "$ref": "#/components/schemas/NextAlarmChanged"
-          },
-          {
-            "$ref": "#/components/schemas/ProfileUpdated"
-          },
-          {
-            "$ref": "#/components/schemas/OccurrenceScheduled"
-          },
-          {
-            "$ref": "#/components/schemas/OccurrenceStarted"
-          },
-          {
-            "$ref": "#/components/schemas/OccurrenceProgress"
-          },
-          {
-            "$ref": "#/components/schemas/OccurrenceDismissed"
-          },
-          {
-            "$ref": "#/components/schemas/OccurrenceSkipped"
-          },
-          {
-            "$ref": "#/components/schemas/OccurrenceFailed"
-          }
-        ],
-        "discriminator": {
-          "propertyName": "type",
-          "mapping": {
-            "alarm.created": "#/components/schemas/AlarmCreated",
-            "alarm.deleted": "#/components/schemas/AlarmDeleted",
-            "alarm.next_changed": "#/components/schemas/NextAlarmChanged",
-            "alarm.updated": "#/components/schemas/AlarmUpdated",
-            "occurrence.dismissed": "#/components/schemas/OccurrenceDismissed",
-            "occurrence.failed": "#/components/schemas/OccurrenceFailed",
-            "occurrence.progress": "#/components/schemas/OccurrenceProgress",
-            "occurrence.scheduled": "#/components/schemas/OccurrenceScheduled",
-            "occurrence.skipped": "#/components/schemas/OccurrenceSkipped",
-            "occurrence.started": "#/components/schemas/OccurrenceStarted",
-            "profile.updated": "#/components/schemas/ProfileUpdated"
-          }
-        }
-      },
-      "DoctorCheckRead": {
-        "properties": {
-          "configured": {
-            "type": "boolean",
-            "title": "Configured"
+            "title": "Checks"
           }
         },
         "type": "object",
         "required": [
-          "configured"
+          "status",
+          "checks"
         ],
-        "title": "DoctorCheckRead"
-      },
-      "DoctorRead": {
-        "properties": {
-          "configured": {
-            "type": "boolean",
-            "title": "Configured"
-          },
-          "hue_bridge": {
-            "$ref": "#/components/schemas/DoctorCheckRead"
-          }
-        },
-        "type": "object",
-        "required": [
-          "configured",
-          "hue_bridge"
-        ],
-        "title": "DoctorRead"
+        "title": "DoctorResponse"
       },
       "HTTPValidationError": {
         "properties": {
@@ -1764,56 +490,29 @@
         "properties": {
           "status": {
             "type": "string",
-            "const": "ok",
-            "title": "Status",
-            "default": "ok"
+            "title": "Status"
           }
         },
         "type": "object",
+        "required": [
+          "status"
+        ],
         "title": "HealthResponse"
       },
-      "HueBridgeRead": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id",
-            "description": "Stable Philips Hue Bridge ID."
-          },
-          "ip_address": {
-            "type": "string",
-            "title": "Ip Address",
-            "description": "Current, replaceable network address."
-          },
-          "selected": {
-            "type": "boolean",
-            "title": "Selected"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "ip_address",
-          "selected"
+      "OnboardingState": {
+        "type": "string",
+        "enum": [
+          "not_selected",
+          "link_button_required",
+          "ready"
         ],
-        "title": "HueBridgeRead"
+        "title": "OnboardingState"
       },
-      "HueBridgeSelectionRequest": {
+      "OnboardingStatusResponse": {
         "properties": {
-          "bridge_id": {
-            "type": "string",
-            "minLength": 1,
-            "title": "Bridge Id",
-            "description": "Stable discovered bridge ID."
-          }
-        },
-        "type": "object",
-        "required": [
-          "bridge_id"
-        ],
-        "title": "HueBridgeSelectionRequest"
-      },
-      "HueBridgeStatusRead": {
-        "properties": {
+          "state": {
+            "$ref": "#/components/schemas/OnboardingState"
+          },
           "bridge_id": {
             "anyOf": [
               {
@@ -1836,735 +535,21 @@
             ],
             "title": "Ip Address"
           },
-          "configured": {
+          "read_only": {
             "type": "boolean",
-            "title": "Configured"
-          },
-          "source": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/HueConfigurationSource"
-              },
-              {
-                "type": "null"
-              }
-            ]
+            "title": "Read Only"
           }
         },
         "type": "object",
         "required": [
+          "state",
           "bridge_id",
           "ip_address",
-          "configured",
-          "source"
+          "read_only"
         ],
-        "title": "HueBridgeStatusRead"
+        "title": "OnboardingStatusResponse"
       },
-      "HueConfigurationSource": {
-        "type": "string",
-        "enum": [
-          "environment",
-          "database"
-        ],
-        "title": "HueConfigurationSource"
-      },
-      "LoginRequest": {
-        "properties": {
-          "username": {
-            "type": "string",
-            "title": "Username"
-          },
-          "password": {
-            "type": "string",
-            "title": "Password"
-          }
-        },
-        "type": "object",
-        "required": [
-          "username",
-          "password"
-        ],
-        "title": "LoginRequest"
-      },
-      "LogoutRequest": {
-        "properties": {
-          "refresh_token": {
-            "type": "string",
-            "title": "Refresh Token"
-          }
-        },
-        "type": "object",
-        "required": [
-          "refresh_token"
-        ],
-        "title": "LogoutRequest"
-      },
-      "NextAlarmChanged": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "parent_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Parent Id"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "type": {
-            "type": "string",
-            "const": "alarm.next_changed",
-            "title": "Type",
-            "default": "alarm.next_changed"
-          },
-          "alarm": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/AlarmSnapshot"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "None when no enabled alarm remains."
-          },
-          "scheduled_for": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Scheduled For"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "alarm",
-          "scheduled_for"
-        ],
-        "title": "NextAlarmChanged",
-        "description": "The alarm that will fire next is now a different one, or fires at a\ndifferent time. Derived -- never emitted by hand."
-      },
-      "OccurrenceDismissed": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "parent_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Parent Id"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "type": {
-            "type": "string",
-            "const": "occurrence.dismissed",
-            "title": "Type",
-            "default": "occurrence.dismissed"
-          },
-          "occurrence": {
-            "$ref": "#/components/schemas/OccurrenceSnapshot"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "occurrence"
-        ],
-        "title": "OccurrenceDismissed"
-      },
-      "OccurrenceFailed": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "parent_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Parent Id"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "type": {
-            "type": "string",
-            "const": "occurrence.failed",
-            "title": "Type",
-            "default": "occurrence.failed"
-          },
-          "occurrence": {
-            "$ref": "#/components/schemas/OccurrenceSnapshot"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "occurrence"
-        ],
-        "title": "OccurrenceFailed"
-      },
-      "OccurrenceProgress": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "parent_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Parent Id"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "type": {
-            "type": "string",
-            "const": "occurrence.progress",
-            "title": "Type",
-            "default": "occurrence.progress"
-          },
-          "occurrence_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Occurrence Id"
-          },
-          "alarm_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Alarm Id"
-          },
-          "brightness": {
-            "type": "integer",
-            "title": "Brightness"
-          },
-          "step": {
-            "type": "integer",
-            "title": "Step"
-          },
-          "total_steps": {
-            "type": "integer",
-            "title": "Total Steps"
-          },
-          "elapsed_seconds": {
-            "type": "integer",
-            "title": "Elapsed Seconds"
-          },
-          "total_seconds": {
-            "type": "integer",
-            "title": "Total Seconds"
-          },
-          "percent": {
-            "type": "number",
-            "title": "Percent",
-            "readOnly": true
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "occurrence_id",
-          "alarm_id",
-          "brightness",
-          "step",
-          "total_steps",
-          "elapsed_seconds",
-          "total_seconds",
-          "percent"
-        ],
-        "title": "OccurrenceProgress",
-        "description": "One sunrise step. Fires per brightness change, so it carries no snapshot:\nthe occurrence itself does not move while the sunrise runs."
-      },
-      "OccurrenceRead": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "alarm_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Alarm Id"
-          },
-          "scheduled_for": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Scheduled For"
-          },
-          "state": {
-            "$ref": "#/components/schemas/OccurrenceState"
-          },
-          "triggered_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Triggered At"
-          },
-          "finished_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Finished At"
-          },
-          "failure_reason": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Failure Reason"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "alarm_id",
-          "scheduled_for",
-          "state",
-          "triggered_at",
-          "finished_at",
-          "failure_reason"
-        ],
-        "title": "OccurrenceRead"
-      },
-      "OccurrenceScheduled": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "parent_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Parent Id"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "type": {
-            "type": "string",
-            "const": "occurrence.scheduled",
-            "title": "Type",
-            "default": "occurrence.scheduled"
-          },
-          "occurrence": {
-            "$ref": "#/components/schemas/OccurrenceSnapshot"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "occurrence"
-        ],
-        "title": "OccurrenceScheduled"
-      },
-      "OccurrenceSkipped": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "parent_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Parent Id"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "type": {
-            "type": "string",
-            "const": "occurrence.skipped",
-            "title": "Type",
-            "default": "occurrence.skipped"
-          },
-          "occurrence": {
-            "$ref": "#/components/schemas/OccurrenceSnapshot"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "occurrence"
-        ],
-        "title": "OccurrenceSkipped"
-      },
-      "OccurrenceSnapshot": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "alarm_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Alarm Id"
-          },
-          "scheduled_for": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Scheduled For"
-          },
-          "state": {
-            "$ref": "#/components/schemas/OccurrenceState"
-          },
-          "triggered_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Triggered At"
-          },
-          "finished_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Finished At"
-          },
-          "failure_reason": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Failure Reason"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "alarm_id",
-          "scheduled_for",
-          "state",
-          "triggered_at",
-          "finished_at",
-          "failure_reason"
-        ],
-        "title": "OccurrenceSnapshot",
-        "description": "One concrete run of an alarm as of the moment an event fired."
-      },
-      "OccurrenceStarted": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "parent_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Parent Id"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "type": {
-            "type": "string",
-            "const": "occurrence.started",
-            "title": "Type",
-            "default": "occurrence.started"
-          },
-          "occurrence": {
-            "$ref": "#/components/schemas/OccurrenceSnapshot"
-          },
-          "label": {
-            "type": "string",
-            "title": "Label"
-          },
-          "room_name": {
-            "type": "string",
-            "title": "Room Name"
-          },
-          "sunrise_seconds": {
-            "type": "integer",
-            "title": "Sunrise Seconds"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "occurrence",
-          "label",
-          "room_name",
-          "sunrise_seconds"
-        ],
-        "title": "OccurrenceStarted",
-        "description": "The sunrise has begun. Everything a display needs to open its wake screen."
-      },
-      "OccurrenceState": {
-        "type": "string",
-        "enum": [
-          "pending",
-          "sunrise",
-          "dismissed",
-          "skipped",
-          "failed"
-        ],
-        "title": "OccurrenceState"
-      },
-      "ProfileCreate": {
-        "properties": {
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "sunrise": {
-            "$ref": "#/components/schemas/SunriseSchema"
-          }
-        },
-        "type": "object",
-        "required": [
-          "name",
-          "sunrise"
-        ],
-        "title": "ProfileCreate"
-      },
-      "ProfileField": {
-        "type": "string",
-        "enum": [
-          "sunrise_scene"
-        ],
-        "title": "ProfileField",
-        "description": "A field of a profile that a change can be reported against."
-      },
-      "ProfileRead": {
-        "properties": {
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "sunrise": {
-            "$ref": "#/components/schemas/SunriseSchema"
-          },
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "is_default": {
-            "type": "boolean",
-            "title": "Is Default"
-          }
-        },
-        "type": "object",
-        "required": [
-          "name",
-          "sunrise",
-          "id",
-          "is_default"
-        ],
-        "title": "ProfileRead",
-        "description": "Everything a profile is created with, plus what the server owns."
-      },
-      "ProfileSnapshot": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "is_default": {
-            "type": "boolean",
-            "title": "Is Default"
-          },
-          "sunrise": {
-            "$ref": "#/components/schemas/SunriseSnapshot"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "name",
-          "is_default",
-          "sunrise"
-        ],
-        "title": "ProfileSnapshot",
-        "description": "The behaviour shared by every alarm using it, as of an event."
-      },
-      "ProfileUpdated": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "parent_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Parent Id"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "type": {
-            "type": "string",
-            "const": "profile.updated",
-            "title": "Type",
-            "default": "profile.updated"
-          },
-          "profile": {
-            "$ref": "#/components/schemas/ProfileSnapshot"
-          },
-          "changed": {
-            "items": {
-              "$ref": "#/components/schemas/ProfileField"
-            },
-            "type": "array",
-            "title": "Changed",
-            "description": "The fields this update actually moved."
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "profile",
-          "changed"
-        ],
-        "title": "ProfileUpdated"
-      },
-      "RefreshRequest": {
-        "properties": {
-          "refresh_token": {
-            "type": "string",
-            "title": "Refresh Token"
-          }
-        },
-        "type": "object",
-        "required": [
-          "refresh_token"
-        ],
-        "title": "RefreshRequest"
-      },
-      "RegisterRequest": {
-        "properties": {
-          "username": {
-            "type": "string",
-            "maxLength": 64,
-            "minLength": 3,
-            "title": "Username"
-          },
-          "password": {
-            "type": "string",
-            "maxLength": 256,
-            "minLength": 8,
-            "title": "Password"
-          }
-        },
-        "type": "object",
-        "required": [
-          "username",
-          "password"
-        ],
-        "title": "RegisterRequest"
-      },
-      "RoomRead": {
+      "RoomResponse": {
         "properties": {
           "id": {
             "type": "string",
@@ -2577,7 +562,7 @@
           },
           "scenes": {
             "items": {
-              "$ref": "#/components/schemas/SceneRead"
+              "$ref": "#/components/schemas/SceneResponse"
             },
             "type": "array",
             "title": "Scenes"
@@ -2589,28 +574,9 @@
           "name",
           "scenes"
         ],
-        "title": "RoomRead"
+        "title": "RoomResponse"
       },
-      "SceneActivationRequest": {
-        "properties": {
-          "brightness": {
-            "anyOf": [
-              {
-                "type": "number",
-                "maximum": 100.0,
-                "minimum": 0.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Brightness"
-          }
-        },
-        "type": "object",
-        "title": "SceneActivationRequest"
-      },
-      "SceneRead": {
+      "SceneResponse": {
         "properties": {
           "id": {
             "type": "string",
@@ -2627,266 +593,7 @@
           "id",
           "name"
         ],
-        "title": "SceneRead"
-      },
-      "ScheduleSchema": {
-        "properties": {
-          "hour": {
-            "type": "integer",
-            "maximum": 23.0,
-            "minimum": 0.0,
-            "title": "Hour"
-          },
-          "minute": {
-            "type": "integer",
-            "maximum": 59.0,
-            "minimum": 0.0,
-            "title": "Minute"
-          },
-          "timezone": {
-            "type": "string",
-            "title": "Timezone",
-            "description": "IANA zone. The alarm keeps its wall-clock time across DST.",
-            "default": "Europe/Berlin"
-          },
-          "days": {
-            "items": {
-              "$ref": "#/components/schemas/Weekday"
-            },
-            "type": "array",
-            "title": "Days",
-            "description": "Empty means the alarm fires once, then disables itself."
-          }
-        },
-        "type": "object",
-        "required": [
-          "hour",
-          "minute"
-        ],
-        "title": "ScheduleSchema",
-        "description": "When an alarm fires, as wall-clock time in a named zone."
-      },
-      "ScheduleSnapshot": {
-        "properties": {
-          "hour": {
-            "type": "integer",
-            "title": "Hour"
-          },
-          "minute": {
-            "type": "integer",
-            "title": "Minute"
-          },
-          "timezone": {
-            "type": "string",
-            "title": "Timezone"
-          },
-          "weekdays": {
-            "items": {
-              "$ref": "#/components/schemas/Weekday"
-            },
-            "type": "array",
-            "title": "Weekdays"
-          }
-        },
-        "type": "object",
-        "required": [
-          "hour",
-          "minute",
-          "timezone",
-          "weekdays"
-        ],
-        "title": "ScheduleSnapshot"
-      },
-      "SunriseDemoRead": {
-        "properties": {
-          "room_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Room Id"
-          },
-          "room_name": {
-            "type": "string",
-            "title": "Room Name"
-          },
-          "scene_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Scene Id"
-          },
-          "scene_name": {
-            "type": "string",
-            "title": "Scene Name"
-          },
-          "brightness_start": {
-            "type": "integer",
-            "title": "Brightness Start"
-          },
-          "brightness_end": {
-            "type": "integer",
-            "title": "Brightness End"
-          },
-          "steps": {
-            "type": "integer",
-            "title": "Steps",
-            "description": "Brightness changes this demo will send."
-          },
-          "step_interval_seconds": {
-            "type": "number",
-            "title": "Step Interval Seconds"
-          },
-          "duration_seconds": {
-            "type": "number",
-            "title": "Duration Seconds"
-          }
-        },
-        "type": "object",
-        "required": [
-          "room_id",
-          "room_name",
-          "scene_id",
-          "scene_name",
-          "brightness_start",
-          "brightness_end",
-          "steps",
-          "step_interval_seconds",
-          "duration_seconds"
-        ],
-        "title": "SunriseDemoRead",
-        "description": "The demo now running, in enough detail for a client to mirror it."
-      },
-      "SunriseDemoRequest": {
-        "properties": {
-          "duration_seconds": {
-            "type": "number",
-            "maximum": 300.0,
-            "exclusiveMinimum": true,
-            "title": "Duration Seconds",
-            "description": "How long the whole climb should take.",
-            "default": 20.0,
-            "minimum": 0.0
-          },
-          "brightness_start": {
-            "type": "integer",
-            "maximum": 100.0,
-            "minimum": 1.0,
-            "title": "Brightness Start",
-            "default": 1
-          },
-          "brightness_end": {
-            "type": "integer",
-            "maximum": 100.0,
-            "minimum": 1.0,
-            "title": "Brightness End",
-            "default": 100
-          }
-        },
-        "type": "object",
-        "title": "SunriseDemoRequest",
-        "description": "The sunrise to replay, compressed into a handful of seconds."
-      },
-      "SunriseSchema": {
-        "properties": {
-          "scene_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Scene Id",
-            "description": "Stable Hue scene UUID returned by GET /rooms."
-          },
-          "scene_name": {
-            "type": "string",
-            "title": "Scene Name",
-            "description": "Display metadata for the selected Hue scene."
-          },
-          "duration_minutes": {
-            "type": "integer",
-            "maximum": 120.0,
-            "minimum": 0.0,
-            "title": "Duration Minutes",
-            "default": 7
-          },
-          "brightness_start": {
-            "type": "integer",
-            "maximum": 99.0,
-            "minimum": 1.0,
-            "title": "Brightness Start",
-            "default": 1
-          },
-          "brightness_end": {
-            "type": "integer",
-            "maximum": 100.0,
-            "minimum": 2.0,
-            "title": "Brightness End",
-            "default": 100
-          }
-        },
-        "type": "object",
-        "required": [
-          "scene_id",
-          "scene_name"
-        ],
-        "title": "SunriseSchema"
-      },
-      "SunriseSnapshot": {
-        "properties": {
-          "scene_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Scene Id"
-          },
-          "scene_name": {
-            "type": "string",
-            "title": "Scene Name"
-          },
-          "duration_minutes": {
-            "type": "integer",
-            "title": "Duration Minutes"
-          },
-          "brightness_start": {
-            "type": "integer",
-            "title": "Brightness Start"
-          },
-          "brightness_end": {
-            "type": "integer",
-            "title": "Brightness End"
-          }
-        },
-        "type": "object",
-        "required": [
-          "scene_id",
-          "scene_name",
-          "duration_minutes",
-          "brightness_start",
-          "brightness_end"
-        ],
-        "title": "SunriseSnapshot"
-      },
-      "TokenResponse": {
-        "properties": {
-          "access_token": {
-            "type": "string",
-            "title": "Access Token"
-          },
-          "refresh_token": {
-            "type": "string",
-            "title": "Refresh Token"
-          },
-          "token_type": {
-            "type": "string",
-            "title": "Token Type"
-          },
-          "expires_in": {
-            "type": "integer",
-            "title": "Expires In"
-          }
-        },
-        "type": "object",
-        "required": [
-          "access_token",
-          "refresh_token",
-          "token_type",
-          "expires_in"
-        ],
-        "title": "TokenResponse"
+        "title": "SceneResponse"
       },
       "ValidationError": {
         "properties": {
@@ -2920,26 +627,13 @@
           "type"
         ],
         "title": "ValidationError"
-      },
-      "Weekday": {
-        "type": "integer",
-        "enum": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6
-        ],
-        "title": "Weekday"
       }
     },
     "securitySchemes": {
-      "AccessToken": {
-        "type": "http",
-        "description": "Send the /auth/login access token as `Authorization: Bearer <token>`.",
-        "scheme": "bearer"
+      "APIKeyHeader": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key"
       }
     }
   }

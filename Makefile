@@ -1,35 +1,20 @@
-.PHONY: build fmt test vet generate check-generated lint lint-fix format format-check
-
-build:
-	mkdir -p bin
-	go -C cli build -o ../bin/huerise ./cmd/huerise
-
-fmt:
-	go -C cli fmt ./cmd/... ./internal/...
+.PHONY: test lint lint-fix format format-check openapi
 
 test:
-	go -C cli test ./...
-
-vet:
-	go -C cli vet ./...
+	uv run pytest
 
 lint:
-	uv run --group dev ruff check .
-	uv run --group dev ruff format --check .
+	uv run ruff check .
+	uv run ruff format --check .
 
 lint-fix:
-	uv run --group dev ruff check --fix .
-	uv run --group dev ruff format .
+	uv run ruff check --fix .
+	uv run ruff format .
 
 format: lint-fix
 
 format-check:
-	uv run --group dev ruff format --check .
+	uv run ruff format --check .
 
-generate:
+openapi:
 	uv run python scripts/export_openapi.py
-	cp openapi.json cli/openapi.json
-	go -C cli generate ./internal/generate
-
-check-generated: generate
-	git diff --exit-code -- openapi.json cli/internal/client

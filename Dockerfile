@@ -2,13 +2,13 @@ FROM python:3.14-slim AS builder
 
 WORKDIR /app
 
-RUN pip install uv
+RUN pip install --no-cache-dir uv
 
 COPY pyproject.toml uv.lock README.md ./
-RUN uv sync --frozen --no-dev
+RUN uv sync --frozen --no-dev --no-install-project
 
 
-FROM python:3.14-slim AS runtime
+FROM python:3.14-slim
 
 WORKDIR /app
 
@@ -18,21 +18,4 @@ COPY huerise/ ./huerise/
 ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
 
-CMD ["python", "-m", "uvicorn", "huerise.main:app", "--host", "0.0.0.0", "--port", "8000", "--loop", "asyncio"]
-
-
-FROM python:3.14-slim AS dev
-
-WORKDIR /app
-
-RUN pip install uv
-
-COPY pyproject.toml uv.lock README.md ./
-RUN uv sync --frozen
-
-COPY huerise/ ./huerise/
-
-ENV PATH="/app/.venv/bin:$PATH"
-ENV PYTHONUNBUFFERED=1
-
-CMD ["python", "-m", "uvicorn", "huerise.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--loop", "asyncio"]
+CMD ["python", "-m", "uvicorn", "huerise.main:app", "--host", "0.0.0.0", "--port", "8000"]

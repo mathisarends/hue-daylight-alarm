@@ -1,66 +1,22 @@
 services:
-  postgres:
-    image: postgres:17-alpine
-    container_name: huerise-postgres
-    restart: unless-stopped
-    environment:
-      - POSTGRES_USER=${POSTGRES_USER:-huerise}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-huerise}
-      - POSTGRES_DB=${POSTGRES_DB:-huerise}
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-huerise} -d ${POSTGRES_DB:-huerise}"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-      start_period: 5s
-
-  migrate:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: dev
-    container_name: huerise-migrate
-    env_file:
-      - .env
-    volumes:
-      - ./huerise:/app/huerise
-      - ./alembic.ini:/app/alembic.ini
-    environment:
-      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-huerise}:${POSTGRES_PASSWORD:-huerise}@postgres:5432/${POSTGRES_DB:-huerise}
-    depends_on:
-      postgres:
-        condition: service_healthy
-    command: ["python", "-m", "alembic", "upgrade", "head"]
-
   daylight-alarm:
     build:
       context: .
       dockerfile: Dockerfile
-      target: dev
-    container_name: daylight-alarm
+    container_name: huerise
     restart: unless-stopped
-    env_file:
-      - .env
+    environment:
+      HUERISE_API_KEY: ${HUERISE_API_KEY:?Set HUERISE_API_KEY in .env}
+      HUERISE_CONFIG_PATH: /config/huerise.yml
+      HUE_BRIDGE_IP: ${HUE_BRIDGE_IP:-}
+      HUE_APP_KEY: ${HUE_APP_KEY:-}
     ports:
       - "8000:8000"
     volumes:
-      - ./huerise:/app/huerise
-      - ./alembic.ini:/app/alembic.ini
-    environment:
-      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-huerise}:${POSTGRES_PASSWORD:-huerise}@postgres:5432/${POSTGRES_DB:-huerise}
-    depends_on:
-      migrate:
-        condition: service_completed_successfully
+      - ./data:/config
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/ready')"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 10s
       timeout: 3s
       retries: 3
-      start_period: 10s
-
-volumes:
-  postgres_data:
+      start_period: 5s
