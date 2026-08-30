@@ -72,6 +72,41 @@ def test_reports_missing_and_malformed_files(tmp_path: Path) -> None:
         repository.load()
 
 
+@pytest.mark.parametrize("contents", ["", "[]"])
+def test_rejects_non_mapping_configuration_roots(tmp_path: Path, contents: str) -> None:
+    path = tmp_path / "huerise.yml"
+    path.write_text(contents, encoding="utf-8")
+
+    with pytest.raises(ConfigurationError, match="root must be a mapping"):
+        YamlConfiguration(path).load()
+
+
+def test_empty_file_can_receive_initial_hue_configuration(tmp_path: Path) -> None:
+    path = tmp_path / "huerise.yml"
+    path.write_text("", encoding="utf-8")
+    repository = YamlConfiguration(path)
+
+    repository.save_hue(HueConfig(bridge_ip="192.0.2.10"))
+
+    assert repository.load_hue() == HueConfig(bridge_ip="192.0.2.10")
+
+
+def test_removes_temporary_file_when_atomic_replace_fails(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repository = YamlConfiguration(tmp_path / "huerise.yml")
+
+    def fail_replace(_: Path, __: Path) -> None:
+        raise OSError("disk unavailable")
+
+    monkeypatch.setattr("huerise.configuration.os.replace", fail_replace)
+
+    with pytest.raises(OSError, match="disk unavailable"):
+        repository.save_hue(HueConfig(bridge_ip="192.0.2.10"))
+
+    assert list(tmp_path.glob("*.tmp")) == []
+
+
 def test_updates_only_hue_section_atomically(tmp_path: Path) -> None:
     path = tmp_path / "huerise.yml"
     path.write_text(VALID_CONFIG, encoding="utf-8")

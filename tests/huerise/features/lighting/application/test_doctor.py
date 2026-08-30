@@ -73,3 +73,17 @@ async def test_reports_bridge_failures() -> None:
         await doctor.check()
 
     assert client.closed is True
+
+
+async def test_reports_client_initialization_failures() -> None:
+    client = FakeHueClient()
+    doctor = Doctor(
+        FakeConfiguration(CONFIG),
+        FakeHueCredentialsSource(),
+        FakeHueClientFactory(client, error=OSError("invalid transport")),
+    )
+
+    with pytest.raises(HueUnavailableError, match="initialize Hue Bridge connection"):
+        await doctor.check()
+
+    assert client.closed is False

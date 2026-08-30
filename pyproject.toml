@@ -26,10 +26,11 @@ dev = [
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
-addopts = "--cov=huerise --cov-report=term-missing"
+pythonpath = ["."]
+addopts = "--cov=src/huerise --cov-report=term-missing"
 
 [tool.coverage.run]
-source = ["huerise"]
+source = ["src/huerise"]
 omit = [
     "src/huerise/main.py",
 ]

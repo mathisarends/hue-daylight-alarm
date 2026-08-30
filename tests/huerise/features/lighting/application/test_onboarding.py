@@ -9,6 +9,7 @@ from huerise.features.lighting.application import (
     BridgeNotSelectedError,
     HueBridge,
     HueOnboarding,
+    HueUnavailableError,
     LinkButtonTimeoutError,
     OnboardingReadOnlyError,
     OnboardingState,
@@ -92,3 +93,26 @@ async def test_environment_configuration_is_ready_and_read_only(
     assert status.read_only is True
     with pytest.raises(OnboardingReadOnlyError):
         await onboarding.select("bridge-1")
+
+
+async def test_reports_discovery_failures(tmp_path: Path) -> None:
+    onboarding = make_onboarding(
+        tmp_path,
+        FakeOnboardingGateway(discovery_error=OSError("discovery offline")),
+    )
+
+    with pytest.raises(HueUnavailableError, match="Could not discover Hue Bridges"):
+        await onboarding.discover()
+
+
+async def test_reports_registration_failures(tmp_path: Path) -> None:
+    onboarding = make_onboarding(
+        tmp_path,
+        FakeOnboardingGateway(BRIDGES, registration_error=OSError("offline")),
+    )
+    await onboarding.select("bridge-2")
+
+    with pytest.raises(HueUnavailableError, match="Could not register with Hue Bridge"):
+        await onboarding.register()
+
+    assert onboarding.status().state is OnboardingState.LINK_BUTTON_REQUIRED
