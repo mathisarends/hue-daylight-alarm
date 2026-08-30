@@ -1,90 +1,11 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import Self
 from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
-from huerise.features.devices.application import (
-    DEMO_DURATION,
-    AudioOutputStatus,
-    SonosSpeakerStatus,
-    SunriseDemo,
-)
-from huerise.features.devices.application.sound_service import PREVIEW_VOLUME
-from huerise.features.devices.domain import (
-    AudioOutput,
-    Room,
-    Sound,
-    SoundCategory,
-    SunriseRamp,
-)
-
-
-class SoundRead(BaseModel):
-    """A sound as an alarm profile refers to it."""
-
-    id: UUID = Field(description="Store this UUID in a profile.")
-    name: str
-    category: SoundCategory
-    created_at: datetime
-
-    @classmethod
-    def from_domain(cls, sound: Sound) -> Self:
-        return cls(
-            id=sound.id,
-            name=sound.name,
-            category=sound.category,
-            created_at=sound.created_at,
-        )
-
-
-class SoundPreviewRequest(BaseModel):
-    sound_id: UUID
-    volume: int = Field(default=PREVIEW_VOLUME, ge=0, le=100)
-
-
-class VolumeRequest(BaseModel):
-    volume: int = Field(ge=0, le=100)
-
-
-class AudioOutputRead(BaseModel):
-    """The device sounds are currently played on."""
-
-    active: AudioOutput
-    available: list[AudioOutput]
-
-    @classmethod
-    def from_domain(cls, status: AudioOutputStatus) -> Self:
-        return cls(active=status.active, available=list(status.available))
-
-
-class AudioOutputRequest(BaseModel):
-    output: AudioOutput = Field(description="The output to play on from now on.")
-
-
-class SonosSpeakerRead(BaseModel):
-    id: str = Field(description="Stable Sonos device UID used for selection.")
-    name: str
-    ip_address: str
-    group_id: str | None
-    is_coordinator: bool
-    selected: bool
-
-    @classmethod
-    def from_domain(cls, status: SonosSpeakerStatus) -> Self:
-        speaker = status.speaker
-        return cls(
-            id=speaker.id,
-            name=speaker.name,
-            ip_address=speaker.ip_address,
-            group_id=speaker.group_id,
-            is_coordinator=speaker.is_coordinator,
-            selected=status.selected,
-        )
-
-
-class SonosSpeakerRequest(BaseModel):
-    speaker_id: str = Field(min_length=1, description="Sonos device UID to select.")
+from huerise.features.devices.application import DEMO_DURATION, SunriseDemo
+from huerise.features.devices.domain import Room, SunriseRamp
 
 
 class SceneRead(BaseModel):

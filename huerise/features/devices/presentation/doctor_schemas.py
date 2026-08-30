@@ -11,15 +11,11 @@ class DoctorCheckRead(BaseModel):
 
 class DoctorRead(BaseModel):
     configured: bool
-    sonos_speaker: DoctorCheckRead
     hue_bridge: DoctorCheckRead
 
     @classmethod
     def from_domain(cls, status: DoctorStatus) -> Self:
         return cls(
             configured=status.configured,
-            sonos_speaker=DoctorCheckRead(
-                configured=status.sonos_speaker.configured
-            ),
             hue_bridge=DoctorCheckRead(configured=status.hue_bridge.configured),
         )

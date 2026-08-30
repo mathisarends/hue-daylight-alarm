@@ -2,20 +2,16 @@ from huerise.presentation import Feature
 
 from .infrastructure import DevicesProvider
 from .presentation import (
-    audio_output_router,
     doctor_router,
     hue_router,
     register_device_exception_handlers,
     scene_router,
-    sound_router,
 )
 
 feature = Feature(
     name="devices",
     routers=[
-        sound_router,
         scene_router,
-        audio_output_router,
         hue_router,
         doctor_router,
     ],

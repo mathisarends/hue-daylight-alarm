@@ -1,10 +1,7 @@
-from typing import Annotated
-
-from pydantic import Field, SecretStr, field_validator, model_validator
-from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
+from pydantic import SecretStr, model_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from huerise.features.devices.application.ports import HueEnvironmentOverride
-from huerise.features.devices.domain import AudioOutput
 
 
 class HueEnvironment(BaseSettings, HueEnvironmentOverride):
@@ -29,60 +26,3 @@ class HueEnvironment(BaseSettings, HueEnvironmentOverride):
     @property
     def configured(self) -> bool:
         return self.app_key is not None and self.bridge_ip is not None
-class AudioSettings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        env_prefix="AUDIO_",
-        extra="ignore",
-    )
-
-    backends: Annotated[tuple[AudioOutput, ...], NoDecode] = (AudioOutput.LOCAL,)
-    """Backends constructed by the composition root: local, sonos, or all."""
-
-    default_output: AudioOutput | None = None
-    """Initially active output. A single configured backend selects itself."""
-
-    @field_validator("backends", mode="before")
-    @classmethod
-    def parse_backends(cls, value: object) -> object:
-        if not isinstance(value, str):
-            return value
-        if value.strip().lower() == "all":
-            return (AudioOutput.LOCAL, AudioOutput.SONOS)
-        return (value.strip(),) if value.strip() else ()
-
-    @field_validator("backends")
-    @classmethod
-    def require_backends(
-        cls, value: tuple[AudioOutput, ...]
-    ) -> tuple[AudioOutput, ...]:
-        if not value:
-            raise ValueError("configure at least one audio backend")
-        return tuple(dict.fromkeys(value))
-
-    @property
-    def initial_output(self) -> AudioOutput:
-        return self.default_output or self.backends[0]
-
-
-class SonosSettings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        env_prefix="SONOS_",
-        extra="ignore",
-    )
-
-    speaker_name: str | None = None
-    """Speaker to play on. Without one, discovery picks the first coordinator."""
-
-    ip_address: str | None = None
-    """Skips SSDP discovery, which multicast-blocking networks may swallow."""
-
-    discovery_timeout: float = Field(default=5.0, gt=0)
-
-    @field_validator("speaker_name", "ip_address", mode="before")
-    @classmethod
-    def empty_string_is_unset(cls, value: object) -> object:
-        return None if isinstance(value, str) and not value.strip() else value

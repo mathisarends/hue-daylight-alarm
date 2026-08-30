@@ -2,7 +2,6 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from huerise.features.devices.domain import (
-    AudioOutputUnavailableError,
     HueBridgeNotFoundError,
     HueBridgeNotSelectedError,
     HueDiscoveryError,
@@ -12,14 +11,11 @@ from huerise.features.devices.domain import (
     HueUnavailableError,
     RoomNotFoundError,
     SceneNotFoundError,
-    SoundNotFoundError,
 )
 
 _HANDLERS: list[tuple[type[Exception], int, str]] = [
-    (SoundNotFoundError, 404, "Sound not found"),
     (RoomNotFoundError, 404, "Room not found"),
     (SceneNotFoundError, 404, "Scene not found"),
-    (AudioOutputUnavailableError, 503, "Audio output unavailable"),
     (HueBridgeNotFoundError, 404, "Hue Bridge not found"),
     (HueBridgeNotSelectedError, 409, "Hue Bridge not selected"),
     (HueEnvironmentOverrideError, 409, "Hue is environment-controlled"),
