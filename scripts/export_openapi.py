@@ -7,7 +7,9 @@ OUTPUT = Path(__file__).resolve().parent.parent / "specs" / "openapi.json"
 
 
 def main() -> None:
-    OUTPUT.write_text(json.dumps(app.openapi(), indent=2) + "\n", encoding="utf-8")
+    OUTPUT.write_text(
+        json.dumps(app.openapi(), indent=2) + "\n", encoding="utf-8", newline="\n"
+    )
     print(f"Wrote {OUTPUT}")
 
 
