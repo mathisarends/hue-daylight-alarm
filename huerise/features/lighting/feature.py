@@ -1,10 +1,10 @@
 from huerise.presentation import Feature
 
-from .provider import LightingProvider
-from .router import router
+from .infrastructure import LightingProvider
+from .presentation import doctor_router, hue_router, scene_router
 
 feature = Feature(
     name="lighting",
-    routers=[router],
+    routers=[doctor_router, scene_router, hue_router],
     providers=[LightingProvider],
 )

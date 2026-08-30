@@ -3,10 +3,8 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Protocol
 
-from hueify.onboarding import discover_bridges, register_app_key
-
 from huerise.configuration import HueConfig, HueEnvironment, YamlConfiguration
-from huerise.features.lighting.hue import HueUnavailableError
+from huerise.features.lighting.application.models import HueUnavailableError
 
 
 class OnboardingState(StrEnum):
@@ -57,17 +55,6 @@ class OnboardingGateway(Protocol):
     async def discover(self) -> tuple[HueBridge, ...]: ...
 
     async def register(self, bridge_ip: str) -> str: ...
-
-
-class HueifyOnboarding:
-    async def discover(self) -> tuple[HueBridge, ...]:
-        return tuple(
-            HueBridge(item.id, item.internalipaddress)
-            for item in await discover_bridges()
-        )
-
-    async def register(self, bridge_ip: str) -> str:
-        return await register_app_key(bridge_ip, device_type="huerise#backend")
 
 
 class HueOnboarding:

@@ -1,60 +1,20 @@
-from dataclasses import dataclass
-from typing import Protocol
 from uuid import UUID
 
 from hueify import Hueify
+from hueify.onboarding import discover_bridges, register_app_key
 
 from huerise.configuration import HueEnvironment, YamlConfiguration
-
-
-class HueUnavailableError(Exception):
-    pass
-
-
-class SceneNotFoundError(Exception):
-    def __init__(self, scene_id: UUID, room_id: UUID | None = None) -> None:
-        detail = f" in room {room_id}" if room_id is not None else ""
-        super().__init__(f"Hue scene not found{detail}: {scene_id}")
-        self.scene_id = scene_id
-
-
-class RoomNotFoundError(Exception):
-    def __init__(self, room_id: UUID) -> None:
-        super().__init__(f"Hue room not found: {room_id}")
-        self.room_id = room_id
-
-
-@dataclass(frozen=True, slots=True)
-class HueCredentials:
-    bridge_ip: str
-    app_key: str
-
-
-@dataclass(frozen=True, slots=True)
-class Scene:
-    id: UUID
-    name: str
-
-
-@dataclass(frozen=True, slots=True)
-class Room:
-    id: UUID
-    name: str
-    scenes: tuple[Scene, ...]
-
-
-class HueClient(Protocol):
-    async def list_rooms(self) -> list[Room]: ...
-
-    async def activate_scene(self, scene_id: UUID, *, brightness: float) -> None: ...
-
-    async def set_brightness(self, room_id: UUID, brightness: float) -> None: ...
-
-    async def close(self) -> None: ...
-
-
-class HueClientFactory(Protocol):
-    def create(self, credentials: HueCredentials) -> HueClient: ...
+from huerise.features.lighting.application.models import (
+    HueClient,
+    HueCredentials,
+    HueUnavailableError,
+    Room,
+    Scene,
+)
+from huerise.features.lighting.application.onboarding import (
+    HueBridge,
+    OnboardingGateway,
+)
 
 
 class HueCredentialsProvider:
@@ -112,21 +72,12 @@ class HueifyClient:
         await self._client.close()
 
 
-def room_for_scene(
-    rooms: list[Room], scene_id: UUID, *, room_id: UUID | None = None
-) -> Room:
-    if room_id is not None:
-        room = next((room for room in rooms if room.id == room_id), None)
-        if room is None:
-            raise RoomNotFoundError(room_id)
-        if not any(scene.id == scene_id for scene in room.scenes):
-            raise SceneNotFoundError(scene_id, room_id)
-        return room
+class HueifyOnboarding(OnboardingGateway):
+    async def discover(self) -> tuple[HueBridge, ...]:
+        return tuple(
+            HueBridge(item.id, item.internalipaddress)
+            for item in await discover_bridges()
+        )
 
-    room = next(
-        (item for item in rooms if any(scene.id == scene_id for scene in item.scenes)),
-        None,
-    )
-    if room is None:
-        raise SceneNotFoundError(scene_id)
-    return room
+    async def register(self, bridge_ip: str) -> str:
+        return await register_app_key(bridge_ip, device_type="huerise#backend")

@@ -1,8 +1,9 @@
 from dishka import Provider, Scope, provide
 
 from huerise.configuration import YamlConfiguration
-from huerise.features.daylight_alarm.service import DaylightAlarm
-from huerise.features.lighting.hue import HueClientFactory, HueCredentialsProvider
+from huerise.features.daylight_alarm.application import DaylightAlarm
+from huerise.features.lighting.application import HueClientFactory
+from huerise.features.lighting.infrastructure import HueCredentialsProvider
 
 
 class DaylightAlarmProvider(Provider):

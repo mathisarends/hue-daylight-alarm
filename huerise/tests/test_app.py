@@ -9,18 +9,16 @@ from pydantic import SecretStr
 
 from huerise.app import create_app
 from huerise.configuration import APISettings, HueEnvironment, YamlConfiguration
-from huerise.features.daylight_alarm.provider import DaylightAlarmProvider
-from huerise.features.lighting.hue import (
+from huerise.features.daylight_alarm.infrastructure import DaylightAlarmProvider
+from huerise.features.lighting.application import (
+    HueBridge,
     HueClientFactory,
     HueCredentials,
+    OnboardingGateway,
     Room,
     Scene,
 )
-from huerise.features.lighting.onboarding import (
-    HueBridge,
-    OnboardingGateway,
-)
-from huerise.features.lighting.provider import LightingProvider
+from huerise.features.lighting.infrastructure import LightingProvider
 
 API_KEY = "test-api-key"
 AUTH = {"X-API-Key": API_KEY}
@@ -130,6 +128,27 @@ def test_health_is_public(client: TestClient) -> None:
     assert response.json() == {"status": "ok"}
 
 
+def test_operation_ids_are_explicit_and_stable(client: TestClient) -> None:
+    operations = {
+        operation["operationId"]
+        for path in client.app.openapi()["paths"].values()
+        for operation in path.values()
+    }
+
+    assert operations == {
+        "doctor",
+        "getHueBridge",
+        "health",
+        "listHueBridges",
+        "listRooms",
+        "listScenes",
+        "registerHueBridge",
+        "selectHueBridge",
+        "startDaylightAlarm",
+        "stopDaylightAlarm",
+    }
+
+
 @pytest.mark.parametrize("headers", [{}, {"X-API-Key": "wrong"}])
 def test_protected_routes_require_api_key(
     client: TestClient, headers: dict[str, str]
@@ -143,6 +162,7 @@ def test_protected_routes_require_api_key(
 def test_exposes_doctor_and_rooms(client: TestClient) -> None:
     doctor = client.get("/doctor", headers=AUTH)
     rooms = client.get("/rooms", headers=AUTH)
+    scenes = client.get("/scenes", headers=AUTH)
 
     assert doctor.status_code == 200
     assert [check["name"] for check in doctor.json()["checks"]] == [
@@ -158,6 +178,14 @@ def test_exposes_doctor_and_rooms(client: TestClient) -> None:
             "scenes": [{"id": str(SCENE_ID), "name": "Sunrise"}],
         }
     ]
+    assert scenes.json() == [
+        {
+            "id": str(SCENE_ID),
+            "name": "Sunrise",
+            "room_id": str(ROOM_ID),
+            "room_name": "Bedroom",
+        }
+    ]
 
 
 def test_starts_and_stops_daylight_alarm(
@@ -167,15 +195,18 @@ def test_starts_and_stops_daylight_alarm(
     stopped = client.post("/daylight-alarm/stop", headers=AUTH)
 
     assert started.status_code == 202
+    assert started.json() == {"status": "started", "duration_seconds": 1800}
     assert stopped.status_code == 204
     assert hue_client.commands == [("activate", SCENE_ID, 1)]
 
 
-def test_starts_and_stops_ten_second_demo(client: TestClient) -> None:
-    path = f"/rooms/{ROOM_ID}/scenes/{SCENE_ID}/demo"
-
-    started = client.post(path, headers=AUTH)
-    stopped = client.delete(path, headers=AUTH)
+def test_overrides_duration_for_one_run(client: TestClient) -> None:
+    started = client.post(
+        "/daylight-alarm/start",
+        headers=AUTH,
+        json={"duration_seconds": 10},
+    )
+    stopped = client.post("/daylight-alarm/stop", headers=AUTH)
 
     assert started.status_code == 202
     assert started.json() == {"status": "started", "duration_seconds": 10}

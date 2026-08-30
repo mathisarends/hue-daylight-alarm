@@ -1,17 +1,19 @@
 from contextlib import suppress
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, Protocol
 
-from huerise.features.daylight_alarm.service import (
-    ConfigurationSource,
-    CredentialsSource,
-)
-from huerise.features.lighting.hue import (
+from huerise.configuration import HueriseConfig
+from huerise.features.lighting.application.models import (
     HueClientFactory,
+    HueCredentialsSource,
     HueUnavailableError,
     SceneNotFoundError,
     room_for_scene,
 )
+
+
+class ConfigurationSource(Protocol):
+    def load(self) -> HueriseConfig: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -30,7 +32,7 @@ class Doctor:
     def __init__(
         self,
         configuration: ConfigurationSource,
-        credentials: CredentialsSource,
+        credentials: HueCredentialsSource,
         clients: HueClientFactory,
     ) -> None:
         self._configuration = configuration

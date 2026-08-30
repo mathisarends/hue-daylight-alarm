@@ -9,20 +9,17 @@ from pydantic import BaseModel
 
 from huerise.configuration import ConfigurationError
 from huerise.features import FEATURES
-from huerise.features.daylight_alarm.service import (
+from huerise.features.daylight_alarm.application import (
     AlarmAlreadyRunningError,
     DaylightAlarm,
 )
-from huerise.features.lighting.hue import (
-    HueUnavailableError,
-    RoomNotFoundError,
-    SceneNotFoundError,
-)
-from huerise.features.lighting.onboarding import (
+from huerise.features.lighting.application import (
     BridgeNotFoundError,
     BridgeNotSelectedError,
+    HueUnavailableError,
     LinkButtonTimeoutError,
     OnboardingReadOnlyError,
+    SceneNotFoundError,
 )
 from huerise.providers import CoreProvider
 
@@ -60,7 +57,12 @@ def create_app(container: AsyncContainer | None = None) -> FastAPI:
     setup_dishka(container, app=app)
     _install_exception_handlers(app)
 
-    @app.get("/health", response_model=HealthResponse, tags=["health"])
+    @app.get(
+        "/health",
+        response_model=HealthResponse,
+        tags=["health"],
+        operation_id="health",
+    )
     async def health() -> HealthResponse:
         return HealthResponse(status="ok")
 
@@ -87,7 +89,6 @@ def _install_exception_handlers(app: FastAPI) -> None:
     _map_error(app, BridgeNotSelectedError, status.HTTP_409_CONFLICT)
     _map_error(app, LinkButtonTimeoutError, status.HTTP_409_CONFLICT)
     _map_error(app, BridgeNotFoundError, status.HTTP_404_NOT_FOUND)
-    _map_error(app, RoomNotFoundError, status.HTTP_404_NOT_FOUND)
     _map_error(app, SceneNotFoundError, status.HTTP_404_NOT_FOUND)
     _map_error(app, HueUnavailableError, status.HTTP_503_SERVICE_UNAVAILABLE)
 

@@ -4,8 +4,8 @@ from uuid import UUID
 import pytest
 
 from huerise.configuration import DaylightAlarmConfig, HueriseConfig
-from huerise.features.lighting.doctor import Doctor
-from huerise.features.lighting.hue import (
+from huerise.features.lighting.application import (
+    Doctor,
     HueCredentials,
     HueUnavailableError,
     Room,

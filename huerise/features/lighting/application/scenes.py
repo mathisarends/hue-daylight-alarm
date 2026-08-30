@@ -1,10 +1,9 @@
 from contextlib import suppress
-from uuid import UUID
 
-from huerise.features.daylight_alarm.service import DaylightAlarm
-from huerise.features.lighting.hue import (
+from huerise.features.lighting.application.models import (
+    AvailableScene,
     HueClientFactory,
-    HueCredentialsProvider,
+    HueCredentialsSource,
     HueUnavailableError,
     Room,
 )
@@ -13,13 +12,11 @@ from huerise.features.lighting.hue import (
 class SceneService:
     def __init__(
         self,
-        credentials: HueCredentialsProvider,
+        credentials: HueCredentialsSource,
         clients: HueClientFactory,
-        alarm: DaylightAlarm,
     ) -> None:
         self._credentials = credentials
         self._clients = clients
-        self._alarm = alarm
 
     async def list_rooms(self) -> list[Room]:
         try:
@@ -38,8 +35,14 @@ class SceneService:
             with suppress(Exception):
                 await client.close()
 
-    async def demo(self, room_id: UUID, scene_id: UUID) -> None:
-        await self._alarm.demo(room_id, scene_id)
-
-    async def stop_demo(self) -> None:
-        await self._alarm.stop()
+    async def list_scenes(self) -> list[AvailableScene]:
+        return [
+            AvailableScene(
+                id=scene.id,
+                name=scene.name,
+                room_id=room.id,
+                room_name=room.name,
+            )
+            for room in await self.list_rooms()
+            for scene in room.scenes
+        ]

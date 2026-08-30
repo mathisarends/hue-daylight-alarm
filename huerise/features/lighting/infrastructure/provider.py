@@ -1,19 +1,18 @@
 from dishka import Provider, Scope, provide
 
 from huerise.configuration import HueEnvironment, YamlConfiguration
-from huerise.features.daylight_alarm.service import DaylightAlarm
-from huerise.features.lighting.doctor import Doctor
-from huerise.features.lighting.hue import (
+from huerise.features.lighting.application import (
+    Doctor,
     HueClientFactory,
-    HueCredentialsProvider,
-    HueifyClientFactory,
-)
-from huerise.features.lighting.onboarding import (
-    HueifyOnboarding,
     HueOnboarding,
     OnboardingGateway,
+    SceneService,
 )
-from huerise.features.lighting.services import SceneService
+from huerise.features.lighting.infrastructure.hue import (
+    HueCredentialsProvider,
+    HueifyClientFactory,
+    HueifyOnboarding,
+)
 
 
 class LightingProvider(Provider):
@@ -58,6 +57,5 @@ class LightingProvider(Provider):
         self,
         credentials: HueCredentialsProvider,
         clients: HueClientFactory,
-        alarm: DaylightAlarm,
     ) -> SceneService:
-        return SceneService(credentials, clients, alarm)
+        return SceneService(credentials, clients)

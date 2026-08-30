@@ -1,7 +1,7 @@
 from huerise.presentation import Feature
 
-from .provider import DaylightAlarmProvider
-from .router import router
+from .infrastructure import DaylightAlarmProvider
+from .presentation import router
 
 feature = Feature(
     name="daylight_alarm",
