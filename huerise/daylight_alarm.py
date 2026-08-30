@@ -11,6 +11,7 @@ from huerise.hue import (
     HueClientFactory,
     HueCredentials,
     HueUnavailableError,
+    RoomNotFoundError,
     SceneNotFoundError,
     room_for_scene,
 )
@@ -55,14 +56,27 @@ class DaylightAlarm:
         return self._task is not None and not self._task.done()
 
     async def start(self) -> None:
+        await self._start(self._configuration.load().daylight_alarm)
+
+    async def demo(self, room_id: UUID, scene_id: UUID) -> None:
+        configured = self._configuration.load().daylight_alarm
+        demo = configured.model_copy(
+            update={"scene_id": scene_id, "duration_seconds": 10}
+        )
+        await self._start(demo, room_id=room_id)
+
+    async def _start(
+        self, config: DaylightAlarmConfig, *, room_id: UUID | None = None
+    ) -> None:
         async with self._lock:
             if self.is_running:
                 raise AlarmAlreadyRunningError("Daylight alarm is already running")
 
-            config = self._configuration.load().daylight_alarm
             client = self._clients.create(self._credentials.get())
             try:
-                room = room_for_scene(await client.list_rooms(), config.scene_id)
+                room = room_for_scene(
+                    await client.list_rooms(), config.scene_id, room_id=room_id
+                )
                 await client.activate_scene(
                     config.scene_id, brightness=config.start_brightness
                 )
@@ -70,7 +84,7 @@ class DaylightAlarm:
                 await self._close(client)
                 if isinstance(error, HueUnavailableError):
                     raise
-                if isinstance(error, SceneNotFoundError):
+                if isinstance(error, SceneNotFoundError | RoomNotFoundError):
                     raise
                 raise HueUnavailableError(
                     "Could not communicate with Hue Bridge"

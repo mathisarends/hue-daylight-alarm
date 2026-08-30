@@ -6,7 +6,13 @@ import pytest
 
 from huerise.configuration import DaylightAlarmConfig, HueriseConfig
 from huerise.daylight_alarm import AlarmAlreadyRunningError, DaylightAlarm
-from huerise.hue import HueCredentials, Room, Scene, SceneNotFoundError
+from huerise.hue import (
+    HueCredentials,
+    Room,
+    RoomNotFoundError,
+    Scene,
+    SceneNotFoundError,
+)
 
 SCENE_ID = UUID(int=1)
 ROOM_ID = UUID(int=2)
@@ -155,3 +161,37 @@ async def test_start_fails_before_changing_light_when_scene_is_missing() -> None
 
     assert client.commands == []
     assert client.closed is True
+
+
+async def test_demos_selected_scene_in_ten_seconds() -> None:
+    demo_scene_id = UUID(int=3)
+    client = StubClient(
+        [
+            Room(
+                ROOM_ID,
+                "Bedroom",
+                (Scene(SCENE_ID, "Sunrise"), Scene(demo_scene_id, "Relax")),
+            )
+        ]
+    )
+    alarm = make_alarm(client, duration=1800, sleep=immediate_sleep)
+
+    await alarm.demo(ROOM_ID, demo_scene_id)
+    assert alarm._task is not None
+    await alarm._task
+
+    assert client.commands[0] == ("activate", demo_scene_id, 10)
+    assert client.commands[-1] == ("brightness", ROOM_ID, 30)
+    assert len(client.commands) == 11
+
+
+async def test_demo_requires_scene_to_belong_to_route_room() -> None:
+    other_room = UUID(int=4)
+    client = StubClient()
+    alarm = make_alarm(client)
+
+    with pytest.raises(RoomNotFoundError):
+        await alarm.demo(other_room, SCENE_ID)
+
+    with pytest.raises(SceneNotFoundError):
+        await alarm.demo(ROOM_ID, UUID(int=5))

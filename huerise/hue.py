@@ -12,9 +12,16 @@ class HueUnavailableError(Exception):
 
 
 class SceneNotFoundError(Exception):
-    def __init__(self, scene_id: UUID) -> None:
-        super().__init__(f"Hue scene not found: {scene_id}")
+    def __init__(self, scene_id: UUID, room_id: UUID | None = None) -> None:
+        detail = f" in room {room_id}" if room_id is not None else ""
+        super().__init__(f"Hue scene not found{detail}: {scene_id}")
         self.scene_id = scene_id
+
+
+class RoomNotFoundError(Exception):
+    def __init__(self, room_id: UUID) -> None:
+        super().__init__(f"Hue room not found: {room_id}")
+        self.room_id = room_id
 
 
 @dataclass(frozen=True, slots=True)
@@ -105,9 +112,19 @@ class HueifyClient:
         await self._client.close()
 
 
-def room_for_scene(rooms: list[Room], scene_id: UUID) -> Room:
+def room_for_scene(
+    rooms: list[Room], scene_id: UUID, *, room_id: UUID | None = None
+) -> Room:
+    if room_id is not None:
+        room = next((room for room in rooms if room.id == room_id), None)
+        if room is None:
+            raise RoomNotFoundError(room_id)
+        if not any(scene.id == scene_id for scene in room.scenes):
+            raise SceneNotFoundError(scene_id, room_id)
+        return room
+
     room = next(
-        (room for room in rooms if any(scene.id == scene_id for scene in room.scenes)),
+        (item for item in rooms if any(scene.id == scene_id for scene in item.scenes)),
         None,
     )
     if room is None:
