@@ -144,6 +144,6 @@ uv run ruff format --check .
 uv run pytest
 ```
 
-The implementation is split into the `daylight_alarm` and `lighting` features.
-Dishka owns their app-scoped services and Hue adapters. The full design scope is
-documented in [`HUERISE_CONCEPT_CHANGE.md`](HUERISE_CONCEPT_CHANGE.md).
+The implementation is split into the `daylight_alarm` and `lighting` features,
+each layered into `application`, `infrastructure`, and `presentation`. Dishka
+owns their app-scoped services and Hue adapters.
