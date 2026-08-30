@@ -3,6 +3,10 @@ from fastapi import APIRouter, Depends
 
 from huerise.authentication import require_api_key
 from huerise.features.lighting.application import HueOnboarding
+from huerise.features.lighting.presentation.mappers import (
+    to_bridge_response,
+    to_onboarding_status_response,
+)
 from huerise.features.lighting.presentation.schemas import (
     BridgeResponse,
     BridgeSelectionRequest,
@@ -25,7 +29,8 @@ hue_router = APIRouter(
 async def discover_bridges(
     service: FromDishka[HueOnboarding],
 ) -> list[BridgeResponse]:
-    return [BridgeResponse.from_domain(item) for item in await service.discover()]
+    bridges = await service.discover()
+    return [to_bridge_response(bridge) for bridge in bridges]
 
 
 @hue_router.get(
@@ -36,7 +41,8 @@ async def discover_bridges(
 async def bridge_status(
     service: FromDishka[HueOnboarding],
 ) -> OnboardingStatusResponse:
-    return OnboardingStatusResponse.from_domain(service.status())
+    status = service.status()
+    return to_onboarding_status_response(status)
 
 
 @hue_router.put(
@@ -48,7 +54,8 @@ async def select_bridge(
     body: BridgeSelectionRequest,
     service: FromDishka[HueOnboarding],
 ) -> OnboardingStatusResponse:
-    return OnboardingStatusResponse.from_domain(await service.select(body.bridge_id))
+    status = await service.select(body.bridge_id)
+    return to_onboarding_status_response(status)
 
 
 @hue_router.post(
@@ -59,4 +66,5 @@ async def select_bridge(
 async def register_bridge(
     service: FromDishka[HueOnboarding],
 ) -> OnboardingStatusResponse:
-    return OnboardingStatusResponse.from_domain(await service.register())
+    status = await service.register()
+    return to_onboarding_status_response(status)

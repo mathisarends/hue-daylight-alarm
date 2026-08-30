@@ -3,6 +3,10 @@ from fastapi import APIRouter, Depends
 
 from huerise.authentication import require_api_key
 from huerise.features.lighting.application import SceneService
+from huerise.features.lighting.presentation.mappers import (
+    to_available_scene_response,
+    to_room_response,
+)
 from huerise.features.lighting.presentation.schemas import (
     AvailableSceneResponse,
     RoomResponse,
@@ -20,8 +24,11 @@ scene_router = APIRouter(
     response_model=list[RoomResponse],
     operation_id="listRooms",
 )
-async def rooms(service: FromDishka[SceneService]) -> list[RoomResponse]:
-    return [RoomResponse.from_domain(room) for room in await service.list_rooms()]
+async def rooms(
+    service: FromDishka[SceneService],
+) -> list[RoomResponse]:
+    rooms = await service.list_rooms()
+    return [to_room_response(room) for room in rooms]
 
 
 @scene_router.get(
@@ -32,7 +39,5 @@ async def rooms(service: FromDishka[SceneService]) -> list[RoomResponse]:
 async def scenes(
     service: FromDishka[SceneService],
 ) -> list[AvailableSceneResponse]:
-    return [
-        AvailableSceneResponse.from_domain(scene)
-        for scene in await service.list_scenes()
-    ]
+    scenes = await service.list_scenes()
+    return [to_available_scene_response(scene) for scene in scenes]
