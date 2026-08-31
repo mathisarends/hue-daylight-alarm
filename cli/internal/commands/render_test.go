@@ -24,8 +24,8 @@ func TestBridgeStatusPointsAtTheNextStep(t *testing.T) {
 	}))
 	defer server.Close()
 
-	stdout, stderr, exitCode := runTestCLI(t, server.URL, "hue", "bridge", "status")
-	if exitCode != 0 || !strings.Contains(stdout, "huerise hue bridge register") {
+	stdout, stderr, exitCode := runTestCLI(t, server.URL, "bridge", "status")
+	if exitCode != 0 || !strings.Contains(stdout, "huerise bridge register") {
 		t.Fatalf("exit = %d, stdout = %s, stderr = %s", exitCode, stdout, stderr)
 	}
 }
@@ -38,7 +38,7 @@ func TestEmptyBridgeListExplainsWhy(t *testing.T) {
 	}))
 	defer server.Close()
 
-	stdout, stderr, exitCode := runTestCLI(t, server.URL, "hue", "bridge", "list")
+	stdout, stderr, exitCode := runTestCLI(t, server.URL, "bridge", "list")
 	if exitCode != 0 || !strings.Contains(stdout, "No Hue Bridges found") || !strings.Contains(stdout, "same network") {
 		t.Fatalf("exit = %d, stdout = %s, stderr = %s", exitCode, stdout, stderr)
 	}

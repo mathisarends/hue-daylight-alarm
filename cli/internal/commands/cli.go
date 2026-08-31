@@ -17,8 +17,8 @@ const description = `Control the Huerise daylight alarm from the terminal.
 
 Every example below is a full command, including the "huerise" itself.
 
-First run: "huerise hue bridge list", then "huerise hue bridge select <id>",
-then press the round button on the bridge and run "huerise hue bridge register".
+First run: "huerise bridge list", then "huerise bridge select <id>",
+then press the round button on the bridge and run "huerise bridge register".
 
 Then "huerise configuration set" asks which room and scene to wake up to,
 "huerise doctor" confirms everything the alarm needs is in place, and
@@ -38,9 +38,10 @@ type commandTree struct {
 	Stop          stopCommand          `cmd:"" help:"Stop a running daylight alarm."`
 	Scenes        scenesCommand        `cmd:"" help:"List every Hue scene."`
 	Configuration configurationCommand `cmd:"" help:"Read or save the daylight alarm configuration."`
-	Hue           hueCommand           `cmd:"" help:"Configure the Hue Bridge."`
-	Doctor        doctorCommand        `cmd:"" help:"Check device configuration."`
-	Version       versionCommand       `cmd:"" help:"Print version information."`
+	Bridge        hueBridgeCommand     `cmd:"" help:"Discover, select, and register the Hue Bridge."`
+
+	Doctor  doctorCommand  `cmd:"" help:"Check device configuration."`
+	Version versionCommand `cmd:"" help:"Print version information."`
 }
 
 type versionCommand struct{}

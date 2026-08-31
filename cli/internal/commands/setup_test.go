@@ -69,7 +69,7 @@ func TestHueBridgeList(t *testing.T) {
 	}))
 	defer server.Close()
 
-	stdout, stderr, exitCode := runTestCLI(t, server.URL, "hue", "bridge", "list")
+	stdout, stderr, exitCode := runTestCLI(t, server.URL, "bridge", "list")
 	if exitCode != 0 || !strings.Contains(stdout, "bridge-1") || !strings.Contains(stdout, "192.0.2.10") {
 		t.Fatalf("exit = %d, stdout = %s, stderr = %s", exitCode, stdout, stderr)
 	}
@@ -86,7 +86,7 @@ func TestHueBridgeStatus(t *testing.T) {
 	}))
 	defer server.Close()
 
-	stdout, stderr, exitCode := runTestCLI(t, server.URL, "hue", "bridge", "status")
+	stdout, stderr, exitCode := runTestCLI(t, server.URL, "bridge", "status")
 	if exitCode != 0 || !strings.Contains(stdout, "bridge-1") || !strings.Contains(stdout, "ready") {
 		t.Fatalf("exit = %d, stdout = %s, stderr = %s", exitCode, stdout, stderr)
 	}
@@ -110,7 +110,7 @@ func TestHueBridgeSelect(t *testing.T) {
 	}))
 	defer server.Close()
 
-	stdout, stderr, exitCode := runTestCLI(t, server.URL, "hue", "bridge", "select", "bridge-2", "--json", "--compact")
+	stdout, stderr, exitCode := runTestCLI(t, server.URL, "bridge", "select", "bridge-2", "--json", "--compact")
 	if exitCode != 0 || !strings.Contains(stdout, `"bridge_id":"bridge-2"`) {
 		t.Fatalf("exit = %d, stdout = %s, stderr = %s", exitCode, stdout, stderr)
 	}
@@ -127,7 +127,7 @@ func TestHueBridgeRegister(t *testing.T) {
 	}))
 	defer server.Close()
 
-	stdout, stderr, exitCode := runTestCLI(t, server.URL, "hue", "bridge", "register", "--json", "--compact")
+	stdout, stderr, exitCode := runTestCLI(t, server.URL, "bridge", "register", "--json", "--compact")
 	if exitCode != 0 || !strings.Contains(stdout, `"state":"ready"`) {
 		t.Fatalf("exit = %d, stdout = %s, stderr = %s", exitCode, stdout, stderr)
 	}

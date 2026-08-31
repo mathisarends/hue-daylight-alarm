@@ -6,10 +6,6 @@ import (
 	"github.com/mathisarends/huerise/cli/internal/client"
 )
 
-type hueCommand struct {
-	Bridge hueBridgeCommand `cmd:"" help:"Discover, select, and register a Hue Bridge."`
-}
-
 type hueBridgeCommand struct {
 	List     hueBridgeListCommand     `cmd:"" help:"List discovered Hue Bridges."`
 	Status   hueBridgeStatusCommand   `cmd:"" help:"Show the effective Hue Bridge configuration."`
@@ -22,7 +18,7 @@ type hueBridgeListCommand struct{}
 type hueBridgeStatusCommand struct{}
 
 type hueBridgeSelectCommand struct {
-	BridgeID string `arg:"" name:"bridge-id" help:"Stable bridge ID from hue bridge list."`
+	BridgeID string `arg:"" name:"bridge-id" help:"Stable bridge ID from huerise bridge list."`
 }
 
 type hueBridgeRegisterCommand struct{}
@@ -52,7 +48,7 @@ func (hueBridgeListCommand) Run(runtime *Runtime) error {
 		if len(bridges) == 0 {
 			return nil
 		}
-		return writeNext(runtime.stdout, "huerise hue bridge select <id>")
+		return writeNext(runtime.stdout, "huerise bridge select <id>")
 	})
 }
 
@@ -106,11 +102,11 @@ func writeOnboardingStatus(runtime *Runtime, status *client.OnboardingStatusResp
 func onboardingNextSteps(status *client.OnboardingStatusResponse) []string {
 	switch status.State {
 	case client.OnboardingStateNotSelected:
-		return []string{"huerise hue bridge list", "huerise hue bridge select <id>"}
+		return []string{"huerise bridge list", "huerise bridge select <id>"}
 	case client.OnboardingStateLinkButtonRequired:
 		return []string{
 			"press the round button on the bridge, then run:",
-			"huerise hue bridge register",
+			"huerise bridge register",
 		}
 	case client.OnboardingStateReady:
 		return []string{"huerise scenes", "huerise doctor"}
