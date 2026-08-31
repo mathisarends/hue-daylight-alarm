@@ -15,10 +15,14 @@ var Version = "dev"
 
 const description = `Control the Huerise daylight alarm from the terminal.
 
-First run: "hue bridge list", then "hue bridge select <id>", then press the round
-button on the bridge and run "hue bridge register". "doctor" confirms that
-everything the alarm needs is in place, "scenes" shows what you can wake up to,
-and "start" runs it.
+Every example below is a full command, including the "huerise" itself.
+
+First run: "huerise hue bridge list", then "huerise hue bridge select <id>",
+then press the round button on the bridge and run "huerise hue bridge register".
+
+Then "huerise configuration set" asks which room and scene to wake up to,
+"huerise doctor" confirms everything the alarm needs is in place, and
+"huerise start --watch" runs it and shows the fade.
 
 Every command prints a readable summary, or stable JSON with --json.`
 
