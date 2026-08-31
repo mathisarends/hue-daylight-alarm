@@ -52,8 +52,6 @@ async def set_configuration(
     return await configuration.save(
         room_id=body.room_id,
         scene_id=body.scene_id,
-        start_brightness=body.start_brightness,
-        end_brightness=body.end_brightness,
         duration_seconds=body.duration_seconds,
         after_alarm_room_id=after_alarm.room_id if after_alarm is not None else None,
         after_alarm_scene_id=after_alarm.scene_id if after_alarm is not None else None,

@@ -31,7 +31,7 @@ SCENE_ID = UUID(int=1)
 ROOM_ID = UUID(int=2)
 
 
-DEFAULT_ROOMS = [Room(ROOM_ID, "Bedroom", (Scene(SCENE_ID, "Sunrise"),))]
+DEFAULT_ROOMS = [Room(ROOM_ID, "Bedroom", (Scene(SCENE_ID, "Sunrise", 30),))]
 
 
 def make_alarm(
@@ -41,8 +41,6 @@ def make_alarm(
         daylight_alarm=DaylightAlarmConfig(
             room=NamedResourceConfig(id=ROOM_ID, name="Bedroom"),
             scene=NamedResourceConfig(id=SCENE_ID, name="Sunrise"),
-            start_brightness=10,
-            end_brightness=30,
             duration_seconds=duration,
         )
     )
@@ -59,7 +57,7 @@ async def immediate_sleep(_: float) -> None:
     await asyncio.sleep(0)
 
 
-async def test_runs_the_configured_ramp() -> None:
+async def test_runs_from_one_percent_to_the_scenes_brightness() -> None:
     client = FakeHueClient(DEFAULT_ROOMS)
     alarm = make_alarm(client, sleep=immediate_sleep)
 
@@ -68,8 +66,8 @@ async def test_runs_the_configured_ramp() -> None:
     await alarm._task
 
     assert client.commands == [
-        ("activate", SCENE_ID, 10),
-        ("brightness", ROOM_ID, 20),
+        ("activate", SCENE_ID, 1),
+        ("brightness", ROOM_ID, 15.5),
         ("brightness", ROOM_ID, 30),
     ]
     assert client.closed is True
@@ -95,8 +93,8 @@ async def test_stop_leaves_the_light_at_its_current_brightness() -> None:
     await alarm.stop()
 
     assert client.commands == [
-        ("activate", SCENE_ID, 10),
-        ("brightness", ROOM_ID, pytest.approx(16.67, abs=0.01)),
+        ("activate", SCENE_ID, 1),
+        ("brightness", ROOM_ID, pytest.approx(10.67, abs=0.01)),
     ]
     assert client.closed is True
     assert alarm.is_running is False
@@ -135,6 +133,17 @@ async def test_start_fails_before_changing_light_when_scene_is_missing() -> None
     assert client.closed is True
 
 
+async def test_start_fails_before_changing_light_when_scene_has_no_brightness() -> None:
+    client = FakeHueClient([Room(ROOM_ID, "Bedroom", (Scene(SCENE_ID, "Sunrise"),))])
+    alarm = make_alarm(client)
+
+    with pytest.raises(HueUnavailableError, match="scene has no brightness"):
+        await alarm.start()
+
+    assert client.commands == []
+    assert client.closed is True
+
+
 async def test_overrides_only_the_duration_for_one_run() -> None:
     client = FakeHueClient(DEFAULT_ROOMS)
     alarm = make_alarm(client, duration=1800, sleep=immediate_sleep)
@@ -144,7 +153,7 @@ async def test_overrides_only_the_duration_for_one_run() -> None:
     await alarm._task
 
     assert duration == 10
-    assert client.commands[0] == ("activate", SCENE_ID, 10)
+    assert client.commands[0] == ("activate", SCENE_ID, 1)
     assert client.commands[-1] == ("brightness", ROOM_ID, 30)
     assert len(client.commands) == 11
 
@@ -155,8 +164,6 @@ async def test_activates_the_optional_after_alarm_scene() -> None:
         daylight_alarm=DaylightAlarmConfig(
             room=NamedResourceConfig(id=ROOM_ID, name="Bedroom"),
             scene=NamedResourceConfig(id=SCENE_ID, name="Sunrise"),
-            start_brightness=10,
-            end_brightness=30,
             duration_seconds=2,
             after_alarm=AfterAlarmConfig(
                 room=NamedResourceConfig(id=ROOM_ID, name="Bedroom"),
@@ -198,8 +205,6 @@ async def test_reports_client_initialization_failures(
                 daylight_alarm=DaylightAlarmConfig(
                     room=NamedResourceConfig(id=ROOM_ID, name="Bedroom"),
                     scene=NamedResourceConfig(id=SCENE_ID, name="Sunrise"),
-                    start_brightness=10,
-                    end_brightness=30,
                     duration_seconds=2,
                 )
             )

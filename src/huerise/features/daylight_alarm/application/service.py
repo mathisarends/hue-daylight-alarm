@@ -16,6 +16,7 @@ from huerise.features.lighting.application import (
 )
 
 logger = logging.getLogger(__name__)
+START_BRIGHTNESS = 1.0
 
 type Sleep = Callable[[float], Awaitable[None]]
 
@@ -73,10 +74,17 @@ class DaylightAlarm:
             try:
                 rooms = await client.list_rooms()
                 room = room_for_scene(rooms, config.scene.id)
+                scene = next(
+                    scene for scene in room.scenes if scene.id == config.scene.id
+                )
+                if scene.brightness is None:
+                    raise HueUnavailableError(
+                        "The configured Hue scene has no brightness"
+                    )
                 if config.after_alarm is not None:
                     room_for_scene(rooms, config.after_alarm.scene.id)
                 await client.activate_scene(
-                    config.scene.id, brightness=config.start_brightness
+                    config.scene.id, brightness=START_BRIGHTNESS
                 )
             except Exception as error:
                 await self._close(client)
@@ -88,7 +96,9 @@ class DaylightAlarm:
                     "Could not communicate with Hue Bridge"
                 ) from error
 
-            task = asyncio.create_task(self._run(client, room.id, config))
+            task = asyncio.create_task(
+                self._run(client, room.id, scene.brightness, config)
+            )
             self._task = task
             task.add_done_callback(self._finished)
 
@@ -103,7 +113,11 @@ class DaylightAlarm:
             await task
 
     async def _run(
-        self, client: HueClient, room_id: UUID, config: DaylightAlarmConfig
+        self,
+        client: HueClient,
+        room_id: UUID,
+        end_brightness: float,
+        config: DaylightAlarmConfig,
     ) -> None:
         elapsed = 0.0
         try:
@@ -113,8 +127,7 @@ class DaylightAlarm:
                 elapsed += delay
                 progress = elapsed / config.duration_seconds
                 brightness = (
-                    config.start_brightness
-                    + (config.end_brightness - config.start_brightness) * progress
+                    START_BRIGHTNESS + (end_brightness - START_BRIGHTNESS) * progress
                 )
                 await client.set_brightness(room_id, brightness)
             if config.after_alarm is not None:

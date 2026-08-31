@@ -1,7 +1,7 @@
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field
 
 
 class StartRequest(BaseModel):
@@ -30,8 +30,6 @@ class AfterAlarmConfigurationResponse(BaseModel):
 class DaylightAlarmConfigurationResponse(BaseModel):
     room: NamedResourceResponse
     scene: NamedResourceResponse
-    start_brightness: int
-    end_brightness: int
     duration_seconds: int
     after_alarm: AfterAlarmConfigurationResponse | None = None
 
@@ -46,13 +44,5 @@ class AfterAlarmConfigurationRequest(BaseModel):
 class DaylightAlarmConfigurationRequest(BaseModel):
     room_id: UUID
     scene_id: UUID
-    start_brightness: int = Field(ge=1, le=100)
-    end_brightness: int = Field(ge=1, le=100)
     duration_seconds: int = Field(ge=1)
     after_alarm: AfterAlarmConfigurationRequest | None = None
-
-    @model_validator(mode="after")
-    def require_increasing_brightness(self) -> DaylightAlarmConfigurationRequest:
-        if self.end_brightness <= self.start_brightness:
-            raise ValueError("end_brightness must be greater than start_brightness")
-        return self

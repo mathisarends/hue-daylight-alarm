@@ -29,8 +29,6 @@ CONFIG = HueriseConfig(
     daylight_alarm=DaylightAlarmConfig(
         room=NamedResourceConfig(id=ROOM_ID, name="Bedroom"),
         scene=NamedResourceConfig(id=SCENE_ID, name="Sunrise"),
-        start_brightness=1,
-        end_brightness=100,
         duration_seconds=1800,
     )
 )

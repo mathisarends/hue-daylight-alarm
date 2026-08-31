@@ -1,7 +1,7 @@
 import os
 import tempfile
 from pathlib import Path
-from typing import Any, Self
+from typing import Any
 from uuid import UUID
 
 import yaml
@@ -13,7 +13,6 @@ from pydantic import (
     StrictInt,
     StrictStr,
     ValidationError,
-    model_validator,
 )
 
 
@@ -50,16 +49,8 @@ class DaylightAlarmConfig(BaseModel):
 
     room: NamedResourceConfig
     scene: NamedResourceConfig
-    start_brightness: StrictInt = Field(ge=1, le=100)
-    end_brightness: StrictInt = Field(ge=1, le=100)
     duration_seconds: StrictInt = Field(gt=0)
     after_alarm: AfterAlarmConfig | None = None
-
-    @model_validator(mode="after")
-    def require_increasing_brightness(self) -> Self:
-        if self.end_brightness <= self.start_brightness:
-            raise ValueError("end_brightness must be greater than start_brightness")
-        return self
 
 
 class HueConfig(BaseModel):

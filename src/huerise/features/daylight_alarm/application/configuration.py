@@ -30,8 +30,6 @@ class DaylightAlarmConfiguration:
         *,
         room_id: UUID,
         scene_id: UUID,
-        start_brightness: int,
-        end_brightness: int,
         duration_seconds: int,
         after_alarm_room_id: UUID | None = None,
         after_alarm_scene_id: UUID | None = None,
@@ -63,8 +61,6 @@ class DaylightAlarmConfiguration:
         alarm = DaylightAlarmConfig(
             room=NamedResourceConfig(id=scene.room_id, name=scene.room_name),
             scene=NamedResourceConfig(id=scene.id, name=scene.name),
-            start_brightness=start_brightness,
-            end_brightness=end_brightness,
             duration_seconds=duration_seconds,
             after_alarm=after_alarm,
         )

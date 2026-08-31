@@ -65,7 +65,7 @@ class AppTestProvider(Provider):
 
 @pytest.fixture
 def hue_client() -> FakeHueClient:
-    return FakeHueClient([Room(ROOM_ID, "Bedroom", (Scene(SCENE_ID, "Sunrise"),))])
+    return FakeHueClient([Room(ROOM_ID, "Bedroom", (Scene(SCENE_ID, "Sunrise", 80),))])
 
 
 @pytest.fixture
@@ -84,8 +84,6 @@ daylight_alarm:
   scene:
     id: {SCENE_ID}
     name: Sunrise
-  start_brightness: 1
-  end_brightness: 100
   duration_seconds: 1800
 """,
         encoding="utf-8",
@@ -172,14 +170,12 @@ def test_exposes_doctor_scenes_and_configuration(client: TestClient) -> None:
             "name": "Sunrise",
             "room_id": str(ROOM_ID),
             "room_name": "Bedroom",
-            "brightness": None,
+            "brightness": 80.0,
         }
     ]
     assert configuration.json() == {
         "room": {"id": str(ROOM_ID), "name": "Bedroom"},
         "scene": {"id": str(SCENE_ID), "name": "Sunrise"},
-        "start_brightness": 1,
-        "end_brightness": 100,
         "duration_seconds": 1800,
         "after_alarm": None,
     }
@@ -192,8 +188,6 @@ def test_saves_configuration_from_the_selected_scene(client: TestClient) -> None
         json={
             "room_id": str(ROOM_ID),
             "scene_id": str(SCENE_ID),
-            "start_brightness": 5,
-            "end_brightness": 80,
             "duration_seconds": 900,
             "after_alarm": {
                 "room_id": str(ROOM_ID),
@@ -208,8 +202,6 @@ def test_saves_configuration_from_the_selected_scene(client: TestClient) -> None
     assert response.json() == {
         "room": {"id": str(ROOM_ID), "name": "Bedroom"},
         "scene": {"id": str(SCENE_ID), "name": "Sunrise"},
-        "start_brightness": 5,
-        "end_brightness": 80,
         "duration_seconds": 900,
         "after_alarm": {
             "room": {"id": str(ROOM_ID), "name": "Bedroom"},

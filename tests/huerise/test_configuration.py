@@ -15,8 +15,6 @@ daylight_alarm:
   scene:
     id: 00000000-0000-0000-0000-000000000001
     name: Sunrise
-  start_brightness: 1
-  end_brightness: 100
   duration_seconds: 1800
 """
 
@@ -36,8 +34,16 @@ def test_loads_daylight_alarm(tmp_path: Path) -> None:
 @pytest.mark.parametrize(
     ("target", "replacement", "location"),
     [
-        ("  end_brightness: 100\n", "", "daylight_alarm.end_brightness"),
-        ("end_brightness: 100", "end_brightness: 1", "daylight_alarm"),
+        (
+            "duration_seconds: 1800",
+            "start_brightness: 1\n  duration_seconds: 1800",
+            "daylight_alarm.start_brightness",
+        ),
+        (
+            "duration_seconds: 1800",
+            "end_brightness: 100\n  duration_seconds: 1800",
+            "daylight_alarm.end_brightness",
+        ),
         (
             "duration_seconds: 1800",
             "duration_seconds: 0",
