@@ -22,7 +22,10 @@ func (roomsCommand) Run(runtime *Runtime) error {
 		for _, room := range rooms {
 			rows = append(rows, []string{room.ID.String(), room.Name, strings.Join(sceneNames(room.Scenes), ", ")})
 		}
-		return writeTable(runtime.stdout, []string{"ID", "NAME", "SCENES"}, rows, "No rooms found.")
+		return writeTable(runtime.stdout, []string{"ID", "NAME", "SCENES"}, rows, emptyState{
+			Message: "No rooms found on the bridge.",
+			Hint:    "Run 'huerise hue bridge status' to check the connection.",
+		})
 	})
 }
 
@@ -38,7 +41,16 @@ func (scenesCommand) Run(runtime *Runtime) error {
 		for _, scene := range scenes {
 			rows = append(rows, []string{scene.ID.String(), scene.Name, scene.RoomName})
 		}
-		return writeTable(runtime.stdout, []string{"ID", "NAME", "ROOM"}, rows, "No scenes found.")
+		if err := writeTable(runtime.stdout, []string{"ID", "NAME", "ROOM"}, rows, emptyState{
+			Message: "No scenes found on the bridge.",
+			Hint:    "Create a scene in the Hue app, then run this again.",
+		}); err != nil {
+			return err
+		}
+		if len(scenes) == 0 {
+			return nil
+		}
+		return writeNext(runtime.stdout, "copy a scene ID into daylight_alarm.scene_id in huerise.yml")
 	})
 }
 

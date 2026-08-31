@@ -6,7 +6,6 @@ import (
 	"io"
 	"sort"
 	"strings"
-	"text/tabwriter"
 )
 
 type outputOptions struct {
@@ -108,36 +107,4 @@ func splitFields(value string) []string {
 		}
 	}
 	return fields
-}
-
-func writeTable(writer io.Writer, columns []string, rows [][]string, emptyMessage string) error {
-	if len(rows) == 0 {
-		_, err := fmt.Fprintln(writer, emptyMessage)
-		return err
-	}
-	table := tabwriter.NewWriter(writer, 0, 4, 2, ' ', 0)
-	if _, err := fmt.Fprintln(table, strings.Join(columns, "\t")); err != nil {
-		return err
-	}
-	for _, row := range rows {
-		if _, err := fmt.Fprintln(table, strings.Join(row, "\t")); err != nil {
-			return err
-		}
-	}
-	return table.Flush()
-}
-
-type recordField struct {
-	Name  string
-	Value string
-}
-
-func writeRecord(writer io.Writer, fields ...recordField) error {
-	table := tabwriter.NewWriter(writer, 0, 4, 2, ' ', 0)
-	for _, field := range fields {
-		if _, err := fmt.Fprintf(table, "%s\t%s\n", field.Name, field.Value); err != nil {
-			return err
-		}
-	}
-	return table.Flush()
 }

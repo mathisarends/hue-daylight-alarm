@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"strings"
+
 	"github.com/mathisarends/huerise/cli/internal/client"
 )
 
@@ -14,8 +16,16 @@ func (doctorCommand) Run(runtime *Runtime) error {
 	return runtime.output(result, func() error {
 		rows := make([][]string, 0, len(result.Checks))
 		for _, check := range result.Checks {
-			rows = append(rows, []string{check.Name, check.Status})
+			rows = append(rows, []string{check.Status, strings.ReplaceAll(check.Name, "_", " ")})
 		}
-		return writeTable(runtime.stdout, []string{"CHECK", "STATUS"}, rows, "No checks reported.")
+		if err := writeTable(runtime.stdout, nil, rows, emptyState{
+			Message: "No checks reported.",
+		}); err != nil {
+			return err
+		}
+		if len(rows) == 0 {
+			return nil
+		}
+		return writeLines(runtime.stdout, "Everything the alarm needs is in place.")
 	})
 }

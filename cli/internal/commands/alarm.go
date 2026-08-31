@@ -26,9 +26,9 @@ func (command startCommand) Run(runtime *Runtime) error {
 		return err
 	}
 	return runtime.output(result, func() error {
-		return writeRecord(runtime.stdout,
-			recordField{Name: "status", Value: result.Status.Or("started")},
-			recordField{Name: "duration_seconds", Value: fmt.Sprintf("%d", result.DurationSeconds)},
+		return writeLines(runtime.stdout,
+			fmt.Sprintf("Daylight alarm started, fading over %s.", formatDuration(result.DurationSeconds)),
+			"Stop it early with: huerise stop",
 		)
 	})
 }
@@ -42,7 +42,6 @@ func (stopCommand) Run(runtime *Runtime) error {
 		return err
 	}
 	return runtime.output(map[string]any{"stopped": true}, func() error {
-		_, err := fmt.Fprintln(runtime.stdout, "Stopped.")
-		return err
+		return writeLines(runtime.stdout, "Stopped. The lights stay where they are.")
 	})
 }

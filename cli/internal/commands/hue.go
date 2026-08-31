@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"fmt"
+	"strings"
 
 	"github.com/mathisarends/huerise/cli/internal/client"
 )
@@ -37,9 +37,22 @@ func (hueBridgeListCommand) Run(runtime *Runtime) error {
 	return runtime.output(bridges, func() error {
 		rows := make([][]string, 0, len(bridges))
 		for _, bridge := range bridges {
-			rows = append(rows, []string{bridge.ID, bridge.IPAddress, fmt.Sprintf("%t", bridge.Selected)})
+			selected := ""
+			if bridge.Selected {
+				selected = "selected"
+			}
+			rows = append(rows, []string{bridge.ID, bridge.IPAddress, selected})
 		}
-		return writeTable(runtime.stdout, []string{"ID", "IP ADDRESS", "SELECTED"}, rows, "No Hue Bridges found.")
+		if err := writeTable(runtime.stdout, []string{"ID", "IP ADDRESS", ""}, rows, emptyState{
+			Message: "No Hue Bridges found on this network.",
+			Hint:    "Check that the bridge is powered on and connected to the same network.",
+		}); err != nil {
+			return err
+		}
+		if len(bridges) == 0 {
+			return nil
+		}
+		return writeNext(runtime.stdout, "huerise hue bridge select <id>")
 	})
 }
 
@@ -73,11 +86,35 @@ func (hueBridgeRegisterCommand) Run(runtime *Runtime) error {
 
 func writeOnboardingStatus(runtime *Runtime, status *client.OnboardingStatusResponse) error {
 	return runtime.output(status, func() error {
-		return writeRecord(runtime.stdout,
-			recordField{Name: "state", Value: string(status.State)},
-			recordField{Name: "bridge_id", Value: status.BridgeID.Or("-")},
-			recordField{Name: "ip_address", Value: status.IPAddress.Or("-")},
-			recordField{Name: "read_only", Value: fmt.Sprintf("%t", status.ReadOnly)},
-		)
+		fields := []recordField{{Name: "State", Value: strings.ReplaceAll(string(status.State), "_", " ")}}
+		if bridge := status.BridgeID.Or(""); bridge != "" {
+			fields = append(fields, recordField{Name: "Bridge", Value: bridge})
+		}
+		if address := status.IPAddress.Or(""); address != "" {
+			fields = append(fields, recordField{Name: "Address", Value: address})
+		}
+		if status.ReadOnly {
+			fields = append(fields, recordField{Name: "Source", Value: "environment (read-only)"})
+		}
+		if err := writeRecord(runtime.stdout, fields...); err != nil {
+			return err
+		}
+		return writeNext(runtime.stdout, onboardingNextSteps(status)...)
 	})
+}
+
+func onboardingNextSteps(status *client.OnboardingStatusResponse) []string {
+	switch status.State {
+	case client.OnboardingStateNotSelected:
+		return []string{"huerise hue bridge list", "huerise hue bridge select <id>"}
+	case client.OnboardingStateLinkButtonRequired:
+		return []string{
+			"press the round button on the bridge, then run:",
+			"huerise hue bridge register",
+		}
+	case client.OnboardingStateReady:
+		return []string{"huerise scenes", "huerise doctor"}
+	default:
+		return nil
+	}
 }

@@ -44,9 +44,16 @@ run `huerise hue bridge register`; registration may take up to 60 seconds.
 `huerise hue bridge status` shows the onboarding state of the effective bridge.
 `huerise doctor` reports the configuration checks the server runs.
 
+## Human output
+
+Without `--json`, results are printed as an indented table or field list, and
+onboarding commands end with a `Next` block naming the command that follows.
+Empty results say why they are empty instead of printing a bare table header.
+None of this appears in JSON mode.
+
 ## Streams and JSON
 
-- stdout contains only result data.
+- stdout contains only result data, plus the `Next` guidance in human mode.
 - stderr receives hints and errors.
 - `--json` emits one valid JSON document.
 - `--compact` removes JSON indentation.

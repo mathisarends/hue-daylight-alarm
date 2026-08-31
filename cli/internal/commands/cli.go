@@ -13,6 +13,15 @@ import (
 
 var Version = "dev"
 
+const description = `Control the Huerise daylight alarm from the terminal.
+
+First run: "hue bridge list", then "hue bridge select <id>", then press the round
+button on the bridge and run "hue bridge register". "doctor" confirms that
+everything the alarm needs is in place, "scenes" shows what you can wake up to,
+and "start" runs it.
+
+Every command prints a readable summary, or stable JSON with --json.`
+
 type commandTree struct {
 	JSON    bool   `help:"Emit stable JSON on stdout."`
 	Fields  string `help:"Comma-separated top-level fields to include; implies --json." placeholder:"FIELD,..."`
@@ -55,7 +64,7 @@ func Run(ctx context.Context, args []string, stdin io.Reader, stdout, stderr io.
 	parser, err := kong.New(
 		&root,
 		kong.Name("huerise"),
-		kong.Description("Control the Huerise daylight alarm from the terminal — readable by humans, predictable for agents."),
+		kong.Description(description),
 		kong.UsageOnError(),
 		kong.Writers(stdout, stderr),
 		kong.Exit(func(code int) { panic(parserExit(code)) }),
