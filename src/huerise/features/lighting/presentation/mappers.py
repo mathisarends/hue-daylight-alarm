@@ -3,7 +3,6 @@ from huerise.features.lighting.application import (
     DiscoveredBridge,
     DoctorReport,
     OnboardingStatus,
-    Room,
 )
 from huerise.features.lighting.presentation.schemas import (
     AvailableSceneResponse,
@@ -11,8 +10,6 @@ from huerise.features.lighting.presentation.schemas import (
     DoctorCheckResponse,
     DoctorResponse,
     OnboardingStatusResponse,
-    RoomResponse,
-    SceneResponse,
 )
 
 
@@ -32,14 +29,7 @@ def to_available_scene_response(scene: AvailableScene) -> AvailableSceneResponse
         name=scene.name,
         room_id=scene.room_id,
         room_name=scene.room_name,
-    )
-
-
-def to_room_response(room: Room) -> RoomResponse:
-    return RoomResponse(
-        id=room.id,
-        name=room.name,
-        scenes=[SceneResponse(id=scene.id, name=scene.name) for scene in room.scenes],
+        brightness=scene.brightness,
     )
 
 

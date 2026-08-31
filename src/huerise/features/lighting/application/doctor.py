@@ -50,7 +50,7 @@ class Doctor:
             ) from error
         try:
             rooms = await client.list_rooms()
-            room_for_scene(rooms, config.daylight_alarm.scene_id)
+            room_for_scene(rooms, config.daylight_alarm.scene.id)
         except SceneNotFoundError:
             raise
         except Exception as error:

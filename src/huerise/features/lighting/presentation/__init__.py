@@ -8,8 +8,6 @@ from .schemas import (
     DoctorCheckResponse,
     DoctorResponse,
     OnboardingStatusResponse,
-    RoomResponse,
-    SceneResponse,
 )
 
 __all__ = [
@@ -19,8 +17,6 @@ __all__ = [
     "DoctorCheckResponse",
     "DoctorResponse",
     "OnboardingStatusResponse",
-    "RoomResponse",
-    "SceneResponse",
     "doctor_router",
     "hue_router",
     "scene_router",

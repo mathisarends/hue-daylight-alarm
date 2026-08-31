@@ -17,15 +17,16 @@ type SecuritySource interface {
 
 // operationRolesAPIKeyHeader is a private map storing roles per operation.
 var operationRolesAPIKeyHeader = map[string][]string{
-	DoctorOperation:             []string{},
-	GetHueBridgeOperation:       []string{},
-	ListHueBridgesOperation:     []string{},
-	ListRoomsOperation:          []string{},
-	ListScenesOperation:         []string{},
-	RegisterHueBridgeOperation:  []string{},
-	SelectHueBridgeOperation:    []string{},
-	StartDaylightAlarmOperation: []string{},
-	StopDaylightAlarmOperation:  []string{},
+	DoctorOperation:                        []string{},
+	GetDaylightAlarmConfigurationOperation: []string{},
+	GetHueBridgeOperation:                  []string{},
+	ListHueBridgesOperation:                []string{},
+	ListScenesOperation:                    []string{},
+	RegisterHueBridgeOperation:             []string{},
+	SelectHueBridgeOperation:               []string{},
+	SetDaylightAlarmConfigurationOperation: []string{},
+	StartDaylightAlarmOperation:            []string{},
+	StopDaylightAlarmOperation:             []string{},
 }
 
 // GetRolesForAPIKeyHeader returns the required roles for the given operation.

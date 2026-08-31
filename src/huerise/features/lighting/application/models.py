@@ -23,6 +23,7 @@ class HueCredentials:
 class Scene:
     id: UUID
     name: str
+    brightness: float | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -38,6 +39,7 @@ class AvailableScene:
     name: str
     room_id: UUID
     room_name: str
+    brightness: float | None
 
 
 class HueClient(Protocol):

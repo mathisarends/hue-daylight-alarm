@@ -30,7 +30,20 @@ class FakeRoomsApi:
 
     async def scenes(self, room_id: UUID) -> list[SimpleNamespace]:
         assert room_id == ROOM_ID
-        return [SimpleNamespace(id=SCENE_ID, name="Sunrise")]
+        return [
+            SimpleNamespace(
+                id=SCENE_ID,
+                name="Sunrise",
+                actions=[
+                    SimpleNamespace(
+                        action=SimpleNamespace(dimming=SimpleNamespace(brightness=20.0))
+                    ),
+                    SimpleNamespace(
+                        action=SimpleNamespace(dimming=SimpleNamespace(brightness=40.0))
+                    ),
+                ],
+            )
+        ]
 
     async def set_brightness(self, room_id: UUID, brightness: float) -> None:
         self.brightness.append((room_id, brightness))
@@ -133,6 +146,7 @@ async def test_client_adapts_hueify_operations() -> None:
     assert [(scene.id, scene.name) for scene in rooms[0].scenes] == [
         (SCENE_ID, "Sunrise")
     ]
+    assert rooms[0].scenes[0].brightness == 30
     assert external.scenes.activations == [(SCENE_ID, 12.5)]
     assert external.rooms.brightness == [(ROOM_ID, 42)]
     assert external.closed is True

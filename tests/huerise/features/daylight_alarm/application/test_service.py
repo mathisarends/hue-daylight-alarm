@@ -4,7 +4,12 @@ from uuid import UUID
 
 import pytest
 
-from huerise.configuration import DaylightAlarmConfig, HueriseConfig
+from huerise.configuration import (
+    AfterAlarmConfig,
+    DaylightAlarmConfig,
+    HueriseConfig,
+    NamedResourceConfig,
+)
 from huerise.features.daylight_alarm.application import (
     AlarmAlreadyRunningError,
     DaylightAlarm,
@@ -34,7 +39,8 @@ def make_alarm(
 ) -> DaylightAlarm:
     config = HueriseConfig(
         daylight_alarm=DaylightAlarmConfig(
-            scene_id=SCENE_ID,
+            room=NamedResourceConfig(id=ROOM_ID, name="Bedroom"),
+            scene=NamedResourceConfig(id=SCENE_ID, name="Sunrise"),
             start_brightness=10,
             end_brightness=30,
             duration_seconds=duration,
@@ -143,6 +149,37 @@ async def test_overrides_only_the_duration_for_one_run() -> None:
     assert len(client.commands) == 11
 
 
+async def test_activates_the_optional_after_alarm_scene() -> None:
+    client = FakeHueClient(DEFAULT_ROOMS)
+    config = HueriseConfig(
+        daylight_alarm=DaylightAlarmConfig(
+            room=NamedResourceConfig(id=ROOM_ID, name="Bedroom"),
+            scene=NamedResourceConfig(id=SCENE_ID, name="Sunrise"),
+            start_brightness=10,
+            end_brightness=30,
+            duration_seconds=2,
+            after_alarm=AfterAlarmConfig(
+                room=NamedResourceConfig(id=ROOM_ID, name="Bedroom"),
+                scene=NamedResourceConfig(id=SCENE_ID, name="Sunrise"),
+                brightness=50,
+                delay_seconds=60,
+            ),
+        )
+    )
+    alarm = DaylightAlarm(
+        FakeConfiguration(config),
+        FakeHueCredentialsSource(),
+        FakeHueClientFactory(client),
+        sleep=immediate_sleep,
+    )
+
+    await alarm.start()
+    assert alarm._task is not None
+    await alarm._task
+
+    assert client.commands[-1] == ("activate", SCENE_ID, 50)
+
+
 @pytest.mark.parametrize(
     ("error", "message"),
     [
@@ -159,7 +196,8 @@ async def test_reports_client_initialization_failures(
         FakeConfiguration(
             HueriseConfig(
                 daylight_alarm=DaylightAlarmConfig(
-                    scene_id=SCENE_ID,
+                    room=NamedResourceConfig(id=ROOM_ID, name="Bedroom"),
+                    scene=NamedResourceConfig(id=SCENE_ID, name="Sunrise"),
                     start_brightness=10,
                     end_brightness=30,
                     duration_seconds=2,

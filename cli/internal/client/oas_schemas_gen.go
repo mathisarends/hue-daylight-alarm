@@ -32,6 +32,102 @@ func (s *APIKeyHeader) SetRoles(val []string) {
 	s.Roles = val
 }
 
+// Ref: #/components/schemas/AfterAlarmConfigurationRequest
+type AfterAlarmConfigurationRequest struct {
+	RoomID       uuid.UUID `json:"room_id"`
+	SceneID      uuid.UUID `json:"scene_id"`
+	Brightness   int       `json:"brightness"`
+	DelaySeconds int       `json:"delay_seconds"`
+}
+
+// GetRoomID returns the value of RoomID.
+func (s *AfterAlarmConfigurationRequest) GetRoomID() uuid.UUID {
+	return s.RoomID
+}
+
+// GetSceneID returns the value of SceneID.
+func (s *AfterAlarmConfigurationRequest) GetSceneID() uuid.UUID {
+	return s.SceneID
+}
+
+// GetBrightness returns the value of Brightness.
+func (s *AfterAlarmConfigurationRequest) GetBrightness() int {
+	return s.Brightness
+}
+
+// GetDelaySeconds returns the value of DelaySeconds.
+func (s *AfterAlarmConfigurationRequest) GetDelaySeconds() int {
+	return s.DelaySeconds
+}
+
+// SetRoomID sets the value of RoomID.
+func (s *AfterAlarmConfigurationRequest) SetRoomID(val uuid.UUID) {
+	s.RoomID = val
+}
+
+// SetSceneID sets the value of SceneID.
+func (s *AfterAlarmConfigurationRequest) SetSceneID(val uuid.UUID) {
+	s.SceneID = val
+}
+
+// SetBrightness sets the value of Brightness.
+func (s *AfterAlarmConfigurationRequest) SetBrightness(val int) {
+	s.Brightness = val
+}
+
+// SetDelaySeconds sets the value of DelaySeconds.
+func (s *AfterAlarmConfigurationRequest) SetDelaySeconds(val int) {
+	s.DelaySeconds = val
+}
+
+// Ref: #/components/schemas/AfterAlarmConfigurationResponse
+type AfterAlarmConfigurationResponse struct {
+	Room         NamedResourceResponse `json:"room"`
+	Scene        NamedResourceResponse `json:"scene"`
+	Brightness   int                   `json:"brightness"`
+	DelaySeconds int                   `json:"delay_seconds"`
+}
+
+// GetRoom returns the value of Room.
+func (s *AfterAlarmConfigurationResponse) GetRoom() NamedResourceResponse {
+	return s.Room
+}
+
+// GetScene returns the value of Scene.
+func (s *AfterAlarmConfigurationResponse) GetScene() NamedResourceResponse {
+	return s.Scene
+}
+
+// GetBrightness returns the value of Brightness.
+func (s *AfterAlarmConfigurationResponse) GetBrightness() int {
+	return s.Brightness
+}
+
+// GetDelaySeconds returns the value of DelaySeconds.
+func (s *AfterAlarmConfigurationResponse) GetDelaySeconds() int {
+	return s.DelaySeconds
+}
+
+// SetRoom sets the value of Room.
+func (s *AfterAlarmConfigurationResponse) SetRoom(val NamedResourceResponse) {
+	s.Room = val
+}
+
+// SetScene sets the value of Scene.
+func (s *AfterAlarmConfigurationResponse) SetScene(val NamedResourceResponse) {
+	s.Scene = val
+}
+
+// SetBrightness sets the value of Brightness.
+func (s *AfterAlarmConfigurationResponse) SetBrightness(val int) {
+	s.Brightness = val
+}
+
+// SetDelaySeconds sets the value of DelaySeconds.
+func (s *AfterAlarmConfigurationResponse) SetDelaySeconds(val int) {
+	s.DelaySeconds = val
+}
+
 // Ref: #/components/schemas/AlarmStatusResponse
 type AlarmStatusResponse struct {
 	Status          OptString `json:"status"`
@@ -62,10 +158,11 @@ func (*AlarmStatusResponse) startDaylightAlarmRes() {}
 
 // Ref: #/components/schemas/AvailableSceneResponse
 type AvailableSceneResponse struct {
-	ID       uuid.UUID `json:"id"`
-	Name     string    `json:"name"`
-	RoomID   uuid.UUID `json:"room_id"`
-	RoomName string    `json:"room_name"`
+	ID         uuid.UUID  `json:"id"`
+	Name       string     `json:"name"`
+	RoomID     uuid.UUID  `json:"room_id"`
+	RoomName   string     `json:"room_name"`
+	Brightness NilFloat64 `json:"brightness"`
 }
 
 // GetID returns the value of ID.
@@ -88,6 +185,11 @@ func (s *AvailableSceneResponse) GetRoomName() string {
 	return s.RoomName
 }
 
+// GetBrightness returns the value of Brightness.
+func (s *AvailableSceneResponse) GetBrightness() NilFloat64 {
+	return s.Brightness
+}
+
 // SetID sets the value of ID.
 func (s *AvailableSceneResponse) SetID(val uuid.UUID) {
 	s.ID = val
@@ -106,6 +208,11 @@ func (s *AvailableSceneResponse) SetRoomID(val uuid.UUID) {
 // SetRoomName sets the value of RoomName.
 func (s *AvailableSceneResponse) SetRoomName(val string) {
 	s.RoomName = val
+}
+
+// SetBrightness sets the value of Brightness.
+func (s *AvailableSceneResponse) SetBrightness(val NilFloat64) {
+	s.Brightness = val
 }
 
 // Ref: #/components/schemas/BridgeResponse
@@ -189,7 +296,6 @@ func (s *ConfigurationErrorResponse) SetIssues(val []ConfigurationIssue) {
 func (*ConfigurationErrorResponse) doctorRes()             {}
 func (*ConfigurationErrorResponse) getHueBridgeRes()       {}
 func (*ConfigurationErrorResponse) listHueBridgesRes()     {}
-func (*ConfigurationErrorResponse) listRoomsRes()          {}
 func (*ConfigurationErrorResponse) listScenesRes()         {}
 func (*ConfigurationErrorResponse) registerHueBridgeRes()  {}
 func (*ConfigurationErrorResponse) selectHueBridgeRes()    {}
@@ -231,6 +337,149 @@ func (s *ConfigurationIssue) SetMessage(val string) {
 func (s *ConfigurationIssue) SetType(val string) {
 	s.Type = val
 }
+
+// Ref: #/components/schemas/DaylightAlarmConfigurationRequest
+type DaylightAlarmConfigurationRequest struct {
+	RoomID          uuid.UUID                            `json:"room_id"`
+	SceneID         uuid.UUID                            `json:"scene_id"`
+	StartBrightness int                                  `json:"start_brightness"`
+	EndBrightness   int                                  `json:"end_brightness"`
+	DurationSeconds int                                  `json:"duration_seconds"`
+	AfterAlarm      OptNilAfterAlarmConfigurationRequest `json:"after_alarm"`
+}
+
+// GetRoomID returns the value of RoomID.
+func (s *DaylightAlarmConfigurationRequest) GetRoomID() uuid.UUID {
+	return s.RoomID
+}
+
+// GetSceneID returns the value of SceneID.
+func (s *DaylightAlarmConfigurationRequest) GetSceneID() uuid.UUID {
+	return s.SceneID
+}
+
+// GetStartBrightness returns the value of StartBrightness.
+func (s *DaylightAlarmConfigurationRequest) GetStartBrightness() int {
+	return s.StartBrightness
+}
+
+// GetEndBrightness returns the value of EndBrightness.
+func (s *DaylightAlarmConfigurationRequest) GetEndBrightness() int {
+	return s.EndBrightness
+}
+
+// GetDurationSeconds returns the value of DurationSeconds.
+func (s *DaylightAlarmConfigurationRequest) GetDurationSeconds() int {
+	return s.DurationSeconds
+}
+
+// GetAfterAlarm returns the value of AfterAlarm.
+func (s *DaylightAlarmConfigurationRequest) GetAfterAlarm() OptNilAfterAlarmConfigurationRequest {
+	return s.AfterAlarm
+}
+
+// SetRoomID sets the value of RoomID.
+func (s *DaylightAlarmConfigurationRequest) SetRoomID(val uuid.UUID) {
+	s.RoomID = val
+}
+
+// SetSceneID sets the value of SceneID.
+func (s *DaylightAlarmConfigurationRequest) SetSceneID(val uuid.UUID) {
+	s.SceneID = val
+}
+
+// SetStartBrightness sets the value of StartBrightness.
+func (s *DaylightAlarmConfigurationRequest) SetStartBrightness(val int) {
+	s.StartBrightness = val
+}
+
+// SetEndBrightness sets the value of EndBrightness.
+func (s *DaylightAlarmConfigurationRequest) SetEndBrightness(val int) {
+	s.EndBrightness = val
+}
+
+// SetDurationSeconds sets the value of DurationSeconds.
+func (s *DaylightAlarmConfigurationRequest) SetDurationSeconds(val int) {
+	s.DurationSeconds = val
+}
+
+// SetAfterAlarm sets the value of AfterAlarm.
+func (s *DaylightAlarmConfigurationRequest) SetAfterAlarm(val OptNilAfterAlarmConfigurationRequest) {
+	s.AfterAlarm = val
+}
+
+// Ref: #/components/schemas/DaylightAlarmConfigurationResponse
+type DaylightAlarmConfigurationResponse struct {
+	Room            NamedResourceResponse                 `json:"room"`
+	Scene           NamedResourceResponse                 `json:"scene"`
+	StartBrightness int                                   `json:"start_brightness"`
+	EndBrightness   int                                   `json:"end_brightness"`
+	DurationSeconds int                                   `json:"duration_seconds"`
+	AfterAlarm      OptNilAfterAlarmConfigurationResponse `json:"after_alarm"`
+}
+
+// GetRoom returns the value of Room.
+func (s *DaylightAlarmConfigurationResponse) GetRoom() NamedResourceResponse {
+	return s.Room
+}
+
+// GetScene returns the value of Scene.
+func (s *DaylightAlarmConfigurationResponse) GetScene() NamedResourceResponse {
+	return s.Scene
+}
+
+// GetStartBrightness returns the value of StartBrightness.
+func (s *DaylightAlarmConfigurationResponse) GetStartBrightness() int {
+	return s.StartBrightness
+}
+
+// GetEndBrightness returns the value of EndBrightness.
+func (s *DaylightAlarmConfigurationResponse) GetEndBrightness() int {
+	return s.EndBrightness
+}
+
+// GetDurationSeconds returns the value of DurationSeconds.
+func (s *DaylightAlarmConfigurationResponse) GetDurationSeconds() int {
+	return s.DurationSeconds
+}
+
+// GetAfterAlarm returns the value of AfterAlarm.
+func (s *DaylightAlarmConfigurationResponse) GetAfterAlarm() OptNilAfterAlarmConfigurationResponse {
+	return s.AfterAlarm
+}
+
+// SetRoom sets the value of Room.
+func (s *DaylightAlarmConfigurationResponse) SetRoom(val NamedResourceResponse) {
+	s.Room = val
+}
+
+// SetScene sets the value of Scene.
+func (s *DaylightAlarmConfigurationResponse) SetScene(val NamedResourceResponse) {
+	s.Scene = val
+}
+
+// SetStartBrightness sets the value of StartBrightness.
+func (s *DaylightAlarmConfigurationResponse) SetStartBrightness(val int) {
+	s.StartBrightness = val
+}
+
+// SetEndBrightness sets the value of EndBrightness.
+func (s *DaylightAlarmConfigurationResponse) SetEndBrightness(val int) {
+	s.EndBrightness = val
+}
+
+// SetDurationSeconds sets the value of DurationSeconds.
+func (s *DaylightAlarmConfigurationResponse) SetDurationSeconds(val int) {
+	s.DurationSeconds = val
+}
+
+// SetAfterAlarm sets the value of AfterAlarm.
+func (s *DaylightAlarmConfigurationResponse) SetAfterAlarm(val OptNilAfterAlarmConfigurationResponse) {
+	s.AfterAlarm = val
+}
+
+func (*DaylightAlarmConfigurationResponse) getDaylightAlarmConfigurationRes() {}
+func (*DaylightAlarmConfigurationResponse) setDaylightAlarmConfigurationRes() {}
 
 // Ref: #/components/schemas/DoctorCheckResponse
 type DoctorCheckResponse struct {
@@ -310,20 +559,98 @@ func (s *ErrorResponse) SetDetail(val string) {
 }
 
 func (*ErrorResponse) listHueBridgesRes() {}
-func (*ErrorResponse) listRoomsRes()      {}
 func (*ErrorResponse) listScenesRes()     {}
+
+type GetDaylightAlarmConfigurationNotFound ErrorResponse
+
+func (*GetDaylightAlarmConfigurationNotFound) getDaylightAlarmConfigurationRes() {}
+
+type GetDaylightAlarmConfigurationServiceUnavailable ErrorResponse
+
+func (*GetDaylightAlarmConfigurationServiceUnavailable) getDaylightAlarmConfigurationRes() {}
+
+type GetDaylightAlarmConfigurationUnprocessableEntity ErrorResponse
+
+func (*GetDaylightAlarmConfigurationUnprocessableEntity) getDaylightAlarmConfigurationRes() {}
 
 type ListHueBridgesOKApplicationJSON []BridgeResponse
 
 func (*ListHueBridgesOKApplicationJSON) listHueBridgesRes() {}
 
-type ListRoomsOKApplicationJSON []RoomResponse
-
-func (*ListRoomsOKApplicationJSON) listRoomsRes() {}
-
 type ListScenesOKApplicationJSON []AvailableSceneResponse
 
 func (*ListScenesOKApplicationJSON) listScenesRes() {}
+
+// Ref: #/components/schemas/NamedResourceResponse
+type NamedResourceResponse struct {
+	ID   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
+}
+
+// GetID returns the value of ID.
+func (s *NamedResourceResponse) GetID() uuid.UUID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *NamedResourceResponse) GetName() string {
+	return s.Name
+}
+
+// SetID sets the value of ID.
+func (s *NamedResourceResponse) SetID(val uuid.UUID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *NamedResourceResponse) SetName(val string) {
+	s.Name = val
+}
+
+// NewNilFloat64 returns new NilFloat64 with value set to v.
+func NewNilFloat64(v float64) NilFloat64 {
+	return NilFloat64{
+		Value: v,
+	}
+}
+
+// NilFloat64 is nullable float64.
+type NilFloat64 struct {
+	Value float64
+	Null  bool
+}
+
+// SetTo sets value to v.
+func (o *NilFloat64) SetTo(v float64) {
+	o.Null = false
+	o.Value = v
+}
+
+// IsNull returns true if value is Null.
+func (o NilFloat64) IsNull() bool { return o.Null }
+
+// SetToNull sets value to null.
+func (o *NilFloat64) SetToNull() {
+	o.Null = true
+	var v float64
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o NilFloat64) Get() (v float64, ok bool) {
+	if o.Null {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o NilFloat64) Or(d float64) float64 {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
 
 // NewNilString returns new NilString with value set to v.
 func NewNilString(v string) NilString {
@@ -471,6 +798,132 @@ func (*OnboardingStatusResponse) getHueBridgeRes()      {}
 func (*OnboardingStatusResponse) registerHueBridgeRes() {}
 func (*OnboardingStatusResponse) selectHueBridgeRes()   {}
 
+// NewOptNilAfterAlarmConfigurationRequest returns new OptNilAfterAlarmConfigurationRequest with value set to v.
+func NewOptNilAfterAlarmConfigurationRequest(v AfterAlarmConfigurationRequest) OptNilAfterAlarmConfigurationRequest {
+	return OptNilAfterAlarmConfigurationRequest{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptNilAfterAlarmConfigurationRequest is optional nullable AfterAlarmConfigurationRequest.
+type OptNilAfterAlarmConfigurationRequest struct {
+	Value AfterAlarmConfigurationRequest
+	Set   bool
+	Null  bool
+}
+
+// IsSet returns true if OptNilAfterAlarmConfigurationRequest was set.
+func (o OptNilAfterAlarmConfigurationRequest) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptNilAfterAlarmConfigurationRequest) Reset() {
+	var v AfterAlarmConfigurationRequest
+	o.Value = v
+	o.Set = false
+	o.Null = false
+}
+
+// SetTo sets value to v.
+func (o *OptNilAfterAlarmConfigurationRequest) SetTo(v AfterAlarmConfigurationRequest) {
+	o.Set = true
+	o.Null = false
+	o.Value = v
+}
+
+// IsNull returns true if value is Null.
+func (o OptNilAfterAlarmConfigurationRequest) IsNull() bool { return o.Null }
+
+// SetToNull sets value to null.
+func (o *OptNilAfterAlarmConfigurationRequest) SetToNull() {
+	o.Set = true
+	o.Null = true
+	var v AfterAlarmConfigurationRequest
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptNilAfterAlarmConfigurationRequest) Get() (v AfterAlarmConfigurationRequest, ok bool) {
+	if o.Null {
+		return v, false
+	}
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptNilAfterAlarmConfigurationRequest) Or(d AfterAlarmConfigurationRequest) AfterAlarmConfigurationRequest {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptNilAfterAlarmConfigurationResponse returns new OptNilAfterAlarmConfigurationResponse with value set to v.
+func NewOptNilAfterAlarmConfigurationResponse(v AfterAlarmConfigurationResponse) OptNilAfterAlarmConfigurationResponse {
+	return OptNilAfterAlarmConfigurationResponse{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptNilAfterAlarmConfigurationResponse is optional nullable AfterAlarmConfigurationResponse.
+type OptNilAfterAlarmConfigurationResponse struct {
+	Value AfterAlarmConfigurationResponse
+	Set   bool
+	Null  bool
+}
+
+// IsSet returns true if OptNilAfterAlarmConfigurationResponse was set.
+func (o OptNilAfterAlarmConfigurationResponse) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptNilAfterAlarmConfigurationResponse) Reset() {
+	var v AfterAlarmConfigurationResponse
+	o.Value = v
+	o.Set = false
+	o.Null = false
+}
+
+// SetTo sets value to v.
+func (o *OptNilAfterAlarmConfigurationResponse) SetTo(v AfterAlarmConfigurationResponse) {
+	o.Set = true
+	o.Null = false
+	o.Value = v
+}
+
+// IsNull returns true if value is Null.
+func (o OptNilAfterAlarmConfigurationResponse) IsNull() bool { return o.Null }
+
+// SetToNull sets value to null.
+func (o *OptNilAfterAlarmConfigurationResponse) SetToNull() {
+	o.Set = true
+	o.Null = true
+	var v AfterAlarmConfigurationResponse
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptNilAfterAlarmConfigurationResponse) Get() (v AfterAlarmConfigurationResponse, ok bool) {
+	if o.Null {
+		return v, false
+	}
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptNilAfterAlarmConfigurationResponse) Or(d AfterAlarmConfigurationResponse) AfterAlarmConfigurationResponse {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptNilStartRequest returns new OptNilStartRequest with value set to v.
 func NewOptNilStartRequest(v StartRequest) OptNilStartRequest {
 	return OptNilStartRequest{
@@ -588,69 +1041,6 @@ type RegisterHueBridgeServiceUnavailable ErrorResponse
 
 func (*RegisterHueBridgeServiceUnavailable) registerHueBridgeRes() {}
 
-// Ref: #/components/schemas/RoomResponse
-type RoomResponse struct {
-	ID     uuid.UUID       `json:"id"`
-	Name   string          `json:"name"`
-	Scenes []SceneResponse `json:"scenes"`
-}
-
-// GetID returns the value of ID.
-func (s *RoomResponse) GetID() uuid.UUID {
-	return s.ID
-}
-
-// GetName returns the value of Name.
-func (s *RoomResponse) GetName() string {
-	return s.Name
-}
-
-// GetScenes returns the value of Scenes.
-func (s *RoomResponse) GetScenes() []SceneResponse {
-	return s.Scenes
-}
-
-// SetID sets the value of ID.
-func (s *RoomResponse) SetID(val uuid.UUID) {
-	s.ID = val
-}
-
-// SetName sets the value of Name.
-func (s *RoomResponse) SetName(val string) {
-	s.Name = val
-}
-
-// SetScenes sets the value of Scenes.
-func (s *RoomResponse) SetScenes(val []SceneResponse) {
-	s.Scenes = val
-}
-
-// Ref: #/components/schemas/SceneResponse
-type SceneResponse struct {
-	ID   uuid.UUID `json:"id"`
-	Name string    `json:"name"`
-}
-
-// GetID returns the value of ID.
-func (s *SceneResponse) GetID() uuid.UUID {
-	return s.ID
-}
-
-// GetName returns the value of Name.
-func (s *SceneResponse) GetName() string {
-	return s.Name
-}
-
-// SetID sets the value of ID.
-func (s *SceneResponse) SetID(val uuid.UUID) {
-	s.ID = val
-}
-
-// SetName sets the value of Name.
-func (s *SceneResponse) SetName(val string) {
-	s.Name = val
-}
-
 type SelectHueBridgeConflict ErrorResponse
 
 func (*SelectHueBridgeConflict) selectHueBridgeRes() {}
@@ -662,6 +1052,18 @@ func (*SelectHueBridgeNotFound) selectHueBridgeRes() {}
 type SelectHueBridgeServiceUnavailable ErrorResponse
 
 func (*SelectHueBridgeServiceUnavailable) selectHueBridgeRes() {}
+
+type SetDaylightAlarmConfigurationNotFound ErrorResponse
+
+func (*SetDaylightAlarmConfigurationNotFound) setDaylightAlarmConfigurationRes() {}
+
+type SetDaylightAlarmConfigurationServiceUnavailable ErrorResponse
+
+func (*SetDaylightAlarmConfigurationServiceUnavailable) setDaylightAlarmConfigurationRes() {}
+
+type SetDaylightAlarmConfigurationUnprocessableEntity ErrorResponse
+
+func (*SetDaylightAlarmConfigurationUnprocessableEntity) setDaylightAlarmConfigurationRes() {}
 
 type StartDaylightAlarmConflict ErrorResponse
 

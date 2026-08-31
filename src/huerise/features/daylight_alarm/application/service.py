@@ -71,9 +71,12 @@ class DaylightAlarm:
                     "Could not initialize Hue Bridge connection"
                 ) from error
             try:
-                room = room_for_scene(await client.list_rooms(), config.scene_id)
+                rooms = await client.list_rooms()
+                room = room_for_scene(rooms, config.scene.id)
+                if config.after_alarm is not None:
+                    room_for_scene(rooms, config.after_alarm.scene.id)
                 await client.activate_scene(
-                    config.scene_id, brightness=config.start_brightness
+                    config.scene.id, brightness=config.start_brightness
                 )
             except Exception as error:
                 await self._close(client)
@@ -114,6 +117,12 @@ class DaylightAlarm:
                     + (config.end_brightness - config.start_brightness) * progress
                 )
                 await client.set_brightness(room_id, brightness)
+            if config.after_alarm is not None:
+                await self._sleep(config.after_alarm.delay_seconds)
+                await client.activate_scene(
+                    config.after_alarm.scene.id,
+                    brightness=config.after_alarm.brightness,
+                )
         except asyncio.CancelledError:
             raise
         except Exception:

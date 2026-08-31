@@ -1,4 +1,15 @@
 from .router import router
-from .schemas import AlarmStatusResponse, StartRequest
+from .schemas import (
+    AlarmStatusResponse,
+    DaylightAlarmConfigurationRequest,
+    DaylightAlarmConfigurationResponse,
+    StartRequest,
+)
 
-__all__ = ["AlarmStatusResponse", "StartRequest", "router"]
+__all__ = [
+    "AlarmStatusResponse",
+    "DaylightAlarmConfigurationRequest",
+    "DaylightAlarmConfigurationResponse",
+    "StartRequest",
+    "router",
+]

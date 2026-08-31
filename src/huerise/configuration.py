@@ -29,13 +29,31 @@ class ConfigurationError(Exception):
         self.issues = issues or []
 
 
+class NamedResourceConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: UUID
+    name: StrictStr = Field(min_length=1)
+
+
+class AfterAlarmConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    room: NamedResourceConfig
+    scene: NamedResourceConfig
+    brightness: StrictInt = Field(ge=1, le=100)
+    delay_seconds: StrictInt = Field(ge=0)
+
+
 class DaylightAlarmConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    scene_id: UUID
+    room: NamedResourceConfig
+    scene: NamedResourceConfig
     start_brightness: StrictInt = Field(ge=1, le=100)
     end_brightness: StrictInt = Field(ge=1, le=100)
     duration_seconds: StrictInt = Field(gt=0)
+    after_alarm: AfterAlarmConfig | None = None
 
     @model_validator(mode="after")
     def require_increasing_brightness(self) -> Self:
@@ -75,6 +93,11 @@ class YamlConfiguration:
     def save_hue(self, hue: HueConfig) -> None:
         raw = self._read(required=False)
         raw["hue"] = hue.model_dump(mode="json", exclude_none=True)
+        self._write(raw)
+
+    def save_daylight_alarm(self, alarm: DaylightAlarmConfig) -> None:
+        raw = self._read(required=False)
+        raw["daylight_alarm"] = alarm.model_dump(mode="json")
         self._write(raw)
 
     def _read(self, *, required: bool = True) -> dict[str, Any]:

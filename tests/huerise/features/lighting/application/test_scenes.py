@@ -39,7 +39,7 @@ async def test_lists_rooms_and_flattens_their_scenes() -> None:
     scenes = await service.list_scenes()
 
     assert rooms == client.rooms
-    assert scenes == [AvailableScene(SCENE_ID, "Sunrise", ROOM_ID, "Bedroom")]
+    assert scenes == [AvailableScene(SCENE_ID, "Sunrise", ROOM_ID, "Bedroom", None)]
     assert client.closed is True
 
 

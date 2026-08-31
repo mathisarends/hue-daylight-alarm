@@ -78,7 +78,12 @@ hue:
   bridge_ip: 192.0.2.10
   app_key: a-valid-hue-app-key-123
 daylight_alarm:
-  scene_id: {SCENE_ID}
+  room:
+    id: {ROOM_ID}
+    name: Bedroom
+  scene:
+    id: {SCENE_ID}
+    name: Sunrise
   start_brightness: 1
   end_brightness: 100
   duration_seconds: 1800
@@ -104,11 +109,12 @@ def test_operation_ids_are_explicit_and_stable(client: TestClient) -> None:
     assert operations == {
         "doctor",
         "getHueBridge",
+        "getDaylightAlarmConfiguration",
         "listHueBridges",
-        "listRooms",
         "listScenes",
         "registerHueBridge",
         "selectHueBridge",
+        "setDaylightAlarmConfiguration",
         "startDaylightAlarm",
         "stopDaylightAlarm",
     }
@@ -141,14 +147,17 @@ def test_protected_routes_require_api_key(
 ) -> None:
     assert client.post("/daylight-alarm/start", headers=headers).status_code == 401
     assert client.get("/doctor", headers=headers).status_code == 401
-    assert client.get("/rooms", headers=headers).status_code == 401
+    assert client.get("/scenes", headers=headers).status_code == 401
+    assert (
+        client.get("/daylight-alarm/configuration", headers=headers).status_code == 401
+    )
     assert client.get("/hue/bridge", headers=headers).status_code == 401
 
 
-def test_exposes_doctor_and_rooms(client: TestClient) -> None:
+def test_exposes_doctor_scenes_and_configuration(client: TestClient) -> None:
     doctor = client.get("/doctor", headers=AUTH)
-    rooms = client.get("/rooms", headers=AUTH)
     scenes = client.get("/scenes", headers=AUTH)
+    configuration = client.get("/daylight-alarm/configuration", headers=AUTH)
 
     assert doctor.status_code == 200
     assert [check["name"] for check in doctor.json()["checks"]] == [
@@ -157,21 +166,58 @@ def test_exposes_doctor_and_rooms(client: TestClient) -> None:
         "hue_bridge",
         "scene",
     ]
-    assert rooms.json() == [
-        {
-            "id": str(ROOM_ID),
-            "name": "Bedroom",
-            "scenes": [{"id": str(SCENE_ID), "name": "Sunrise"}],
-        }
-    ]
     assert scenes.json() == [
         {
             "id": str(SCENE_ID),
             "name": "Sunrise",
             "room_id": str(ROOM_ID),
             "room_name": "Bedroom",
+            "brightness": None,
         }
     ]
+    assert configuration.json() == {
+        "room": {"id": str(ROOM_ID), "name": "Bedroom"},
+        "scene": {"id": str(SCENE_ID), "name": "Sunrise"},
+        "start_brightness": 1,
+        "end_brightness": 100,
+        "duration_seconds": 1800,
+        "after_alarm": None,
+    }
+
+
+def test_saves_configuration_from_the_selected_scene(client: TestClient) -> None:
+    response = client.put(
+        "/daylight-alarm/configuration",
+        headers=AUTH,
+        json={
+            "room_id": str(ROOM_ID),
+            "scene_id": str(SCENE_ID),
+            "start_brightness": 5,
+            "end_brightness": 80,
+            "duration_seconds": 900,
+            "after_alarm": {
+                "room_id": str(ROOM_ID),
+                "scene_id": str(SCENE_ID),
+                "brightness": 30,
+                "delay_seconds": 60,
+            },
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "room": {"id": str(ROOM_ID), "name": "Bedroom"},
+        "scene": {"id": str(SCENE_ID), "name": "Sunrise"},
+        "start_brightness": 5,
+        "end_brightness": 80,
+        "duration_seconds": 900,
+        "after_alarm": {
+            "room": {"id": str(ROOM_ID), "name": "Bedroom"},
+            "scene": {"id": str(SCENE_ID), "name": "Sunrise"},
+            "brightness": 30,
+            "delay_seconds": 60,
+        },
+    }
 
 
 def test_starts_and_stops_daylight_alarm(

@@ -24,12 +24,7 @@ class SceneResponse(BaseModel):
 class AvailableSceneResponse(SceneResponse):
     room_id: UUID
     room_name: str
-
-
-class RoomResponse(BaseModel):
-    id: UUID
-    name: str
-    scenes: list[SceneResponse]
+    brightness: float | None
 
 
 class BridgeResponse(BaseModel):

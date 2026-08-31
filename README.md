@@ -54,10 +54,24 @@ The alarm is fully described by `data/huerise.yml`:
 
 ```yaml
 daylight_alarm:
-  scene_id: "00000000-0000-0000-0000-000000000000"
+  room:
+    id: "00000000-0000-0000-0000-000000000000"
+    name: Bedroom
+  scene:
+    id: "00000000-0000-0000-0000-000000000000"
+    name: Sunrise
   start_brightness: 1
   end_brightness: 100
   duration_seconds: 1800
+  after_alarm:
+    room:
+      id: "00000000-0000-0000-0000-000000000000"
+      name: Bedroom
+    scene:
+      id: "00000000-0000-0000-0000-000000000000"
+      name: Evening
+    brightness: 30
+    delay_seconds: 600
 ```
 
 Hue onboarding writes the selected bridge and application key into the optional
@@ -86,8 +100,9 @@ Send the configured key as `X-API-Key` on every route.
 | `GET` | `/doctor` | Validate YAML, credentials, Bridge access, and configured scene |
 | `POST` | `/daylight-alarm/start` | Start immediately, optionally overriding this run's duration |
 | `POST` | `/daylight-alarm/stop` | Stop it without changing the current light state |
-| `GET` | `/rooms` | List Hue rooms and scenes |
-| `GET` | `/scenes` | List all scenes with their room |
+| `GET` | `/daylight-alarm/configuration` | Read the human-readable alarm configuration |
+| `PUT` | `/daylight-alarm/configuration` | Save the selected room, scene, brightness, and duration |
+| `GET` | `/scenes` | List all scenes with their room and reference brightness |
 | `GET` | `/hue/bridges` | Discover Hue Bridges |
 | `GET` | `/hue/bridge` | Read onboarding state |
 | `PUT` | `/hue/bridge` | Select a discovered Bridge |

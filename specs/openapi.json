@@ -62,56 +62,6 @@
         ]
       }
     },
-    "/rooms": {
-      "get": {
-        "tags": [
-          "lighting"
-        ],
-        "summary": "Rooms",
-        "operationId": "listRooms",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/RoomResponse"
-                  },
-                  "type": "array",
-                  "title": "Response Listrooms"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "The YAML configuration is invalid.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ConfigurationErrorResponse"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "The Hue Bridge is not configured, reachable, or authenticated.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "APIKeyHeader": []
-          }
-        ]
-      }
-    },
     "/scenes": {
       "get": {
         "tags": [
@@ -378,6 +328,126 @@
         ]
       }
     },
+    "/daylight-alarm/configuration": {
+      "get": {
+        "tags": [
+          "daylight-alarm"
+        ],
+        "summary": "Get Configuration",
+        "operationId": "getDaylightAlarmConfiguration",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DaylightAlarmConfigurationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The selected scene does not belong to the selected room.\n\nThe YAML configuration is missing or invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The selected Hue scene does not exist.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The Hue Bridge is not configured, reachable, or authenticated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "daylight-alarm"
+        ],
+        "summary": "Set Configuration",
+        "operationId": "setDaylightAlarmConfiguration",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DaylightAlarmConfigurationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DaylightAlarmConfigurationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The selected scene does not belong to the selected room.\n\nThe YAML configuration is missing or invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The selected Hue scene does not exist.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The Hue Bridge is not configured, reachable, or authenticated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
     "/daylight-alarm/start": {
       "post": {
         "tags": [
@@ -483,6 +553,65 @@
   },
   "components": {
     "schemas": {
+      "AfterAlarmConfigurationRequest": {
+        "properties": {
+          "room_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Room Id"
+          },
+          "scene_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Scene Id"
+          },
+          "brightness": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Brightness"
+          },
+          "delay_seconds": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Delay Seconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "room_id",
+          "scene_id",
+          "brightness",
+          "delay_seconds"
+        ],
+        "title": "AfterAlarmConfigurationRequest"
+      },
+      "AfterAlarmConfigurationResponse": {
+        "properties": {
+          "room": {
+            "$ref": "#/components/schemas/NamedResourceResponse"
+          },
+          "scene": {
+            "$ref": "#/components/schemas/NamedResourceResponse"
+          },
+          "brightness": {
+            "type": "integer",
+            "title": "Brightness"
+          },
+          "delay_seconds": {
+            "type": "integer",
+            "title": "Delay Seconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "room",
+          "scene",
+          "brightness",
+          "delay_seconds"
+        ],
+        "title": "AfterAlarmConfigurationResponse"
+      },
       "AlarmStatusResponse": {
         "properties": {
           "status": {
@@ -521,6 +650,17 @@
           "room_name": {
             "type": "string",
             "title": "Room Name"
+          },
+          "brightness": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brightness"
           }
         },
         "type": "object",
@@ -528,7 +668,8 @@
           "id",
           "name",
           "room_id",
-          "room_name"
+          "room_name",
+          "brightness"
         ],
         "title": "AvailableSceneResponse"
       },
@@ -613,6 +754,97 @@
         ],
         "title": "ConfigurationIssue"
       },
+      "DaylightAlarmConfigurationRequest": {
+        "properties": {
+          "room_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Room Id"
+          },
+          "scene_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Scene Id"
+          },
+          "start_brightness": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Start Brightness"
+          },
+          "end_brightness": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "End Brightness"
+          },
+          "duration_seconds": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Duration Seconds"
+          },
+          "after_alarm": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AfterAlarmConfigurationRequest"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "room_id",
+          "scene_id",
+          "start_brightness",
+          "end_brightness",
+          "duration_seconds"
+        ],
+        "title": "DaylightAlarmConfigurationRequest"
+      },
+      "DaylightAlarmConfigurationResponse": {
+        "properties": {
+          "room": {
+            "$ref": "#/components/schemas/NamedResourceResponse"
+          },
+          "scene": {
+            "$ref": "#/components/schemas/NamedResourceResponse"
+          },
+          "start_brightness": {
+            "type": "integer",
+            "title": "Start Brightness"
+          },
+          "end_brightness": {
+            "type": "integer",
+            "title": "End Brightness"
+          },
+          "duration_seconds": {
+            "type": "integer",
+            "title": "Duration Seconds"
+          },
+          "after_alarm": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AfterAlarmConfigurationResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "room",
+          "scene",
+          "start_brightness",
+          "end_brightness",
+          "duration_seconds"
+        ],
+        "title": "DaylightAlarmConfigurationResponse"
+      },
       "DoctorCheckResponse": {
         "properties": {
           "name": {
@@ -667,6 +899,25 @@
         ],
         "title": "ErrorResponse"
       },
+      "NamedResourceResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "NamedResourceResponse"
+      },
       "OnboardingState": {
         "type": "string",
         "enum": [
@@ -716,52 +967,6 @@
           "read_only"
         ],
         "title": "OnboardingStatusResponse"
-      },
-      "RoomResponse": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "scenes": {
-            "items": {
-              "$ref": "#/components/schemas/SceneResponse"
-            },
-            "type": "array",
-            "title": "Scenes"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "name",
-          "scenes"
-        ],
-        "title": "RoomResponse"
-      },
-      "SceneResponse": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "name"
-        ],
-        "title": "SceneResponse"
       },
       "StartRequest": {
         "properties": {

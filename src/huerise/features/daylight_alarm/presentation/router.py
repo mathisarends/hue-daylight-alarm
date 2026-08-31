@@ -3,10 +3,18 @@ from fastapi import Depends, status
 
 from huerise.authentication import require_api_key
 from huerise.exception_handlers import ExceptionRouter
-from huerise.features.daylight_alarm.application import DaylightAlarm
-from huerise.features.daylight_alarm.presentation.errors import start_alarm_errors
+from huerise.features.daylight_alarm.application import (
+    DaylightAlarm,
+    DaylightAlarmConfiguration,
+)
+from huerise.features.daylight_alarm.presentation.errors import (
+    configuration_errors,
+    start_alarm_errors,
+)
 from huerise.features.daylight_alarm.presentation.schemas import (
     AlarmStatusResponse,
+    DaylightAlarmConfigurationRequest,
+    DaylightAlarmConfigurationResponse,
     StartRequest,
 )
 
@@ -16,6 +24,46 @@ router = ExceptionRouter(
     route_class=DishkaRoute,
     dependencies=[Depends(require_api_key)],
 )
+
+
+@router.get(
+    "/configuration",
+    response_model=DaylightAlarmConfigurationResponse,
+    operation_id="getDaylightAlarmConfiguration",
+    errors=configuration_errors,
+)
+async def get_configuration(
+    configuration: FromDishka[DaylightAlarmConfiguration],
+) -> DaylightAlarmConfigurationResponse:
+    return configuration.get()
+
+
+@router.put(
+    "/configuration",
+    response_model=DaylightAlarmConfigurationResponse,
+    operation_id="setDaylightAlarmConfiguration",
+    errors=configuration_errors,
+)
+async def set_configuration(
+    body: DaylightAlarmConfigurationRequest,
+    configuration: FromDishka[DaylightAlarmConfiguration],
+) -> DaylightAlarmConfigurationResponse:
+    after_alarm = body.after_alarm
+    return await configuration.save(
+        room_id=body.room_id,
+        scene_id=body.scene_id,
+        start_brightness=body.start_brightness,
+        end_brightness=body.end_brightness,
+        duration_seconds=body.duration_seconds,
+        after_alarm_room_id=after_alarm.room_id if after_alarm is not None else None,
+        after_alarm_scene_id=after_alarm.scene_id if after_alarm is not None else None,
+        after_alarm_brightness=(
+            after_alarm.brightness if after_alarm is not None else None
+        ),
+        after_alarm_delay_seconds=(
+            after_alarm.delay_seconds if after_alarm is not None else None
+        ),
+    )
 
 
 @router.post(

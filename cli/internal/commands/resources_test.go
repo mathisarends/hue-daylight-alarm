@@ -10,40 +10,6 @@ import (
 	"testing"
 )
 
-func TestRoomsListJSON(t *testing.T) {
-	t.Parallel()
-	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		if request.URL.Path != "/rooms" {
-			t.Errorf("path = %q", request.URL.Path)
-		}
-		if request.Header.Get("X-API-Key") != "test-key" {
-			t.Errorf("X-API-Key = %q", request.Header.Get("X-API-Key"))
-		}
-		writer.Header().Set("Content-Type", "application/json")
-		_, _ = writer.Write([]byte(`[{
-			"id":"7a6d3f2e-1111-4a11-9a11-1a2b3c4d5e6f",
-			"name":"Bedroom",
-			"scenes":[
-				{"id":"7a6d3f2e-2222-4a11-9a11-1a2b3c4d5e6f","name":"Sunrise"},
-				{"id":"7a6d3f2e-3333-4a11-9a11-1a2b3c4d5e6f","name":"Relax"}
-			]
-		}]`))
-	}))
-	defer server.Close()
-
-	stdout, stderr, exitCode := runTestCLI(t, server.URL, "rooms", "--fields=name", "--compact")
-	if exitCode != 0 {
-		t.Fatalf("exit = %d, stderr = %s", exitCode, stderr)
-	}
-	var rooms []map[string]any
-	if err := json.Unmarshal([]byte(stdout), &rooms); err != nil {
-		t.Fatal(err)
-	}
-	if len(rooms) != 1 || len(rooms[0]) != 1 || rooms[0]["name"] != "Bedroom" {
-		t.Fatalf("rooms = %#v", rooms)
-	}
-}
-
 func TestScenesList(t *testing.T) {
 	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
@@ -53,7 +19,7 @@ func TestScenesList(t *testing.T) {
 		writer.Header().Set("Content-Type", "application/json")
 		_, _ = writer.Write([]byte(`[{
 			"id":"7a6d3f2e-2222-4a11-9a11-1a2b3c4d5e6f","name":"Sunrise",
-			"room_id":"7a6d3f2e-1111-4a11-9a11-1a2b3c4d5e6f","room_name":"Bedroom"
+			"room_id":"7a6d3f2e-1111-4a11-9a11-1a2b3c4d5e6f","room_name":"Bedroom","brightness":null
 		}]`))
 	}))
 	defer server.Close()

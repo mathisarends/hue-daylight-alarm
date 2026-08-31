@@ -9,7 +9,12 @@ from huerise.env import AppSettings, HueEnvironment, LogLevel
 
 VALID_CONFIG = """\
 daylight_alarm:
-  scene_id: 00000000-0000-0000-0000-000000000001
+  room:
+    id: 00000000-0000-0000-0000-000000000002
+    name: Bedroom
+  scene:
+    id: 00000000-0000-0000-0000-000000000001
+    name: Sunrise
   start_brightness: 1
   end_brightness: 100
   duration_seconds: 1800
@@ -22,7 +27,8 @@ def test_loads_daylight_alarm(tmp_path: Path) -> None:
 
     config = YamlConfiguration(path).load()
 
-    assert config.daylight_alarm.scene_id == UUID(int=1)
+    assert config.daylight_alarm.scene.id == UUID(int=1)
+    assert config.daylight_alarm.room.name == "Bedroom"
     assert config.daylight_alarm.duration_seconds == 1800
     assert config.hue is None
 
@@ -119,7 +125,7 @@ def test_updates_only_hue_section_atomically(tmp_path: Path) -> None:
     config = repository.load()
     assert str(config.hue.bridge_ip) == "192.0.2.10"
     assert config.hue.app_key == "a-valid-hue-app-key-123"
-    assert config.daylight_alarm.scene_id == UUID(int=1)
+    assert config.daylight_alarm.scene.id == UUID(int=1)
     assert list(tmp_path.glob("*.tmp")) == []
 
 

@@ -6,13 +6,14 @@ package client
 type OperationName = string
 
 const (
-	DoctorOperation             OperationName = "Doctor"
-	GetHueBridgeOperation       OperationName = "GetHueBridge"
-	ListHueBridgesOperation     OperationName = "ListHueBridges"
-	ListRoomsOperation          OperationName = "ListRooms"
-	ListScenesOperation         OperationName = "ListScenes"
-	RegisterHueBridgeOperation  OperationName = "RegisterHueBridge"
-	SelectHueBridgeOperation    OperationName = "SelectHueBridge"
-	StartDaylightAlarmOperation OperationName = "StartDaylightAlarm"
-	StopDaylightAlarmOperation  OperationName = "StopDaylightAlarm"
+	DoctorOperation                        OperationName = "Doctor"
+	GetDaylightAlarmConfigurationOperation OperationName = "GetDaylightAlarmConfiguration"
+	GetHueBridgeOperation                  OperationName = "GetHueBridge"
+	ListHueBridgesOperation                OperationName = "ListHueBridges"
+	ListScenesOperation                    OperationName = "ListScenes"
+	RegisterHueBridgeOperation             OperationName = "RegisterHueBridge"
+	SelectHueBridgeOperation               OperationName = "SelectHueBridge"
+	SetDaylightAlarmConfigurationOperation OperationName = "SetDaylightAlarmConfiguration"
+	StartDaylightAlarmOperation            OperationName = "StartDaylightAlarm"
+	StopDaylightAlarmOperation             OperationName = "StopDaylightAlarm"
 )

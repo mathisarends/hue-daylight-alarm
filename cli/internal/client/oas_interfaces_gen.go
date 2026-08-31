@@ -5,16 +5,16 @@ type DoctorRes interface {
 	doctorRes()
 }
 
+type GetDaylightAlarmConfigurationRes interface {
+	getDaylightAlarmConfigurationRes()
+}
+
 type GetHueBridgeRes interface {
 	getHueBridgeRes()
 }
 
 type ListHueBridgesRes interface {
 	listHueBridgesRes()
-}
-
-type ListRoomsRes interface {
-	listRoomsRes()
 }
 
 type ListScenesRes interface {
@@ -27,6 +27,10 @@ type RegisterHueBridgeRes interface {
 
 type SelectHueBridgeRes interface {
 	selectHueBridgeRes()
+}
+
+type SetDaylightAlarmConfigurationRes interface {
+	setDaylightAlarmConfigurationRes()
 }
 
 type StartDaylightAlarmRes interface {

@@ -1,3 +1,4 @@
+from typing import Any
 from uuid import UUID
 
 from hueify import Hueify
@@ -56,7 +57,11 @@ class HueifyClient:
                 id=room.id,
                 name=room.name,
                 scenes=tuple(
-                    Scene(id=scene.id, name=scene.name)
+                    Scene(
+                        id=scene.id,
+                        name=scene.name,
+                        brightness=_scene_brightness(scene),
+                    )
                     for scene in await self._client.rooms.scenes(room.id)
                 ),
             )
@@ -71,6 +76,17 @@ class HueifyClient:
 
     async def close(self) -> None:
         await self._client.close()
+
+
+def _scene_brightness(scene: Any) -> float | None:
+    brightnesses = [
+        action.action.dimming.brightness
+        for action in scene.actions
+        if action.action.dimming is not None
+    ]
+    if not brightnesses:
+        return None
+    return sum(brightnesses) / len(brightnesses)
 
 
 class HueifyOnboarding(OnboardingGateway):

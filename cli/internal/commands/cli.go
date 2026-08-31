@@ -30,13 +30,13 @@ type commandTree struct {
 	APIURL  string `name:"api-url" help:"Override HUERISE_API_URL."`
 	APIKey  string `name:"api-key" help:"Override HUERISE_API_KEY."`
 
-	Start   startCommand   `cmd:"" help:"Start the daylight alarm."`
-	Stop    stopCommand    `cmd:"" help:"Stop a running daylight alarm."`
-	Rooms   roomsCommand   `cmd:"" help:"List rooms and their Hue scenes."`
-	Scenes  scenesCommand  `cmd:"" help:"List every Hue scene."`
-	Hue     hueCommand     `cmd:"" help:"Configure the Hue Bridge."`
-	Doctor  doctorCommand  `cmd:"" help:"Check device configuration."`
-	Version versionCommand `cmd:"" help:"Print version information."`
+	Start         startCommand         `cmd:"" help:"Start the daylight alarm."`
+	Stop          stopCommand          `cmd:"" help:"Stop a running daylight alarm."`
+	Scenes        scenesCommand        `cmd:"" help:"List every Hue scene."`
+	Configuration configurationCommand `cmd:"" help:"Read or save the daylight alarm configuration."`
+	Hue           hueCommand           `cmd:"" help:"Configure the Hue Bridge."`
+	Doctor        doctorCommand        `cmd:"" help:"Check device configuration."`
+	Version       versionCommand       `cmd:"" help:"Print version information."`
 }
 
 type versionCommand struct{}

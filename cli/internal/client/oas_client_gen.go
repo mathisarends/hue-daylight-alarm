@@ -26,6 +26,12 @@ type Invoker interface {
 	//
 	// GET /doctor
 	Doctor(ctx context.Context) (DoctorRes, error)
+	// GetDaylightAlarmConfiguration invokes getDaylightAlarmConfiguration operation.
+	//
+	// Get Configuration.
+	//
+	// GET /daylight-alarm/configuration
+	GetDaylightAlarmConfiguration(ctx context.Context) (GetDaylightAlarmConfigurationRes, error)
 	// GetHueBridge invokes getHueBridge operation.
 	//
 	// Bridge Status.
@@ -38,12 +44,6 @@ type Invoker interface {
 	//
 	// GET /hue/bridges
 	ListHueBridges(ctx context.Context) (ListHueBridgesRes, error)
-	// ListRooms invokes listRooms operation.
-	//
-	// Rooms.
-	//
-	// GET /rooms
-	ListRooms(ctx context.Context) (ListRoomsRes, error)
 	// ListScenes invokes listScenes operation.
 	//
 	// Scenes.
@@ -62,6 +62,12 @@ type Invoker interface {
 	//
 	// PUT /hue/bridge
 	SelectHueBridge(ctx context.Context, request *BridgeSelectionRequest) (SelectHueBridgeRes, error)
+	// SetDaylightAlarmConfiguration invokes setDaylightAlarmConfiguration operation.
+	//
+	// Set Configuration.
+	//
+	// PUT /daylight-alarm/configuration
+	SetDaylightAlarmConfiguration(ctx context.Context, request *DaylightAlarmConfigurationRequest) (SetDaylightAlarmConfigurationRes, error)
 	// StartDaylightAlarm invokes startDaylightAlarm operation.
 	//
 	// Start.
@@ -180,6 +186,76 @@ func (c *Client) sendDoctor(ctx context.Context) (res DoctorRes, err error) {
 	defer body.Close()
 
 	result, err := decodeDoctorResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// GetDaylightAlarmConfiguration invokes getDaylightAlarmConfiguration operation.
+//
+// Get Configuration.
+//
+// GET /daylight-alarm/configuration
+func (c *Client) GetDaylightAlarmConfiguration(ctx context.Context) (GetDaylightAlarmConfigurationRes, error) {
+	res, err := c.sendGetDaylightAlarmConfiguration(ctx)
+	return res, err
+}
+
+func (c *Client) sendGetDaylightAlarmConfiguration(ctx context.Context) (res GetDaylightAlarmConfigurationRes, err error) {
+
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/daylight-alarm/configuration"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+
+			switch err := c.securityAPIKeyHeader(ctx, GetDaylightAlarmConfigurationOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"APIKeyHeader\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer body.Close()
+
+	result, err := decodeGetDaylightAlarmConfigurationResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -320,76 +396,6 @@ func (c *Client) sendListHueBridges(ctx context.Context) (res ListHueBridgesRes,
 	defer body.Close()
 
 	result, err := decodeListHueBridgesResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
-// ListRooms invokes listRooms operation.
-//
-// Rooms.
-//
-// GET /rooms
-func (c *Client) ListRooms(ctx context.Context) (ListRoomsRes, error) {
-	res, err := c.sendListRooms(ctx)
-	return res, err
-}
-
-func (c *Client) sendListRooms(ctx context.Context) (res ListRoomsRes, err error) {
-
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [1]string
-	pathParts[0] = "/rooms"
-	uri.AddPathParts(u, pathParts[:]...)
-
-	r, err := ht.NewRequest(ctx, "GET", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-
-			switch err := c.securityAPIKeyHeader(ctx, ListRoomsOperation, r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"APIKeyHeader\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	body := resp.Body
-	defer body.Close()
-
-	result, err := decodeListRoomsResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -603,6 +609,79 @@ func (c *Client) sendSelectHueBridge(ctx context.Context, request *BridgeSelecti
 	defer body.Close()
 
 	result, err := decodeSelectHueBridgeResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// SetDaylightAlarmConfiguration invokes setDaylightAlarmConfiguration operation.
+//
+// Set Configuration.
+//
+// PUT /daylight-alarm/configuration
+func (c *Client) SetDaylightAlarmConfiguration(ctx context.Context, request *DaylightAlarmConfigurationRequest) (SetDaylightAlarmConfigurationRes, error) {
+	res, err := c.sendSetDaylightAlarmConfiguration(ctx, request)
+	return res, err
+}
+
+func (c *Client) sendSetDaylightAlarmConfiguration(ctx context.Context, request *DaylightAlarmConfigurationRequest) (res SetDaylightAlarmConfigurationRes, err error) {
+
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/daylight-alarm/configuration"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	r, err := ht.NewRequest(ctx, "PUT", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodeSetDaylightAlarmConfigurationRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+
+			switch err := c.securityAPIKeyHeader(ctx, SetDaylightAlarmConfigurationOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"APIKeyHeader\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer body.Close()
+
+	result, err := decodeSetDaylightAlarmConfigurationResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

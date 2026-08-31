@@ -2,7 +2,11 @@ from uuid import UUID
 
 import pytest
 
-from huerise.configuration import DaylightAlarmConfig, HueriseConfig
+from huerise.configuration import (
+    DaylightAlarmConfig,
+    HueriseConfig,
+    NamedResourceConfig,
+)
 from huerise.features.lighting.application import (
     Doctor,
     HueUnavailableError,
@@ -23,7 +27,8 @@ ROOM_ID = UUID(int=2)
 
 CONFIG = HueriseConfig(
     daylight_alarm=DaylightAlarmConfig(
-        scene_id=SCENE_ID,
+        room=NamedResourceConfig(id=ROOM_ID, name="Bedroom"),
+        scene=NamedResourceConfig(id=SCENE_ID, name="Sunrise"),
         start_brightness=1,
         end_brightness=100,
         duration_seconds=1800,

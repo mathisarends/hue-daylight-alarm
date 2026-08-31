@@ -42,6 +42,7 @@ class SceneService:
                 name=scene.name,
                 room_id=room.id,
                 room_name=room.name,
+                brightness=scene.brightness,
             )
             for room in await self.list_rooms()
             for scene in room.scenes
