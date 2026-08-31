@@ -99,7 +99,8 @@ The server URL is resolved in this order:
 1. Explicit `--api-url` override
 2. `HUERISE_API_URL` environment variable
 3. The file selected by `--env-file` (default `.env`)
-4. The default API URL `http://localhost:8000`
+4. `http://localhost:<HUERISE_PORT>` from the environment or dotenv file
+5. The default API URL `http://localhost:8000`
 
 The API key is resolved in this order:
 

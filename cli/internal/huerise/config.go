@@ -32,7 +32,11 @@ func LoadConfig(dotEnvPath string) (Config, error) {
 	}
 	baseURL := get("HUERISE_API_URL")
 	if baseURL == "" {
-		baseURL = DefaultBaseURL
+		if port := get("HUERISE_PORT"); port != "" {
+			baseURL = "http://localhost:" + port
+		} else {
+			baseURL = DefaultBaseURL
+		}
 	}
 	return Config{BaseURL: strings.TrimRight(baseURL, "/"), APIKey: get("HUERISE_API_KEY")}, nil
 }

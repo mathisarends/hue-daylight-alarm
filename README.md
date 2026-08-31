@@ -48,7 +48,11 @@ Set a private API key in `.env`:
 ```dotenv
 HUERISE_API_KEY=replace-with-a-long-random-key
 HUERISE_LOG_LEVEL=INFO
+HUERISE_PORT=8000
 ```
+
+`HUERISE_PORT` controls the port published on the host. The application keeps
+listening on port 8000 inside the container.
 
 The alarm is fully described by `data/huerise.yml`:
 
@@ -87,9 +91,10 @@ continues with the snapshot it started with.
 docker compose up --build -d
 ```
 
-The API and Swagger UI are available at `http://localhost:8000` and
-`http://localhost:8000/docs`. Compose mounts `./data` at `/config`; this YAML
-file is the application's only persistent storage.
+With the default `HUERISE_PORT`, the API and Swagger UI are available at
+`http://localhost:8000` and `http://localhost:8000/docs`. Compose mounts
+`./data` at `/config`; this YAML file is the application's only persistent
+storage.
 
 ## API
 
@@ -139,6 +144,14 @@ huerise stop
 It reads `HUERISE_API_URL` and `HUERISE_API_KEY` from the environment or a
 dotenv file (`--env-file`). Every command also prints machine-readable output
 with `--json`.
+
+When `HUERISE_API_URL` is unset, the CLI connects to localhost using
+`HUERISE_PORT`, or port 8000 when neither setting is present. Set the full URL
+when the container runs on another host:
+
+```dotenv
+HUERISE_API_URL=http://huerise.local:8080
+```
 
 ## Local development
 

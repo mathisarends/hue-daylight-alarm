@@ -12,6 +12,6 @@ services:
       HUE_BRIDGE_IP: ${HUE_BRIDGE_IP:-}
       HUE_APP_KEY: ${HUE_APP_KEY:-}
     ports:
-      - "8000:8000"
+      - "${HUERISE_PORT:-8000}:8000"
     volumes:
       - ./data:/config

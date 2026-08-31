@@ -39,3 +39,39 @@ func TestLoadConfigReadsDotEnv(t *testing.T) {
 		t.Fatalf("LoadConfig() = %#v", config)
 	}
 }
+
+func TestLoadConfigUsesPublishedPortForLocalServer(t *testing.T) {
+	dotEnv := filepath.Join(t.TempDir(), ".env")
+	if err := os.WriteFile(dotEnv, []byte("HUERISE_PORT=8080\nHUERISE_API_KEY=file-key\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("HUERISE_API_URL", "")
+	t.Setenv("HUERISE_PORT", "")
+	t.Setenv("HUERISE_API_KEY", "")
+
+	config, err := LoadConfig(dotEnv)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if config.BaseURL != "http://localhost:8080" || config.APIKey != "file-key" {
+		t.Fatalf("LoadConfig() = %#v", config)
+	}
+}
+
+func TestLoadConfigPrefersAPIURLOverPublishedPort(t *testing.T) {
+	dotEnv := filepath.Join(t.TempDir(), ".env")
+	if err := os.WriteFile(dotEnv, []byte("HUERISE_API_URL=http://server.example:9000\nHUERISE_PORT=8080\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("HUERISE_API_URL", "")
+	t.Setenv("HUERISE_PORT", "")
+	t.Setenv("HUERISE_API_KEY", "")
+
+	config, err := LoadConfig(dotEnv)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if config.BaseURL != "http://server.example:9000" {
+		t.Fatalf("LoadConfig() = %#v", config)
+	}
+}
