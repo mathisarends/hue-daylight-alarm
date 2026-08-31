@@ -766,18 +766,6 @@
             "format": "uuid",
             "title": "Scene Id"
           },
-          "start_brightness": {
-            "type": "integer",
-            "maximum": 100.0,
-            "minimum": 1.0,
-            "title": "Start Brightness"
-          },
-          "end_brightness": {
-            "type": "integer",
-            "maximum": 100.0,
-            "minimum": 1.0,
-            "title": "End Brightness"
-          },
           "duration_seconds": {
             "type": "integer",
             "minimum": 1.0,
@@ -798,8 +786,6 @@
         "required": [
           "room_id",
           "scene_id",
-          "start_brightness",
-          "end_brightness",
           "duration_seconds"
         ],
         "title": "DaylightAlarmConfigurationRequest"
@@ -811,14 +797,6 @@
           },
           "scene": {
             "$ref": "#/components/schemas/NamedResourceResponse"
-          },
-          "start_brightness": {
-            "type": "integer",
-            "title": "Start Brightness"
-          },
-          "end_brightness": {
-            "type": "integer",
-            "title": "End Brightness"
           },
           "duration_seconds": {
             "type": "integer",
@@ -839,8 +817,6 @@
         "required": [
           "room",
           "scene",
-          "start_brightness",
-          "end_brightness",
           "duration_seconds"
         ],
         "title": "DaylightAlarmConfigurationResponse"

@@ -17,7 +17,7 @@ var errCancelled = errors.New("cancelled")
 
 type configurationCommand struct {
 	Show configurationShowCommand `cmd:"" default:"withargs" help:"Show the saved configuration."`
-	Set  configurationSetCommand  `cmd:"" help:"Save the alarm's room, scene, brightness, and duration."`
+	Set  configurationSetCommand  `cmd:"" help:"Save the alarm's room, scene, and duration."`
 }
 
 type configurationShowCommand struct{}
@@ -36,8 +36,6 @@ func (configurationShowCommand) Run(runtime *Runtime) error {
 type configurationSetCommand struct {
 	RoomID          uuid.UUID  `arg:"" name:"room-id" optional:"" help:"Room to wake up in; asked for when omitted."`
 	SceneID         uuid.UUID  `arg:"" name:"scene-id" optional:"" help:"Scene to fade in; asked for when omitted."`
-	StartBrightness int        `name:"start-brightness" default:"1"`
-	EndBrightness   int        `name:"end-brightness" default:"100"`
 	DurationSeconds int        `name:"duration-seconds" default:"1800"`
 	AfterRoomID     *uuid.UUID `name:"after-room-id"`
 	AfterSceneID    *uuid.UUID `name:"after-scene-id"`
@@ -72,7 +70,6 @@ func (command configurationSetCommand) Run(runtime *Runtime) error {
 func (command configurationSetCommand) request(runtime *Runtime) (*client.DaylightAlarmConfigurationRequest, error) {
 	request := &client.DaylightAlarmConfigurationRequest{
 		RoomID: command.RoomID, SceneID: command.SceneID,
-		StartBrightness: command.StartBrightness, EndBrightness: command.EndBrightness,
 		DurationSeconds: command.DurationSeconds,
 	}
 	if err := command.addAfterAlarm(request); err != nil {
@@ -114,8 +111,6 @@ func (command configurationSetCommand) addAfterAlarm(request *client.DaylightAla
 	return nil
 }
 
-// askForSelection walks a person through the same request an agent would send
-// as two UUIDs: room, then scene, then the two numbers worth thinking about.
 func (command configurationSetCommand) askForSelection(
 	runtime *Runtime, request *client.DaylightAlarmConfigurationRequest,
 ) (*client.DaylightAlarmConfigurationRequest, error) {
@@ -145,21 +140,17 @@ func (command configurationSetCommand) askForSelection(
 		return nil, err
 	}
 
-	brightness, err := prompt.askInt("Brightness at the end of the fade, 1-100", command.EndBrightness, 1, 100)
-	if err != nil {
-		return nil, err
-	}
 	minutes, err := prompt.askInt("Fade duration in minutes", command.DurationSeconds/60, 1, 24*60)
 	if err != nil {
 		return nil, err
 	}
 
 	request.RoomID, request.SceneID = roomID, scene.Value.(uuid.UUID)
-	request.EndBrightness, request.DurationSeconds = brightness, minutes*60
+	request.DurationSeconds = minutes * 60
 
 	if err := writeLines(runtime.stdout, fmt.Sprintf(
-		"Wake up in %s with %q, fading to %d%% over %s.",
-		room.Label, scene.Label, brightness, formatDuration(minutes*60))); err != nil {
+		"Wake up in %s with %q over %s.",
+		room.Label, scene.Label, formatDuration(minutes*60))); err != nil {
 		return nil, err
 	}
 	confirmed, err := prompt.confirm("Save this")
@@ -200,7 +191,6 @@ func writeConfiguration(runtime *Runtime, config *client.DaylightAlarmConfigurat
 	fields := []recordField{
 		{Name: "Room", Value: config.Room.Name},
 		{Name: "Scene", Value: config.Scene.Name},
-		{Name: "Brightness", Value: fmt.Sprintf("%d%% to %d%%", config.StartBrightness, config.EndBrightness)},
 		{Name: "Duration", Value: formatDuration(config.DurationSeconds)},
 	}
 	if after, ok := config.AfterAlarm.Get(); ok {

@@ -1073,14 +1073,6 @@ func (s *DaylightAlarmConfigurationRequest) encodeFields(e *jx.Encoder) {
 		json.EncodeUUID(e, s.SceneID)
 	}
 	{
-		e.FieldStart("start_brightness")
-		e.Int(s.StartBrightness)
-	}
-	{
-		e.FieldStart("end_brightness")
-		e.Int(s.EndBrightness)
-	}
-	{
 		e.FieldStart("duration_seconds")
 		e.Int(s.DurationSeconds)
 	}
@@ -1092,13 +1084,11 @@ func (s *DaylightAlarmConfigurationRequest) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfDaylightAlarmConfigurationRequest = [6]string{
+var jsonFieldsNameOfDaylightAlarmConfigurationRequest = [4]string{
 	0: "room_id",
 	1: "scene_id",
-	2: "start_brightness",
-	3: "end_brightness",
-	4: "duration_seconds",
-	5: "after_alarm",
+	2: "duration_seconds",
+	3: "after_alarm",
 }
 
 // Decode decodes DaylightAlarmConfigurationRequest from json.
@@ -1134,32 +1124,8 @@ func (s *DaylightAlarmConfigurationRequest) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"scene_id\"")
 			}
-		case "start_brightness":
-			requiredBitSet[0] |= 1 << 2
-			if err := func() error {
-				v, err := d.Int()
-				s.StartBrightness = int(v)
-				if err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"start_brightness\"")
-			}
-		case "end_brightness":
-			requiredBitSet[0] |= 1 << 3
-			if err := func() error {
-				v, err := d.Int()
-				s.EndBrightness = int(v)
-				if err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"end_brightness\"")
-			}
 		case "duration_seconds":
-			requiredBitSet[0] |= 1 << 4
+			requiredBitSet[0] |= 1 << 2
 			if err := func() error {
 				v, err := d.Int()
 				s.DurationSeconds = int(v)
@@ -1190,7 +1156,7 @@ func (s *DaylightAlarmConfigurationRequest) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00011111,
+		0b00000111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -1254,14 +1220,6 @@ func (s *DaylightAlarmConfigurationResponse) encodeFields(e *jx.Encoder) {
 		s.Scene.Encode(e)
 	}
 	{
-		e.FieldStart("start_brightness")
-		e.Int(s.StartBrightness)
-	}
-	{
-		e.FieldStart("end_brightness")
-		e.Int(s.EndBrightness)
-	}
-	{
 		e.FieldStart("duration_seconds")
 		e.Int(s.DurationSeconds)
 	}
@@ -1273,13 +1231,11 @@ func (s *DaylightAlarmConfigurationResponse) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfDaylightAlarmConfigurationResponse = [6]string{
+var jsonFieldsNameOfDaylightAlarmConfigurationResponse = [4]string{
 	0: "room",
 	1: "scene",
-	2: "start_brightness",
-	3: "end_brightness",
-	4: "duration_seconds",
-	5: "after_alarm",
+	2: "duration_seconds",
+	3: "after_alarm",
 }
 
 // Decode decodes DaylightAlarmConfigurationResponse from json.
@@ -1311,32 +1267,8 @@ func (s *DaylightAlarmConfigurationResponse) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"scene\"")
 			}
-		case "start_brightness":
-			requiredBitSet[0] |= 1 << 2
-			if err := func() error {
-				v, err := d.Int()
-				s.StartBrightness = int(v)
-				if err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"start_brightness\"")
-			}
-		case "end_brightness":
-			requiredBitSet[0] |= 1 << 3
-			if err := func() error {
-				v, err := d.Int()
-				s.EndBrightness = int(v)
-				if err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"end_brightness\"")
-			}
 		case "duration_seconds":
-			requiredBitSet[0] |= 1 << 4
+			requiredBitSet[0] |= 1 << 2
 			if err := func() error {
 				v, err := d.Int()
 				s.DurationSeconds = int(v)
@@ -1367,7 +1299,7 @@ func (s *DaylightAlarmConfigurationResponse) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00011111,
+		0b00000111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.

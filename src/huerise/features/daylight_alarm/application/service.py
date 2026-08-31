@@ -116,7 +116,7 @@ class DaylightAlarm:
         self,
         client: HueClient,
         room_id: UUID,
-        end_brightness: float,
+        target_brightness: float,
         config: DaylightAlarmConfig,
     ) -> None:
         elapsed = 0.0
@@ -127,7 +127,7 @@ class DaylightAlarm:
                 elapsed += delay
                 progress = elapsed / config.duration_seconds
                 brightness = (
-                    START_BRIGHTNESS + (end_brightness - START_BRIGHTNESS) * progress
+                    START_BRIGHTNESS + (target_brightness - START_BRIGHTNESS) * progress
                 )
                 await client.set_brightness(room_id, brightness)
             if config.after_alarm is not None:

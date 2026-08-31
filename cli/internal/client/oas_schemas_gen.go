@@ -342,8 +342,6 @@ func (s *ConfigurationIssue) SetType(val string) {
 type DaylightAlarmConfigurationRequest struct {
 	RoomID          uuid.UUID                            `json:"room_id"`
 	SceneID         uuid.UUID                            `json:"scene_id"`
-	StartBrightness int                                  `json:"start_brightness"`
-	EndBrightness   int                                  `json:"end_brightness"`
 	DurationSeconds int                                  `json:"duration_seconds"`
 	AfterAlarm      OptNilAfterAlarmConfigurationRequest `json:"after_alarm"`
 }
@@ -356,16 +354,6 @@ func (s *DaylightAlarmConfigurationRequest) GetRoomID() uuid.UUID {
 // GetSceneID returns the value of SceneID.
 func (s *DaylightAlarmConfigurationRequest) GetSceneID() uuid.UUID {
 	return s.SceneID
-}
-
-// GetStartBrightness returns the value of StartBrightness.
-func (s *DaylightAlarmConfigurationRequest) GetStartBrightness() int {
-	return s.StartBrightness
-}
-
-// GetEndBrightness returns the value of EndBrightness.
-func (s *DaylightAlarmConfigurationRequest) GetEndBrightness() int {
-	return s.EndBrightness
 }
 
 // GetDurationSeconds returns the value of DurationSeconds.
@@ -388,16 +376,6 @@ func (s *DaylightAlarmConfigurationRequest) SetSceneID(val uuid.UUID) {
 	s.SceneID = val
 }
 
-// SetStartBrightness sets the value of StartBrightness.
-func (s *DaylightAlarmConfigurationRequest) SetStartBrightness(val int) {
-	s.StartBrightness = val
-}
-
-// SetEndBrightness sets the value of EndBrightness.
-func (s *DaylightAlarmConfigurationRequest) SetEndBrightness(val int) {
-	s.EndBrightness = val
-}
-
 // SetDurationSeconds sets the value of DurationSeconds.
 func (s *DaylightAlarmConfigurationRequest) SetDurationSeconds(val int) {
 	s.DurationSeconds = val
@@ -412,8 +390,6 @@ func (s *DaylightAlarmConfigurationRequest) SetAfterAlarm(val OptNilAfterAlarmCo
 type DaylightAlarmConfigurationResponse struct {
 	Room            NamedResourceResponse                 `json:"room"`
 	Scene           NamedResourceResponse                 `json:"scene"`
-	StartBrightness int                                   `json:"start_brightness"`
-	EndBrightness   int                                   `json:"end_brightness"`
 	DurationSeconds int                                   `json:"duration_seconds"`
 	AfterAlarm      OptNilAfterAlarmConfigurationResponse `json:"after_alarm"`
 }
@@ -426,16 +402,6 @@ func (s *DaylightAlarmConfigurationResponse) GetRoom() NamedResourceResponse {
 // GetScene returns the value of Scene.
 func (s *DaylightAlarmConfigurationResponse) GetScene() NamedResourceResponse {
 	return s.Scene
-}
-
-// GetStartBrightness returns the value of StartBrightness.
-func (s *DaylightAlarmConfigurationResponse) GetStartBrightness() int {
-	return s.StartBrightness
-}
-
-// GetEndBrightness returns the value of EndBrightness.
-func (s *DaylightAlarmConfigurationResponse) GetEndBrightness() int {
-	return s.EndBrightness
 }
 
 // GetDurationSeconds returns the value of DurationSeconds.
@@ -456,16 +422,6 @@ func (s *DaylightAlarmConfigurationResponse) SetRoom(val NamedResourceResponse) 
 // SetScene sets the value of Scene.
 func (s *DaylightAlarmConfigurationResponse) SetScene(val NamedResourceResponse) {
 	s.Scene = val
-}
-
-// SetStartBrightness sets the value of StartBrightness.
-func (s *DaylightAlarmConfigurationResponse) SetStartBrightness(val int) {
-	s.StartBrightness = val
-}
-
-// SetEndBrightness sets the value of EndBrightness.
-func (s *DaylightAlarmConfigurationResponse) SetEndBrightness(val int) {
-	s.EndBrightness = val
 }
 
 // SetDurationSeconds sets the value of DurationSeconds.

@@ -35,7 +35,7 @@ func configurationServer(t *testing.T, saved *map[string]any) *httptest.Server {
 			_, _ = writer.Write([]byte(`{
 				"room":{"id":"` + roomID + `","name":"Mein Zimmer"},
 				"scene":{"id":"` + sceneID + `","name":"Tageslichtwecker"},
-				"start_brightness":1,"end_brightness":80,"duration_seconds":1500,"after_alarm":null
+				"duration_seconds":1500,"after_alarm":null
 			}`))
 		default:
 			t.Errorf("unexpected request = %s %s", request.Method, request.URL.Path)
@@ -57,15 +57,20 @@ func TestConfigurationSetAsksWhenIDsAreMissing(t *testing.T) {
 	server := configurationServer(t, &saved)
 	defer server.Close()
 
-	// One room, so the wizard asks for scene, brightness, minutes, confirmation.
-	stdout, stderr, exitCode := runWithInput(t, server.URL, "1\n80\n25\ny\n", "configuration", "set")
+	stdout, stderr, exitCode := runWithInput(t, server.URL, "1\n25\ny\n", "configuration", "set")
 	if exitCode != 0 {
 		t.Fatalf("exit = %d, stdout = %s, stderr = %s", exitCode, stdout, stderr)
 	}
 	if saved["scene_id"] != sceneID || saved["room_id"] != roomID {
 		t.Fatalf("saved = %#v", saved)
 	}
-	if saved["end_brightness"] != float64(80) || saved["duration_seconds"] != float64(25*60) {
+	if saved["duration_seconds"] != float64(25*60) {
+		t.Fatalf("saved = %#v", saved)
+	}
+	if _, exists := saved["start_brightness"]; exists {
+		t.Fatalf("saved = %#v", saved)
+	}
+	if _, exists := saved["end_brightness"]; exists {
 		t.Fatalf("saved = %#v", saved)
 	}
 	if !strings.Contains(stdout, "Configuration saved.") {
@@ -79,7 +84,7 @@ func TestConfigurationSetSavesNothingWhenDeclined(t *testing.T) {
 	server := configurationServer(t, &saved)
 	defer server.Close()
 
-	stdout, stderr, exitCode := runWithInput(t, server.URL, "1\n80\n25\nn\n", "configuration", "set")
+	stdout, stderr, exitCode := runWithInput(t, server.URL, "1\n25\nn\n", "configuration", "set")
 	if exitCode != 0 || !strings.Contains(stdout, "Nothing saved.") {
 		t.Fatalf("exit = %d, stdout = %s, stderr = %s", exitCode, stdout, stderr)
 	}
