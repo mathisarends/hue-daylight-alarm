@@ -2,19 +2,12 @@ from dishka.integrations.fastapi import DishkaRoute, FromDishka
 from fastapi import Depends, status
 
 from huerise.authentication import require_api_key
-from huerise.configuration import ConfigurationError
-from huerise.exception_handlers import ExceptionRouter, error
-from huerise.features.daylight_alarm.application import (
-    AlarmAlreadyRunningError,
-    DaylightAlarm,
-)
+from huerise.exception_handlers import ExceptionRouter
+from huerise.features.daylight_alarm.application import DaylightAlarm
+from huerise.features.daylight_alarm.presentation.errors import start_alarm_errors
 from huerise.features.daylight_alarm.presentation.schemas import (
     AlarmStatusResponse,
     StartRequest,
-)
-from huerise.features.lighting.application import (
-    HueUnavailableError,
-    SceneNotFoundError,
 )
 
 router = ExceptionRouter(
@@ -30,24 +23,7 @@ router = ExceptionRouter(
     status_code=status.HTTP_202_ACCEPTED,
     response_model=AlarmStatusResponse,
     operation_id="startDaylightAlarm",
-    errors={
-        AlarmAlreadyRunningError: error(
-            status.HTTP_409_CONFLICT,
-            "A daylight alarm is already running.",
-        ),
-        SceneNotFoundError: error(
-            status.HTTP_404_NOT_FOUND,
-            "The configured Hue scene does not exist.",
-        ),
-        ConfigurationError: error(
-            status.HTTP_422_UNPROCESSABLE_CONTENT,
-            "The YAML configuration is missing or invalid.",
-        ),
-        HueUnavailableError: error(
-            status.HTTP_503_SERVICE_UNAVAILABLE,
-            "The Hue Bridge is not configured, reachable, or authenticated.",
-        ),
-    },
+    errors=start_alarm_errors,
 )
 async def start(
     alarm: FromDishka[DaylightAlarm],
