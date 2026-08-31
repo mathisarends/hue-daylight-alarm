@@ -43,14 +43,14 @@ interactive output and is refused together with `--json` or `--fields`.
 
 ## Configuring the alarm
 
-`huerise configuration show` prints the saved room, scene, brightness range,
-and duration.
+`huerise configuration show` prints the saved room, scene, and duration.
 
 `huerise configuration set <room-id> <scene-id>` saves a configuration without
 asking anything, and is the form to use in scripts and from agents. Run
 `huerise configuration set` with no IDs and it asks instead: room, scene,
-final brightness, duration in minutes, then a summary to confirm. Declining the
-summary saves nothing and exits `0`.
+duration in minutes, then a summary to confirm. The fade always starts at 1%
+and ends at the brightness stored in the selected scene. Declining the summary
+saves nothing and exits `0`.
 
 The questions are skipped whenever answering them would be wrong: with
 `--json` or `--fields` the missing IDs are a usage error, and a closed stdin
