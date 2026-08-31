@@ -172,6 +172,9 @@ uv run ruff format --check .
 uv run pytest
 ```
 
+Releases are built from semantic-version Git tags. See
+[`docs/relase.md`](docs/relase.md) for the complete release process.
+
 The implementation is split into the `daylight_alarm` and `lighting` features,
 each layered into `application`, `infrastructure`, and `presentation`. Dishka
 owns their app-scoped services and Hue adapters.
