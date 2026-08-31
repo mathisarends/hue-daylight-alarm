@@ -57,7 +57,7 @@ func TestConfigurationSetAsksWhenIDsAreMissing(t *testing.T) {
 	server := configurationServer(t, &saved)
 	defer server.Close()
 
-	stdout, stderr, exitCode := runWithInput(t, server.URL, "1\n25\ny\n", "configuration", "set")
+	stdout, stderr, exitCode := runWithInput(t, server.URL, "1\n25\nn\ny\n", "configuration", "set")
 	if exitCode != 0 {
 		t.Fatalf("exit = %d, stdout = %s, stderr = %s", exitCode, stdout, stderr)
 	}
@@ -78,13 +78,40 @@ func TestConfigurationSetAsksWhenIDsAreMissing(t *testing.T) {
 	}
 }
 
+func TestConfigurationSetCanChainAFollowUpScene(t *testing.T) {
+	t.Parallel()
+	var saved map[string]any
+	server := configurationServer(t, &saved)
+	defer server.Close()
+
+	// Scene 1, 25 minutes, yes to a follow-up, 40%, 10 minutes later. The
+	// follow-up scene is not asked for: dropping the alarm scene leaves one.
+	stdout, stderr, exitCode := runWithInput(t, server.URL, "1\n25\ny\n40\n10\ny\n", "configuration", "set")
+	if exitCode != 0 {
+		t.Fatalf("exit = %d, stdout = %s, stderr = %s", exitCode, stdout, stderr)
+	}
+	after, ok := saved["after_alarm"].(map[string]any)
+	if !ok {
+		t.Fatalf("saved = %#v", saved)
+	}
+	if after["scene_id"] != otherID || after["room_id"] != roomID {
+		t.Fatalf("after = %#v", after)
+	}
+	if after["brightness"] != float64(40) || after["delay_seconds"] != float64(600) {
+		t.Fatalf("after = %#v", after)
+	}
+	if !strings.Contains(stdout, "Then hold") {
+		t.Fatalf("stdout = %s", stdout)
+	}
+}
+
 func TestConfigurationSetSavesNothingWhenDeclined(t *testing.T) {
 	t.Parallel()
 	var saved map[string]any
 	server := configurationServer(t, &saved)
 	defer server.Close()
 
-	stdout, stderr, exitCode := runWithInput(t, server.URL, "1\n25\nn\n", "configuration", "set")
+	stdout, stderr, exitCode := runWithInput(t, server.URL, "1\n25\nn\nn\n", "configuration", "set")
 	if exitCode != 0 || !strings.Contains(stdout, "Nothing saved.") {
 		t.Fatalf("exit = %d, stdout = %s, stderr = %s", exitCode, stdout, stderr)
 	}

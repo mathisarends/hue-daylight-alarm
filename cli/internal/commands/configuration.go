@@ -3,6 +3,7 @@ package commands
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"sort"
 
 	"github.com/google/uuid"
@@ -148,12 +149,23 @@ func (command configurationSetCommand) askForSelection(
 	request.RoomID, request.SceneID = roomID, scene.Value.(uuid.UUID)
 	request.DurationSeconds = minutes * 60
 
-	if err := writeLines(runtime.stdout, fmt.Sprintf(
-		"Wake up in %s with %q over %s.",
-		room.Label, scene.Label, formatDuration(minutes*60))); err != nil {
+	summary := fmt.Sprintf("Wake up in %s with %q over %s.",
+		room.Label, scene.Label, formatDuration(minutes*60))
+	afterwards, err := askAfterAlarm(prompt, scenes, roomID, scene.Value.(uuid.UUID))
+	if err != nil {
 		return nil, err
 	}
-	confirmed, err := prompt.confirm("Save this")
+	if afterwards != nil {
+		request.AfterAlarm = client.NewOptNilAfterAlarmConfigurationRequest(*afterwards)
+		summary += fmt.Sprintf(" Then hold %q at %d%%, %s after it ends.",
+			sceneName(scenes, afterwards.SceneID), afterwards.Brightness,
+			formatDuration(afterwards.DelaySeconds))
+	}
+
+	if err := writeLines(runtime.stdout, summary); err != nil {
+		return nil, err
+	}
+	confirmed, err := prompt.confirm("Save this", true)
 	if err != nil {
 		return nil, err
 	}
@@ -161,6 +173,46 @@ func (command configurationSetCommand) askForSelection(
 		return nil, errCancelled
 	}
 	return request, nil
+}
+
+// askAfterAlarm offers the scene the room settles into once the fade is over,
+// which is the difference between waking up and staying awake in daylight.
+func askAfterAlarm(
+	prompt *prompter, scenes []client.AvailableSceneResponse, roomID, alarmSceneID uuid.UUID,
+) (*client.AfterAlarmConfigurationRequest, error) {
+	wanted, err := prompt.confirm("Switch to another scene once the fade ends", false)
+	if err != nil || !wanted {
+		return nil, err
+	}
+	choices := sceneChoices(scenes, roomID)
+	choices = slices.DeleteFunc(choices, func(option choice) bool {
+		return option.Value.(uuid.UUID) == alarmSceneID
+	})
+	scene, err := prompt.selectChoice("Which scene afterwards?", choices)
+	if err != nil {
+		return nil, err
+	}
+	brightness, err := prompt.askInt("Its brightness, 1-100", 100, 1, 100)
+	if err != nil {
+		return nil, err
+	}
+	delay, err := prompt.askInt("Minutes to wait after the fade", 0, 0, 12*60)
+	if err != nil {
+		return nil, err
+	}
+	return &client.AfterAlarmConfigurationRequest{
+		RoomID: roomID, SceneID: scene.Value.(uuid.UUID),
+		Brightness: brightness, DelaySeconds: delay * 60,
+	}, nil
+}
+
+func sceneName(scenes []client.AvailableSceneResponse, id uuid.UUID) string {
+	for _, scene := range scenes {
+		if scene.ID == id {
+			return scene.Name
+		}
+	}
+	return id.String()
 }
 
 func roomChoices(scenes []client.AvailableSceneResponse) []choice {

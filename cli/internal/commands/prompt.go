@@ -15,13 +15,19 @@ type choice struct {
 }
 
 type prompter struct {
+	raw  io.Reader
 	in   *bufio.Reader
 	out  io.Writer
 	hint string
 }
 
 func newPrompter(runtime *Runtime, hint string) *prompter {
-	return &prompter{in: bufio.NewReader(runtime.stdin), out: runtime.stdout, hint: hint}
+	return &prompter{
+		raw:  runtime.stdin,
+		in:   bufio.NewReader(runtime.stdin),
+		out:  runtime.stdout,
+		hint: hint,
+	}
 }
 
 // selectChoice lists the options and reads a number. Entering nothing takes
@@ -74,8 +80,12 @@ func (p *prompter) askInt(question string, fallback, low, high int) (int, error)
 	}
 }
 
-func (p *prompter) confirm(question string) (bool, error) {
-	answer, err := p.ask(question+" [Y/n]", "y")
+func (p *prompter) confirm(question string, byDefault bool) (bool, error) {
+	suffix, fallback := " [y/N]", "n"
+	if byDefault {
+		suffix, fallback = " [Y/n]", "y"
+	}
+	answer, err := p.ask(question+suffix, fallback)
 	if err != nil {
 		return false, err
 	}
