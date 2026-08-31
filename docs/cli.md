@@ -36,6 +36,12 @@ Every route requires the server's API key, sent as the `X-API-Key` header. Set
 YAML configuration; `--duration-seconds` overrides it for a single run.
 `huerise stop` cuts a running alarm short.
 
+`huerise start --watch` additionally follows the fade on one redrawn line
+until it finishes. The bar is derived from the duration the server reports, so
+watching costs no further requests. Leaving the watch -- Ctrl-C, or closing the
+terminal -- does not stop the alarm; only `huerise stop` does. `--watch` is
+interactive output and is refused together with `--json` or `--fields`.
+
 ## Hue setup and diagnostics
 
 `huerise hue bridge list` discovers bridges, and `huerise hue bridge select
