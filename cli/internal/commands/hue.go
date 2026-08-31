@@ -28,17 +28,10 @@ type hueBridgeSelectCommand struct {
 type hueBridgeRegisterCommand struct{}
 
 func (hueBridgeListCommand) Run(runtime *Runtime) error {
-	apiClient, err := runtime.client()
+	result, err := fetch[*client.ListHueBridgesOKApplicationJSON](
+		runtime, "list Hue Bridges", (*client.Client).ListHueBridges)
 	if err != nil {
 		return err
-	}
-	response, err := apiClient.ListHueBridges(runtime.ctx)
-	if err != nil {
-		return err
-	}
-	result, ok := response.(*client.ListHueBridgesOKApplicationJSON)
-	if !ok {
-		return apiFailure("list Hue Bridges", response)
 	}
 	bridges := []client.BridgeResponse(*result)
 	return runtime.output(bridges, func() error {
@@ -51,46 +44,34 @@ func (hueBridgeListCommand) Run(runtime *Runtime) error {
 }
 
 func (hueBridgeStatusCommand) Run(runtime *Runtime) error {
-	apiClient, err := runtime.client()
+	status, err := fetch[*client.OnboardingStatusResponse](
+		runtime, "bridge status", (*client.Client).GetHueBridge)
 	if err != nil {
 		return err
 	}
-	response, err := apiClient.GetHueBridge(runtime.ctx)
-	if err != nil {
-		return err
-	}
-	return handleOnboardingResponse(runtime, "bridge status", response)
+	return writeOnboardingStatus(runtime, status)
 }
 
 func (command hueBridgeSelectCommand) Run(runtime *Runtime) error {
-	apiClient, err := runtime.client()
+	status, err := send[*client.OnboardingStatusResponse](
+		runtime, "select Hue Bridge", (*client.Client).SelectHueBridge,
+		&client.BridgeSelectionRequest{BridgeID: command.BridgeID})
 	if err != nil {
 		return err
 	}
-	response, err := apiClient.SelectHueBridge(runtime.ctx, &client.BridgeSelectionRequest{BridgeID: command.BridgeID})
-	if err != nil {
-		return err
-	}
-	return handleOnboardingResponse(runtime, "select Hue Bridge", response)
+	return writeOnboardingStatus(runtime, status)
 }
 
 func (hueBridgeRegisterCommand) Run(runtime *Runtime) error {
-	apiClient, err := runtime.client()
+	status, err := fetch[*client.OnboardingStatusResponse](
+		runtime, "register Hue Bridge", (*client.Client).RegisterHueBridge)
 	if err != nil {
 		return err
 	}
-	response, err := apiClient.RegisterHueBridge(runtime.ctx)
-	if err != nil {
-		return err
-	}
-	return handleOnboardingResponse(runtime, "register Hue Bridge", response)
+	return writeOnboardingStatus(runtime, status)
 }
 
-func handleOnboardingResponse(runtime *Runtime, operation string, response any) error {
-	status, ok := response.(*client.OnboardingStatusResponse)
-	if !ok {
-		return apiFailure(operation, response)
-	}
+func writeOnboardingStatus(runtime *Runtime, status *client.OnboardingStatusResponse) error {
 	return runtime.output(status, func() error {
 		return writeRecord(runtime.stdout,
 			recordField{Name: "state", Value: string(status.State)},

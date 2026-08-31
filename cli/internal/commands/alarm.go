@@ -16,29 +16,21 @@ func (command startCommand) Run(runtime *Runtime) error {
 	if command.DurationSeconds < 0 {
 		return &commandError{Code: "usage", Message: "duration must be positive", ExitCode: 2}
 	}
-	apiClient, err := runtime.client()
-	if err != nil {
-		return err
-	}
 	body := client.OptNilStartRequest{}
 	if command.DurationSeconds > 0 {
 		body = client.NewOptNilStartRequest(client.StartRequest{DurationSeconds: command.DurationSeconds})
 	}
-	response, err := apiClient.StartDaylightAlarm(runtime.ctx, body)
+	result, err := send[*client.AlarmStatusResponse](
+		runtime, "start", (*client.Client).StartDaylightAlarm, body)
 	if err != nil {
 		return err
 	}
-	switch result := response.(type) {
-	case *client.AlarmStatusResponse:
-		return runtime.output(result, func() error {
-			return writeRecord(runtime.stdout,
-				recordField{Name: "status", Value: result.Status.Or("started")},
-				recordField{Name: "duration_seconds", Value: fmt.Sprintf("%d", result.DurationSeconds)},
-			)
-		})
-	default:
-		return apiFailure("start", response)
-	}
+	return runtime.output(result, func() error {
+		return writeRecord(runtime.stdout,
+			recordField{Name: "status", Value: result.Status.Or("started")},
+			recordField{Name: "duration_seconds", Value: fmt.Sprintf("%d", result.DurationSeconds)},
+		)
+	})
 }
 
 func (stopCommand) Run(runtime *Runtime) error {

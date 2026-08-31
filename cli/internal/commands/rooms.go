@@ -11,17 +11,10 @@ type roomsCommand struct{}
 type scenesCommand struct{}
 
 func (roomsCommand) Run(runtime *Runtime) error {
-	apiClient, err := runtime.client()
+	result, err := fetch[*client.ListRoomsOKApplicationJSON](
+		runtime, "list rooms", (*client.Client).ListRooms)
 	if err != nil {
 		return err
-	}
-	response, err := apiClient.ListRooms(runtime.ctx)
-	if err != nil {
-		return err
-	}
-	result, ok := response.(*client.ListRoomsOKApplicationJSON)
-	if !ok {
-		return apiFailure("list rooms", response)
 	}
 	rooms := []client.RoomResponse(*result)
 	return runtime.output(rooms, func() error {
@@ -34,17 +27,10 @@ func (roomsCommand) Run(runtime *Runtime) error {
 }
 
 func (scenesCommand) Run(runtime *Runtime) error {
-	apiClient, err := runtime.client()
+	result, err := fetch[*client.ListScenesOKApplicationJSON](
+		runtime, "list scenes", (*client.Client).ListScenes)
 	if err != nil {
 		return err
-	}
-	response, err := apiClient.ListScenes(runtime.ctx)
-	if err != nil {
-		return err
-	}
-	result, ok := response.(*client.ListScenesOKApplicationJSON)
-	if !ok {
-		return apiFailure("list scenes", response)
 	}
 	scenes := []client.AvailableSceneResponse(*result)
 	return runtime.output(scenes, func() error {

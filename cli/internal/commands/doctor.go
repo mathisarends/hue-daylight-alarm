@@ -7,17 +7,9 @@ import (
 type doctorCommand struct{}
 
 func (doctorCommand) Run(runtime *Runtime) error {
-	apiClient, err := runtime.client()
+	result, err := fetch[*client.DoctorResponse](runtime, "doctor", (*client.Client).Doctor)
 	if err != nil {
 		return err
-	}
-	response, err := apiClient.Doctor(runtime.ctx)
-	if err != nil {
-		return err
-	}
-	result, ok := response.(*client.DoctorResponse)
-	if !ok {
-		return apiFailure("doctor", response)
 	}
 	return runtime.output(result, func() error {
 		rows := make([][]string, 0, len(result.Checks))
