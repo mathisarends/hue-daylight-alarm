@@ -30,8 +30,10 @@ func newPrompter(runtime *Runtime, hint string) *prompter {
 	}
 }
 
-// selectChoice lists the options and reads a number. Entering nothing takes
-// the first option, which is the one a returning user most likely wants.
+// selectChoice offers arrow-key navigation where raw mode is available and
+// falls back to a numbered list otherwise. Entering nothing on the numbered
+// list takes the first option, which is the one a returning user most likely
+// wants.
 func (p *prompter) selectChoice(question string, choices []choice) (choice, error) {
 	if len(choices) == 0 {
 		return choice{}, p.fail(fmt.Sprintf("nothing to choose from for %q", question))
@@ -39,7 +41,17 @@ func (p *prompter) selectChoice(question string, choices []choice) (choice, erro
 	if len(choices) == 1 {
 		return choices[0], p.write(fmt.Sprintf("\n%s%s  %s\n", indent, question, choices[0].Label))
 	}
-	if err := p.write(fmt.Sprintf("\n%s%s\n\n", indent, question)); err != nil {
+	if err := p.write("\n"); err != nil {
+		return choice{}, err
+	}
+	picked, err := selectWithArrowKeys(p.raw, p.out, question, choices)
+	if err == nil {
+		return picked, nil
+	}
+	if !errors.Is(err, errNoRawMode) {
+		return choice{}, err
+	}
+	if err := p.write(fmt.Sprintf("%s%s\n\n", indent, question)); err != nil {
 		return choice{}, err
 	}
 	for index, option := range choices {

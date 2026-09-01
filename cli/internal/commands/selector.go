@@ -24,6 +24,16 @@ type selector struct {
 	cursor   int
 	offset   int
 	drawn    int
+	color    bool
+}
+
+// style wraps text in an ANSI code, or leaves it plain when NO_COLOR is set
+// or the output isn't a terminal.
+func (s *selector) style(code, text string) string {
+	if !s.color {
+		return text
+	}
+	return code + text + "\x1b[0m"
 }
 
 // selectWithArrowKeys draws a live list and moves through it with the arrow
@@ -41,7 +51,7 @@ func selectWithArrowKeys(in io.Reader, out io.Writer, question string, choices [
 	restoreVirtualTerminal := enableVirtualTerminal(out)
 	defer restoreVirtualTerminal()
 
-	list := &selector{out: out, question: question, choices: choices}
+	list := &selector{out: out, question: question, choices: choices, color: supportsColor(out)}
 	if err := list.draw(); err != nil {
 		return choice{}, err
 	}
@@ -125,14 +135,13 @@ func (s *selector) draw() error {
 	for row := range visible {
 		index := s.offset + row
 		if index == s.cursor {
-			write("%s\x1b[7m %s \x1b[0m", indent, s.choices[index].Label)
+			write("%s%s", indent, s.style("\x1b[7m", " "+s.choices[index].Label+" "))
 			continue
 		}
 		write("%s %s", indent, s.choices[index].Label)
 	}
 	write("")
-	write("%s\x1b[2m↑ ↓ to move, Enter to pick, q to cancel%s\x1b[0m",
-		indent, s.scrollHint(visible))
+	write("%s%s", indent, s.style("\x1b[2m", "↑ ↓ to move, Enter to pick, q to cancel"+s.scrollHint(visible)))
 	s.drawn = lines
 	_, err := io.WriteString(s.out, page.String())
 	return err
@@ -155,7 +164,7 @@ func (s *selector) collapse(answer string) error {
 	}
 	fmt.Fprintf(&page, "\x1b[%dA", s.drawn)
 	if answer != "" {
-		fmt.Fprintf(&page, "\r\n%s%s  \x1b[1m%s\x1b[0m\r\n", indent, s.question, answer)
+		fmt.Fprintf(&page, "\r\n%s%s  %s\r\n", indent, s.question, s.style("\x1b[1m", answer))
 	}
 	s.drawn = 0
 	_, err := io.WriteString(s.out, page.String())
