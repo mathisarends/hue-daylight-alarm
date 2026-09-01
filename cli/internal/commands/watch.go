@@ -3,7 +3,6 @@ package commands
 import (
 	"fmt"
 	"io"
-	"os"
 	"strings"
 	"time"
 )
@@ -93,13 +92,4 @@ func formatRemaining(remaining time.Duration) string {
 		return formatDuration(max(seconds, 1))
 	}
 	return formatDuration((seconds + 59) / 60 * 60)
-}
-
-func isTerminal(writer io.Writer) bool {
-	file, ok := writer.(*os.File)
-	if !ok {
-		return false
-	}
-	info, err := file.Stat()
-	return err == nil && info.Mode()&os.ModeCharDevice != 0
 }
