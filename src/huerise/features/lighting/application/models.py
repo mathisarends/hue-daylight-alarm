@@ -33,15 +33,6 @@ class Room:
     scenes: tuple[Scene, ...]
 
 
-@dataclass(frozen=True, slots=True)
-class AvailableScene:
-    id: UUID
-    name: str
-    room_id: UUID
-    room_name: str
-    brightness: float | None
-
-
 class HueClient(Protocol):
     async def list_rooms(self) -> list[Room]: ...
 

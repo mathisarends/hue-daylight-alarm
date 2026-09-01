@@ -10,7 +10,7 @@ import (
 func TestClientSendsAPIKeyHeader(t *testing.T) {
 	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		if request.URL.Path != "/scenes" {
+		if request.URL.Path != "/hue/rooms" {
 			t.Errorf("path = %q", request.URL.Path)
 		}
 		if got := request.Header.Get("X-API-Key"); got != "secret" {
@@ -25,7 +25,7 @@ func TestClientSendsAPIKeyHeader(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := client.ListScenes(context.Background()); err != nil {
+	if _, err := client.ListRooms(context.Background()); err != nil {
 		t.Fatal(err)
 	}
 }

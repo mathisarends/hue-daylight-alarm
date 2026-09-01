@@ -62,60 +62,10 @@
         ]
       }
     },
-    "/scenes": {
-      "get": {
-        "tags": [
-          "lighting"
-        ],
-        "summary": "Scenes",
-        "operationId": "listScenes",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/AvailableSceneResponse"
-                  },
-                  "type": "array",
-                  "title": "Response Listscenes"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "The YAML configuration is invalid.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ConfigurationErrorResponse"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "The Hue Bridge is not configured, reachable, or authenticated.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "APIKeyHeader": []
-          }
-        ]
-      }
-    },
     "/hue/bridges": {
       "get": {
         "tags": [
-          "hue-setup"
+          "hue"
         ],
         "summary": "Discover Bridges",
         "operationId": "listHueBridges",
@@ -165,7 +115,7 @@
     "/hue/bridge": {
       "get": {
         "tags": [
-          "hue-setup"
+          "hue"
         ],
         "summary": "Bridge Status",
         "operationId": "getHueBridge",
@@ -199,7 +149,7 @@
       },
       "put": {
         "tags": [
-          "hue-setup"
+          "hue"
         ],
         "summary": "Select Bridge",
         "operationId": "selectHueBridge",
@@ -275,7 +225,7 @@
     "/hue/bridge/register": {
       "post": {
         "tags": [
-          "hue-setup"
+          "hue"
         ],
         "summary": "Register Bridge",
         "operationId": "registerHueBridge",
@@ -312,6 +262,56 @@
           },
           "503": {
             "description": "Hue Bridge registration is unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/hue/rooms": {
+      "get": {
+        "tags": [
+          "hue"
+        ],
+        "summary": "Rooms",
+        "operationId": "listRooms",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RoomResponse"
+                  },
+                  "type": "array",
+                  "title": "Response Listrooms"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The YAML configuration is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The Hue Bridge is not configured, reachable, or authenticated.",
             "content": {
               "application/json": {
                 "schema": {
@@ -619,48 +619,6 @@
         ],
         "title": "AlarmStatusResponse"
       },
-      "AvailableSceneResponse": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "room_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Room Id"
-          },
-          "room_name": {
-            "type": "string",
-            "title": "Room Name"
-          },
-          "brightness": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Brightness"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "name",
-          "room_id",
-          "room_name",
-          "brightness"
-        ],
-        "title": "AvailableSceneResponse"
-      },
       "BridgeResponse": {
         "properties": {
           "id": {
@@ -931,6 +889,64 @@
           "read_only"
         ],
         "title": "OnboardingStatusResponse"
+      },
+      "RoomResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "scenes": {
+            "items": {
+              "$ref": "#/components/schemas/SceneResponse"
+            },
+            "type": "array",
+            "title": "Scenes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "scenes"
+        ],
+        "title": "RoomResponse"
+      },
+      "SceneResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "brightness": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brightness"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "brightness"
+        ],
+        "title": "SceneResponse"
       },
       "StartRequest": {
         "properties": {

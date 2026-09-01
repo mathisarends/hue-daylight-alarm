@@ -3,7 +3,6 @@ from uuid import UUID
 import pytest
 
 from huerise.features.lighting.application import (
-    AvailableScene,
     HueUnavailableError,
     Room,
     Scene,
@@ -31,15 +30,13 @@ def make_service(
     )
 
 
-async def test_lists_rooms_and_flattens_their_scenes() -> None:
+async def test_lists_rooms_with_their_scenes() -> None:
     client = FakeHueClient([Room(ROOM_ID, "Bedroom", (Scene(SCENE_ID, "Sunrise"),))])
     service = make_service(client)
 
     rooms = await service.list_rooms()
-    scenes = await service.list_scenes()
 
     assert rooms == client.rooms
-    assert scenes == [AvailableScene(SCENE_ID, "Sunrise", ROOM_ID, "Bedroom", None)]
     assert client.closed is True
 
 

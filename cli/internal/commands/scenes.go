@@ -5,16 +5,18 @@ import "github.com/mathisarends/huerise/cli/internal/client"
 type scenesCommand struct{}
 
 func (scenesCommand) Run(runtime *Runtime) error {
-	result, err := fetch[*client.ListScenesOKApplicationJSON](
-		runtime, "list scenes", (*client.Client).ListScenes)
+	result, err := fetch[*client.ListRoomsOKApplicationJSON](
+		runtime, "list scenes", (*client.Client).ListRooms)
 	if err != nil {
 		return err
 	}
-	scenes := []client.AvailableSceneResponse(*result)
-	return runtime.output(scenes, func() error {
-		rows := make([][]string, 0, len(scenes))
-		for _, scene := range scenes {
-			rows = append(rows, []string{scene.ID.String(), scene.Name, scene.RoomName})
+	rooms := []client.RoomResponse(*result)
+	return runtime.output(rooms, func() error {
+		var rows [][]string
+		for _, room := range rooms {
+			for _, scene := range room.Scenes {
+				rows = append(rows, []string{scene.ID.String(), scene.Name, room.Name})
+			}
 		}
 		return writeTable(runtime.stdout, []string{"ID", "NAME", "ROOM"}, rows, emptyState{
 			Message: "No scenes found on the bridge.",

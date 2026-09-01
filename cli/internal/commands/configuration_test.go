@@ -23,10 +23,12 @@ func configurationServer(t *testing.T, saved *map[string]any) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		writer.Header().Set("Content-Type", "application/json")
 		switch {
-		case request.URL.Path == "/scenes":
+		case request.URL.Path == "/hue/rooms":
 			_, _ = writer.Write([]byte(`[
-				{"id":"` + sceneID + `","name":"Tageslichtwecker","room_id":"` + roomID + `","room_name":"Mein Zimmer","brightness":0.79},
-				{"id":"` + otherID + `","name":"Vapor Wave","room_id":"` + roomID + `","room_name":"Mein Zimmer","brightness":0.79}
+				{"id":"` + roomID + `","name":"Mein Zimmer","scenes":[
+					{"id":"` + sceneID + `","name":"Tageslichtwecker","brightness":0.79},
+					{"id":"` + otherID + `","name":"Vapor Wave","brightness":0.79}
+				]}
 			]`))
 		case request.Method == http.MethodPut:
 			if err := json.NewDecoder(request.Body).Decode(saved); err != nil {

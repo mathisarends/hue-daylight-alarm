@@ -546,7 +546,7 @@ func decodeListHueBridgesResponse(resp *http.Response) (res ListHueBridgesRes, _
 	return res, validate.UnexpectedStatusCodeWithResponse(resp)
 }
 
-func decodeListScenesResponse(resp *http.Response) (res ListScenesRes, _ error) {
+func decodeListRoomsResponse(resp *http.Response) (res ListRoomsRes, _ error) {
 	switch resp.StatusCode {
 	case 200:
 		// Code 200.
@@ -562,7 +562,7 @@ func decodeListScenesResponse(resp *http.Response) (res ListScenesRes, _ error) 
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response ListScenesOKApplicationJSON
+			var response ListRoomsOKApplicationJSON
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err

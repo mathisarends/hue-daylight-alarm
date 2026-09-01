@@ -3,26 +3,29 @@ from fastapi import Depends
 
 from huerise.authentication import require_api_key
 from huerise.exception_handlers import ExceptionRouter
-from huerise.features.lighting.application import HueOnboarding
+from huerise.features.lighting.application import HueOnboarding, SceneService
 from huerise.features.lighting.presentation.errors import (
     bridge_status_errors,
     discover_bridges_errors,
     register_bridge_errors,
+    scene_errors,
     select_bridge_errors,
 )
 from huerise.features.lighting.presentation.mappers import (
     to_bridge_response,
     to_onboarding_status_response,
+    to_room_response,
 )
 from huerise.features.lighting.presentation.schemas import (
     BridgeResponse,
     BridgeSelectionRequest,
     OnboardingStatusResponse,
+    RoomResponse,
 )
 
 hue_router = ExceptionRouter(
     prefix="/hue",
-    tags=["hue-setup"],
+    tags=["hue"],
     route_class=DishkaRoute,
     dependencies=[Depends(require_api_key)],
 )
@@ -79,3 +82,15 @@ async def register_bridge(
 ) -> OnboardingStatusResponse:
     status = await service.register()
     return to_onboarding_status_response(status)
+
+
+@hue_router.get(
+    "/rooms",
+    response_model=list[RoomResponse],
+    operation_id="listRooms",
+    errors=scene_errors,
+)
+async def rooms(
+    service: FromDishka[SceneService],
+) -> list[RoomResponse]:
+    return [to_room_response(room) for room in await service.list_rooms()]

@@ -1,7 +1,6 @@
 from contextlib import suppress
 
 from huerise.features.lighting.application.models import (
-    AvailableScene,
     HueClientFactory,
     HueCredentialsSource,
     HueUnavailableError,
@@ -34,16 +33,3 @@ class SceneService:
         finally:
             with suppress(Exception):
                 await client.close()
-
-    async def list_scenes(self) -> list[AvailableScene]:
-        return [
-            AvailableScene(
-                id=scene.id,
-                name=scene.name,
-                room_id=room.id,
-                room_name=room.name,
-                brightness=scene.brightness,
-            )
-            for room in await self.list_rooms()
-            for scene in room.scenes
-        ]

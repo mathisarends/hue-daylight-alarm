@@ -44,12 +44,12 @@ type Invoker interface {
 	//
 	// GET /hue/bridges
 	ListHueBridges(ctx context.Context) (ListHueBridgesRes, error)
-	// ListScenes invokes listScenes operation.
+	// ListRooms invokes listRooms operation.
 	//
-	// Scenes.
+	// Rooms.
 	//
-	// GET /scenes
-	ListScenes(ctx context.Context) (ListScenesRes, error)
+	// GET /hue/rooms
+	ListRooms(ctx context.Context) (ListRoomsRes, error)
 	// RegisterHueBridge invokes registerHueBridge operation.
 	//
 	// Register Bridge.
@@ -403,21 +403,21 @@ func (c *Client) sendListHueBridges(ctx context.Context) (res ListHueBridgesRes,
 	return result, nil
 }
 
-// ListScenes invokes listScenes operation.
+// ListRooms invokes listRooms operation.
 //
-// Scenes.
+// Rooms.
 //
-// GET /scenes
-func (c *Client) ListScenes(ctx context.Context) (ListScenesRes, error) {
-	res, err := c.sendListScenes(ctx)
+// GET /hue/rooms
+func (c *Client) ListRooms(ctx context.Context) (ListRoomsRes, error) {
+	res, err := c.sendListRooms(ctx)
 	return res, err
 }
 
-func (c *Client) sendListScenes(ctx context.Context) (res ListScenesRes, err error) {
+func (c *Client) sendListRooms(ctx context.Context) (res ListRoomsRes, err error) {
 
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [1]string
-	pathParts[0] = "/scenes"
+	pathParts[0] = "/hue/rooms"
 	uri.AddPathParts(u, pathParts[:]...)
 
 	r, err := ht.NewRequest(ctx, "GET", u)
@@ -430,7 +430,7 @@ func (c *Client) sendListScenes(ctx context.Context) (res ListScenesRes, err err
 		var satisfied bitset
 		{
 
-			switch err := c.securityAPIKeyHeader(ctx, ListScenesOperation, r); {
+			switch err := c.securityAPIKeyHeader(ctx, ListRoomsOperation, r); {
 			case err == nil: // if NO error
 				satisfied[0] |= 1 << 0
 			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
@@ -465,7 +465,7 @@ func (c *Client) sendListScenes(ctx context.Context) (res ListScenesRes, err err
 	body := resp.Body
 	defer body.Close()
 
-	result, err := decodeListScenesResponse(resp)
+	result, err := decodeListRoomsResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

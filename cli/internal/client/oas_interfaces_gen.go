@@ -17,8 +17,8 @@ type ListHueBridgesRes interface {
 	listHueBridgesRes()
 }
 
-type ListScenesRes interface {
-	listScenesRes()
+type ListRoomsRes interface {
+	listRoomsRes()
 }
 
 type RegisterHueBridgeRes interface {

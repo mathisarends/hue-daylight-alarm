@@ -126,7 +126,7 @@ def test_operation_ids_are_explicit_and_stable(client: TestClient) -> None:
         "getHueBridge",
         "getDaylightAlarmConfiguration",
         "listHueBridges",
-        "listScenes",
+        "listRooms",
         "registerHueBridge",
         "selectHueBridge",
         "setDaylightAlarmConfiguration",
@@ -162,16 +162,16 @@ def test_protected_routes_require_api_key(
 ) -> None:
     assert client.post("/daylight-alarm/start", headers=headers).status_code == 401
     assert client.get("/doctor", headers=headers).status_code == 401
-    assert client.get("/scenes", headers=headers).status_code == 401
+    assert client.get("/hue/rooms", headers=headers).status_code == 401
     assert (
         client.get("/daylight-alarm/configuration", headers=headers).status_code == 401
     )
     assert client.get("/hue/bridge", headers=headers).status_code == 401
 
 
-def test_exposes_doctor_scenes_and_configuration(client: TestClient) -> None:
+def test_exposes_doctor_rooms_and_configuration(client: TestClient) -> None:
     doctor = client.get("/doctor", headers=AUTH)
-    scenes = client.get("/scenes", headers=AUTH)
+    rooms = client.get("/hue/rooms", headers=AUTH)
     configuration = client.get("/daylight-alarm/configuration", headers=AUTH)
 
     assert doctor.status_code == 200
@@ -181,13 +181,13 @@ def test_exposes_doctor_scenes_and_configuration(client: TestClient) -> None:
         "hue_bridge",
         "scene",
     ]
-    assert scenes.json() == [
+    assert rooms.json() == [
         {
-            "id": str(SCENE_ID),
-            "name": "Sunrise",
-            "room_id": str(ROOM_ID),
-            "room_name": "Bedroom",
-            "brightness": 80.0,
+            "id": str(ROOM_ID),
+            "name": "Bedroom",
+            "scenes": [
+                {"id": str(SCENE_ID), "name": "Sunrise", "brightness": 80.0},
+            ],
         }
     ]
     assert configuration.json() == {

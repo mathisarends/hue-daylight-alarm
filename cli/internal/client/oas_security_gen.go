@@ -21,7 +21,7 @@ var operationRolesAPIKeyHeader = map[string][]string{
 	GetDaylightAlarmConfigurationOperation: []string{},
 	GetHueBridgeOperation:                  []string{},
 	ListHueBridgesOperation:                []string{},
-	ListScenesOperation:                    []string{},
+	ListRoomsOperation:                     []string{},
 	RegisterHueBridgeOperation:             []string{},
 	SelectHueBridgeOperation:               []string{},
 	SetDaylightAlarmConfigurationOperation: []string{},

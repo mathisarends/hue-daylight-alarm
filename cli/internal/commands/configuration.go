@@ -114,13 +114,16 @@ func (command configurationSetCommand) addAfterAlarm(request *client.DaylightAla
 func (command configurationSetCommand) askForSelection(
 	runtime *Runtime, request *client.DaylightAlarmConfigurationRequest,
 ) (*client.DaylightAlarmConfigurationRequest, error) {
-	result, err := fetch[*client.ListScenesOKApplicationJSON](
-		runtime, "list scenes", (*client.Client).ListScenes)
+	result, err := fetch[*client.ListRoomsOKApplicationJSON](
+		runtime, "list rooms", (*client.Client).ListRooms)
 	if err != nil {
 		return nil, err
 	}
-	scenes := []client.AvailableSceneResponse(*result)
-	if len(scenes) == 0 {
+	rooms := []client.RoomResponse(*result)
+	rooms = slices.DeleteFunc(rooms, func(room client.RoomResponse) bool {
+		return len(room.Scenes) == 0
+	})
+	if len(rooms) == 0 {
 		return nil, &commandError{
 			Code:     "empty",
 			Message:  "the bridge reports no scenes",
@@ -130,12 +133,12 @@ func (command configurationSetCommand) askForSelection(
 	}
 
 	prompt := newPrompter(runtime, nonInteractiveHint)
-	room, err := prompt.selectChoice("Which room?", roomChoices(scenes))
+	roomChoice, err := prompt.selectChoice("Which room?", roomChoices(rooms))
 	if err != nil {
 		return nil, err
 	}
-	roomID := room.Value.(uuid.UUID)
-	scene, err := prompt.selectChoice("Which scene should wake you up?", sceneChoices(scenes, roomID))
+	room := roomByID(rooms, roomChoice.Value.(uuid.UUID))
+	scene, err := prompt.selectChoice("Which scene should wake you up?", sceneChoices(room))
 	if err != nil {
 		return nil, err
 	}
@@ -145,19 +148,19 @@ func (command configurationSetCommand) askForSelection(
 		return nil, err
 	}
 
-	request.RoomID, request.SceneID = roomID, scene.Value.(uuid.UUID)
+	request.RoomID, request.SceneID = room.ID, scene.Value.(uuid.UUID)
 	request.DurationSeconds = minutes * 60
 
 	summary := fmt.Sprintf("Wake up in %s with %q over %s.",
-		room.Label, scene.Label, formatDuration(minutes*60))
-	afterwards, err := askAfterAlarm(prompt, scenes, roomID, scene.Value.(uuid.UUID))
+		roomChoice.Label, scene.Label, formatDuration(minutes*60))
+	afterwards, err := askAfterAlarm(prompt, room, scene.Value.(uuid.UUID))
 	if err != nil {
 		return nil, err
 	}
 	if afterwards != nil {
 		request.AfterAlarm = client.NewOptNilAfterAlarmConfigurationRequest(*afterwards)
 		summary += fmt.Sprintf(" Then hold %q, %s after it ends.",
-			sceneName(scenes, afterwards.SceneID), formatDuration(afterwards.DelaySeconds))
+			sceneName(room, afterwards.SceneID), formatDuration(afterwards.DelaySeconds))
 	}
 
 	if err := writeLines(runtime.stdout, summary); err != nil {
@@ -175,14 +178,15 @@ func (command configurationSetCommand) askForSelection(
 
 // askAfterAlarm offers the scene the room settles into once the fade is over,
 // which is the difference between waking up and staying awake in daylight.
+// It stays in the alarm's room: nothing else needs waking.
 func askAfterAlarm(
-	prompt *prompter, scenes []client.AvailableSceneResponse, roomID, alarmSceneID uuid.UUID,
+	prompt *prompter, room client.RoomResponse, alarmSceneID uuid.UUID,
 ) (*client.AfterAlarmConfigurationRequest, error) {
 	wanted, err := prompt.confirm("Switch to another scene once the fade ends", false)
 	if err != nil || !wanted {
 		return nil, err
 	}
-	choices := sceneChoices(scenes, roomID)
+	choices := sceneChoices(room)
 	choices = slices.DeleteFunc(choices, func(option choice) bool {
 		return option.Value.(uuid.UUID) == alarmSceneID
 	})
@@ -195,13 +199,13 @@ func askAfterAlarm(
 		return nil, err
 	}
 	return &client.AfterAlarmConfigurationRequest{
-		RoomID: roomID, SceneID: scene.Value.(uuid.UUID),
+		RoomID: room.ID, SceneID: scene.Value.(uuid.UUID),
 		DelaySeconds: delay * 60,
 	}, nil
 }
 
-func sceneName(scenes []client.AvailableSceneResponse, id uuid.UUID) string {
-	for _, scene := range scenes {
+func sceneName(room client.RoomResponse, id uuid.UUID) string {
+	for _, scene := range room.Scenes {
 		if scene.ID == id {
 			return scene.Name
 		}
@@ -209,25 +213,28 @@ func sceneName(scenes []client.AvailableSceneResponse, id uuid.UUID) string {
 	return id.String()
 }
 
-func roomChoices(scenes []client.AvailableSceneResponse) []choice {
-	names := map[uuid.UUID]string{}
-	for _, scene := range scenes {
-		names[scene.RoomID] = scene.RoomName
+func roomByID(rooms []client.RoomResponse, id uuid.UUID) client.RoomResponse {
+	for _, room := range rooms {
+		if room.ID == id {
+			return room
+		}
 	}
-	choices := make([]choice, 0, len(names))
-	for id, name := range names {
-		choices = append(choices, choice{Label: name, Value: id})
+	return client.RoomResponse{}
+}
+
+func roomChoices(rooms []client.RoomResponse) []choice {
+	choices := make([]choice, 0, len(rooms))
+	for _, room := range rooms {
+		choices = append(choices, choice{Label: room.Name, Value: room.ID})
 	}
 	sort.Slice(choices, func(one, other int) bool { return choices[one].Label < choices[other].Label })
 	return choices
 }
 
-func sceneChoices(scenes []client.AvailableSceneResponse, roomID uuid.UUID) []choice {
-	var choices []choice
-	for _, scene := range scenes {
-		if scene.RoomID == roomID {
-			choices = append(choices, choice{Label: scene.Name, Value: scene.ID})
-		}
+func sceneChoices(room client.RoomResponse) []choice {
+	choices := make([]choice, 0, len(room.Scenes))
+	for _, scene := range room.Scenes {
+		choices = append(choices, choice{Label: scene.Name, Value: scene.ID})
 	}
 	sort.Slice(choices, func(one, other int) bool { return choices[one].Label < choices[other].Label })
 	return choices

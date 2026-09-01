@@ -10,7 +10,7 @@ const (
 	GetDaylightAlarmConfigurationOperation OperationName = "GetDaylightAlarmConfiguration"
 	GetHueBridgeOperation                  OperationName = "GetHueBridge"
 	ListHueBridgesOperation                OperationName = "ListHueBridges"
-	ListScenesOperation                    OperationName = "ListScenes"
+	ListRoomsOperation                     OperationName = "ListRooms"
 	RegisterHueBridgeOperation             OperationName = "RegisterHueBridge"
 	SelectHueBridgeOperation               OperationName = "SelectHueBridge"
 	SetDaylightAlarmConfigurationOperation OperationName = "SetDaylightAlarmConfiguration"

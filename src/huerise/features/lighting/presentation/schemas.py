@@ -19,12 +19,13 @@ class DoctorResponse(BaseModel):
 class SceneResponse(BaseModel):
     id: UUID
     name: str
-
-
-class AvailableSceneResponse(SceneResponse):
-    room_id: UUID
-    room_name: str
     brightness: float | None
+
+
+class RoomResponse(BaseModel):
+    id: UUID
+    name: str
+    scenes: list[SceneResponse]
 
 
 class BridgeResponse(BaseModel):

@@ -1,6 +1,5 @@
 from .doctor import Doctor, DoctorCheck, DoctorReport
 from .models import (
-    AvailableScene,
     HueClient,
     HueClientFactory,
     HueCredentials,
@@ -26,7 +25,6 @@ from .onboarding import (
 from .scenes import SceneService
 
 __all__ = [
-    "AvailableScene",
     "BridgeNotFoundError",
     "BridgeNotSelectedError",
     "DiscoveredBridge",

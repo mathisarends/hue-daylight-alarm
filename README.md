@@ -103,7 +103,7 @@ Send the configured key as `X-API-Key` on every route.
 | `POST` | `/daylight-alarm/stop` | Stop it without changing the current light state |
 | `GET` | `/daylight-alarm/configuration` | Read the human-readable alarm configuration |
 | `PUT` | `/daylight-alarm/configuration` | Save the selected room, scene, and duration |
-| `GET` | `/scenes` | List all scenes with their room and reference brightness |
+| `GET` | `/hue/rooms` | List rooms with their scenes and reference brightness |
 | `GET` | `/hue/bridges` | Discover Hue Bridges |
 | `GET` | `/hue/bridge` | Read onboarding state |
 | `PUT` | `/hue/bridge` | Select a discovered Bridge |

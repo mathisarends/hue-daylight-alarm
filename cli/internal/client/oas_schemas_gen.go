@@ -134,65 +134,6 @@ func (s *AlarmStatusResponse) SetDurationSeconds(val int) {
 
 func (*AlarmStatusResponse) startDaylightAlarmRes() {}
 
-// Ref: #/components/schemas/AvailableSceneResponse
-type AvailableSceneResponse struct {
-	ID         uuid.UUID  `json:"id"`
-	Name       string     `json:"name"`
-	RoomID     uuid.UUID  `json:"room_id"`
-	RoomName   string     `json:"room_name"`
-	Brightness NilFloat64 `json:"brightness"`
-}
-
-// GetID returns the value of ID.
-func (s *AvailableSceneResponse) GetID() uuid.UUID {
-	return s.ID
-}
-
-// GetName returns the value of Name.
-func (s *AvailableSceneResponse) GetName() string {
-	return s.Name
-}
-
-// GetRoomID returns the value of RoomID.
-func (s *AvailableSceneResponse) GetRoomID() uuid.UUID {
-	return s.RoomID
-}
-
-// GetRoomName returns the value of RoomName.
-func (s *AvailableSceneResponse) GetRoomName() string {
-	return s.RoomName
-}
-
-// GetBrightness returns the value of Brightness.
-func (s *AvailableSceneResponse) GetBrightness() NilFloat64 {
-	return s.Brightness
-}
-
-// SetID sets the value of ID.
-func (s *AvailableSceneResponse) SetID(val uuid.UUID) {
-	s.ID = val
-}
-
-// SetName sets the value of Name.
-func (s *AvailableSceneResponse) SetName(val string) {
-	s.Name = val
-}
-
-// SetRoomID sets the value of RoomID.
-func (s *AvailableSceneResponse) SetRoomID(val uuid.UUID) {
-	s.RoomID = val
-}
-
-// SetRoomName sets the value of RoomName.
-func (s *AvailableSceneResponse) SetRoomName(val string) {
-	s.RoomName = val
-}
-
-// SetBrightness sets the value of Brightness.
-func (s *AvailableSceneResponse) SetBrightness(val NilFloat64) {
-	s.Brightness = val
-}
-
 // Ref: #/components/schemas/BridgeResponse
 type BridgeResponse struct {
 	ID        string `json:"id"`
@@ -274,7 +215,7 @@ func (s *ConfigurationErrorResponse) SetIssues(val []ConfigurationIssue) {
 func (*ConfigurationErrorResponse) doctorRes()             {}
 func (*ConfigurationErrorResponse) getHueBridgeRes()       {}
 func (*ConfigurationErrorResponse) listHueBridgesRes()     {}
-func (*ConfigurationErrorResponse) listScenesRes()         {}
+func (*ConfigurationErrorResponse) listRoomsRes()          {}
 func (*ConfigurationErrorResponse) registerHueBridgeRes()  {}
 func (*ConfigurationErrorResponse) selectHueBridgeRes()    {}
 func (*ConfigurationErrorResponse) startDaylightAlarmRes() {}
@@ -493,7 +434,7 @@ func (s *ErrorResponse) SetDetail(val string) {
 }
 
 func (*ErrorResponse) listHueBridgesRes() {}
-func (*ErrorResponse) listScenesRes()     {}
+func (*ErrorResponse) listRoomsRes()      {}
 
 type GetDaylightAlarmConfigurationNotFound ErrorResponse
 
@@ -511,9 +452,9 @@ type ListHueBridgesOKApplicationJSON []BridgeResponse
 
 func (*ListHueBridgesOKApplicationJSON) listHueBridgesRes() {}
 
-type ListScenesOKApplicationJSON []AvailableSceneResponse
+type ListRoomsOKApplicationJSON []RoomResponse
 
-func (*ListScenesOKApplicationJSON) listScenesRes() {}
+func (*ListRoomsOKApplicationJSON) listRoomsRes() {}
 
 // Ref: #/components/schemas/NamedResourceResponse
 type NamedResourceResponse struct {
@@ -974,6 +915,80 @@ func (*RegisterHueBridgeConflict) registerHueBridgeRes() {}
 type RegisterHueBridgeServiceUnavailable ErrorResponse
 
 func (*RegisterHueBridgeServiceUnavailable) registerHueBridgeRes() {}
+
+// Ref: #/components/schemas/RoomResponse
+type RoomResponse struct {
+	ID     uuid.UUID       `json:"id"`
+	Name   string          `json:"name"`
+	Scenes []SceneResponse `json:"scenes"`
+}
+
+// GetID returns the value of ID.
+func (s *RoomResponse) GetID() uuid.UUID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *RoomResponse) GetName() string {
+	return s.Name
+}
+
+// GetScenes returns the value of Scenes.
+func (s *RoomResponse) GetScenes() []SceneResponse {
+	return s.Scenes
+}
+
+// SetID sets the value of ID.
+func (s *RoomResponse) SetID(val uuid.UUID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *RoomResponse) SetName(val string) {
+	s.Name = val
+}
+
+// SetScenes sets the value of Scenes.
+func (s *RoomResponse) SetScenes(val []SceneResponse) {
+	s.Scenes = val
+}
+
+// Ref: #/components/schemas/SceneResponse
+type SceneResponse struct {
+	ID         uuid.UUID  `json:"id"`
+	Name       string     `json:"name"`
+	Brightness NilFloat64 `json:"brightness"`
+}
+
+// GetID returns the value of ID.
+func (s *SceneResponse) GetID() uuid.UUID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *SceneResponse) GetName() string {
+	return s.Name
+}
+
+// GetBrightness returns the value of Brightness.
+func (s *SceneResponse) GetBrightness() NilFloat64 {
+	return s.Brightness
+}
+
+// SetID sets the value of ID.
+func (s *SceneResponse) SetID(val uuid.UUID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *SceneResponse) SetName(val string) {
+	s.Name = val
+}
+
+// SetBrightness sets the value of Brightness.
+func (s *SceneResponse) SetBrightness(val NilFloat64) {
+	s.Brightness = val
+}
 
 type SelectHueBridgeConflict ErrorResponse
 

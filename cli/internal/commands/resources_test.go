@@ -13,13 +13,14 @@ import (
 func TestScenesList(t *testing.T) {
 	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		if request.URL.Path != "/scenes" {
+		if request.URL.Path != "/hue/rooms" {
 			t.Errorf("path = %q", request.URL.Path)
 		}
 		writer.Header().Set("Content-Type", "application/json")
 		_, _ = writer.Write([]byte(`[{
-			"id":"7a6d3f2e-2222-4a11-9a11-1a2b3c4d5e6f","name":"Sunrise",
-			"room_id":"7a6d3f2e-1111-4a11-9a11-1a2b3c4d5e6f","room_name":"Bedroom","brightness":null
+			"id":"7a6d3f2e-1111-4a11-9a11-1a2b3c4d5e6f","name":"Bedroom","scenes":[
+				{"id":"7a6d3f2e-2222-4a11-9a11-1a2b3c4d5e6f","name":"Sunrise","brightness":null}
+			]
 		}]`))
 	}))
 	defer server.Close()
