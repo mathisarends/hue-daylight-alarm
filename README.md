@@ -9,6 +9,16 @@ start it, stop it, and check that everything is wired up. Scheduling stays with
 whatever already runs on time for you — cron, a home automation system, a phone
 shortcut — which calls `POST /daylight-alarm/start`.
 
+## Contents
+
+- [How it works](#how-it-works)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Run with Docker](#run-with-docker)
+- [API](#api)
+- [CLI](#cli)
+- [Local development](#local-development)
+
 ## How it works
 
 Starting an alarm runs one linear brightness ramp:
@@ -31,6 +41,42 @@ Exactly one alarm can be active at a time, and `stop` cancels the ramp in place
 `GET /doctor` runs the same preconditions ahead of time: the YAML parses and
 validates, Hue credentials exist, the Bridge answers and accepts them, and the
 configured scene still exists.
+
+## Installation
+
+Huerise has two parts: the server (run as a container) and the optional
+`huerise` CLI (a single binary) for talking to it. Pick what you need.
+
+### Server
+
+```bash
+docker pull ghcr.io/mathisarends/huerise:latest
+```
+
+Or run [Run with Docker](#run-with-docker) below to build and start it
+locally via Compose.
+
+### CLI
+
+Download the archive for your OS and architecture from the
+[latest release](https://github.com/mathisarends/huerise/releases/latest),
+then unpack it and put `huerise` on your `PATH`. On Linux/macOS:
+
+```bash
+curl -LO https://github.com/mathisarends/huerise/releases/latest/download/huerise_<version>_<os>_<arch>.tar.gz
+tar -xzf huerise_<version>_<os>_<arch>.tar.gz
+sudo mv huerise /usr/local/bin/
+```
+
+Replace `<version>` with the release tag without the leading `v` (e.g.
+`0.1.1`), `<os>` with `linux` or `darwin`, and `<arch>` with `amd64` or
+`arm64`. Windows builds ship as a `.zip` with the same naming.
+
+```bash
+huerise --help
+```
+
+See [`docs/cli.md`](docs/cli.md) for the full command reference.
 
 ## Configuration
 
