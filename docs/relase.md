@@ -46,7 +46,7 @@ semantic versioning:
 - increment MINOR for backward-compatible features;
 - increment MAJOR for incompatible API, CLI, or configuration changes.
 
-Update `src/huerise/version.py` without the `v` prefix:
+Update `huerise/version.py` without the `v` prefix:
 
 ```python
 __version__ = "2.1.0"
@@ -77,7 +77,7 @@ goreleaser release --snapshot --clean --skip=publish
 Commit and push the version change:
 
 ```bash
-git add src/huerise/version.py
+git add huerise/version.py
 git commit -m "Release 2.1.0"
 git push origin main
 ```

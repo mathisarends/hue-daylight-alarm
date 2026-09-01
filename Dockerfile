@@ -13,7 +13,7 @@ FROM python:3.14-slim
 WORKDIR /app
 
 COPY --from=builder /app/.venv .venv
-COPY src/huerise/ ./huerise/
+COPY huerise/ ./huerise/
 
 ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
