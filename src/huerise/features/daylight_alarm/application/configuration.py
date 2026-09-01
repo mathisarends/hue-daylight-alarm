@@ -10,7 +10,10 @@ from huerise.features.lighting.application import SceneNotFoundError, SceneServi
 
 
 class SceneDoesNotBelongToRoomError(Exception):
-    pass
+    def __init__(self, scene_id: UUID, room_id: UUID) -> None:
+        super().__init__(f"Hue scene {scene_id} does not belong to room {room_id}")
+        self.scene_id = scene_id
+        self.room_id = room_id
 
 
 class DaylightAlarmConfiguration:
@@ -70,5 +73,5 @@ class DaylightAlarmConfiguration:
         if scene is None:
             raise SceneNotFoundError(scene_id)
         if scene.room_id != room_id:
-            raise SceneDoesNotBelongToRoomError()
+            raise SceneDoesNotBelongToRoomError(scene_id, room_id)
         return scene

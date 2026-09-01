@@ -30,6 +30,8 @@ API_KEY = "test-api-key"
 AUTH = {"X-API-Key": API_KEY}
 SCENE_ID = UUID(int=1)
 ROOM_ID = UUID(int=2)
+OTHER_ROOM_ID = UUID(int=3)
+OTHER_SCENE_ID = UUID(int=4)
 
 
 class AppTestProvider(Provider):
@@ -68,8 +70,7 @@ def hue_client() -> FakeHueClient:
     return FakeHueClient([Room(ROOM_ID, "Bedroom", (Scene(SCENE_ID, "Sunrise", 80),))])
 
 
-@pytest.fixture
-def client(tmp_path: Path, hue_client: FakeHueClient) -> Iterator[TestClient]:
+def _client(tmp_path: Path, hue_client: FakeHueClient) -> Iterator[TestClient]:
     path = tmp_path / "huerise.yml"
     path.write_text(
         f"""\
@@ -95,6 +96,22 @@ daylight_alarm:
     )
     with TestClient(create_app(container)) as test_client:
         yield test_client
+
+
+@pytest.fixture
+def client(tmp_path: Path, hue_client: FakeHueClient) -> Iterator[TestClient]:
+    yield from _client(tmp_path, hue_client)
+
+
+@pytest.fixture
+def two_room_client(tmp_path: Path) -> Iterator[TestClient]:
+    hue_client = FakeHueClient(
+        [
+            Room(ROOM_ID, "Bedroom", (Scene(SCENE_ID, "Sunrise", 80),)),
+            Room(OTHER_ROOM_ID, "Kitchen", (Scene(OTHER_SCENE_ID, "Bright", 100),)),
+        ]
+    )
+    yield from _client(tmp_path, hue_client)
 
 
 def test_operation_ids_are_explicit_and_stable(client: TestClient) -> None:
@@ -208,6 +225,63 @@ def test_saves_configuration_from_the_selected_scene(client: TestClient) -> None
             "delay_seconds": 60,
         },
     }
+
+
+def test_rejects_a_scene_from_another_room(two_room_client: TestClient) -> None:
+    response = two_room_client.put(
+        "/daylight-alarm/configuration",
+        headers=AUTH,
+        json={
+            "room_id": str(ROOM_ID),
+            "scene_id": str(OTHER_SCENE_ID),
+            "duration_seconds": 900,
+        },
+    )
+
+    assert response.status_code == 422
+    assert response.json() == {
+        "detail": f"Hue scene {OTHER_SCENE_ID} does not belong to room {ROOM_ID}"
+    }
+
+
+def test_rejects_an_after_alarm_scene_from_another_room(
+    two_room_client: TestClient,
+) -> None:
+    response = two_room_client.put(
+        "/daylight-alarm/configuration",
+        headers=AUTH,
+        json={
+            "room_id": str(ROOM_ID),
+            "scene_id": str(SCENE_ID),
+            "duration_seconds": 900,
+            "after_alarm": {
+                "room_id": str(ROOM_ID),
+                "scene_id": str(OTHER_SCENE_ID),
+                "delay_seconds": 60,
+            },
+        },
+    )
+
+    assert response.status_code == 422
+    assert response.json() == {
+        "detail": f"Hue scene {OTHER_SCENE_ID} does not belong to room {ROOM_ID}"
+    }
+
+
+def test_rejects_an_unknown_scene(two_room_client: TestClient) -> None:
+    unknown_scene_id = UUID(int=5)
+    response = two_room_client.put(
+        "/daylight-alarm/configuration",
+        headers=AUTH,
+        json={
+            "room_id": str(ROOM_ID),
+            "scene_id": str(unknown_scene_id),
+            "duration_seconds": 900,
+        },
+    )
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": f"Hue scene not found: {unknown_scene_id}"}
 
 
 def test_starts_and_stops_daylight_alarm(
