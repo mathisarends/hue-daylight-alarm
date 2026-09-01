@@ -33,7 +33,6 @@ class DaylightAlarmConfiguration:
         duration_seconds: int,
         after_alarm_room_id: UUID | None = None,
         after_alarm_scene_id: UUID | None = None,
-        after_alarm_brightness: int | None = None,
         after_alarm_delay_seconds: int | None = None,
     ) -> DaylightAlarmConfig:
         scenes = await self._scenes.list_scenes()
@@ -41,7 +40,6 @@ class DaylightAlarmConfiguration:
         after_alarm = None
         if after_alarm_scene_id is not None:
             assert after_alarm_room_id is not None
-            assert after_alarm_brightness is not None
             assert after_alarm_delay_seconds is not None
             selected_after_alarm = self._selected_scene(
                 scenes, after_alarm_room_id, after_alarm_scene_id
@@ -55,7 +53,6 @@ class DaylightAlarmConfiguration:
                     id=selected_after_alarm.id,
                     name=selected_after_alarm.name,
                 ),
-                brightness=after_alarm_brightness,
                 delay_seconds=after_alarm_delay_seconds,
             )
         alarm = DaylightAlarmConfig(

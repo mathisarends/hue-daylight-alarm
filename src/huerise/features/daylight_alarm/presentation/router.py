@@ -55,9 +55,6 @@ async def set_configuration(
         duration_seconds=body.duration_seconds,
         after_alarm_room_id=after_alarm.room_id if after_alarm is not None else None,
         after_alarm_scene_id=after_alarm.scene_id if after_alarm is not None else None,
-        after_alarm_brightness=(
-            after_alarm.brightness if after_alarm is not None else None
-        ),
         after_alarm_delay_seconds=(
             after_alarm.delay_seconds if after_alarm is not None else None
         ),

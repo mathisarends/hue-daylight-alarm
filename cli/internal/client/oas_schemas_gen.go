@@ -36,7 +36,6 @@ func (s *APIKeyHeader) SetRoles(val []string) {
 type AfterAlarmConfigurationRequest struct {
 	RoomID       uuid.UUID `json:"room_id"`
 	SceneID      uuid.UUID `json:"scene_id"`
-	Brightness   int       `json:"brightness"`
 	DelaySeconds int       `json:"delay_seconds"`
 }
 
@@ -48,11 +47,6 @@ func (s *AfterAlarmConfigurationRequest) GetRoomID() uuid.UUID {
 // GetSceneID returns the value of SceneID.
 func (s *AfterAlarmConfigurationRequest) GetSceneID() uuid.UUID {
 	return s.SceneID
-}
-
-// GetBrightness returns the value of Brightness.
-func (s *AfterAlarmConfigurationRequest) GetBrightness() int {
-	return s.Brightness
 }
 
 // GetDelaySeconds returns the value of DelaySeconds.
@@ -70,11 +64,6 @@ func (s *AfterAlarmConfigurationRequest) SetSceneID(val uuid.UUID) {
 	s.SceneID = val
 }
 
-// SetBrightness sets the value of Brightness.
-func (s *AfterAlarmConfigurationRequest) SetBrightness(val int) {
-	s.Brightness = val
-}
-
 // SetDelaySeconds sets the value of DelaySeconds.
 func (s *AfterAlarmConfigurationRequest) SetDelaySeconds(val int) {
 	s.DelaySeconds = val
@@ -84,7 +73,6 @@ func (s *AfterAlarmConfigurationRequest) SetDelaySeconds(val int) {
 type AfterAlarmConfigurationResponse struct {
 	Room         NamedResourceResponse `json:"room"`
 	Scene        NamedResourceResponse `json:"scene"`
-	Brightness   int                   `json:"brightness"`
 	DelaySeconds int                   `json:"delay_seconds"`
 }
 
@@ -96,11 +84,6 @@ func (s *AfterAlarmConfigurationResponse) GetRoom() NamedResourceResponse {
 // GetScene returns the value of Scene.
 func (s *AfterAlarmConfigurationResponse) GetScene() NamedResourceResponse {
 	return s.Scene
-}
-
-// GetBrightness returns the value of Brightness.
-func (s *AfterAlarmConfigurationResponse) GetBrightness() int {
-	return s.Brightness
 }
 
 // GetDelaySeconds returns the value of DelaySeconds.
@@ -116,11 +99,6 @@ func (s *AfterAlarmConfigurationResponse) SetRoom(val NamedResourceResponse) {
 // SetScene sets the value of Scene.
 func (s *AfterAlarmConfigurationResponse) SetScene(val NamedResourceResponse) {
 	s.Scene = val
-}
-
-// SetBrightness sets the value of Brightness.
-func (s *AfterAlarmConfigurationResponse) SetBrightness(val int) {
-	s.Brightness = val
 }
 
 // SetDelaySeconds sets the value of DelaySeconds.

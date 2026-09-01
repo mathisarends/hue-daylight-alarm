@@ -84,9 +84,9 @@ func TestConfigurationSetCanChainAFollowUpScene(t *testing.T) {
 	server := configurationServer(t, &saved)
 	defer server.Close()
 
-	// Scene 1, 25 minutes, yes to a follow-up, 40%, 10 minutes later. The
+	// Scene 1, 25 minutes, yes to a follow-up, 10 minutes later. The
 	// follow-up scene is not asked for: dropping the alarm scene leaves one.
-	stdout, stderr, exitCode := runWithInput(t, server.URL, "1\n25\ny\n40\n10\ny\n", "configuration", "set")
+	stdout, stderr, exitCode := runWithInput(t, server.URL, "1\n25\ny\n10\ny\n", "configuration", "set")
 	if exitCode != 0 {
 		t.Fatalf("exit = %d, stdout = %s, stderr = %s", exitCode, stdout, stderr)
 	}
@@ -97,7 +97,7 @@ func TestConfigurationSetCanChainAFollowUpScene(t *testing.T) {
 	if after["scene_id"] != otherID || after["room_id"] != roomID {
 		t.Fatalf("after = %#v", after)
 	}
-	if after["brightness"] != float64(40) || after["delay_seconds"] != float64(600) {
+	if after["delay_seconds"] != float64(600) {
 		t.Fatalf("after = %#v", after)
 	}
 	if !strings.Contains(stdout, "Then hold") {

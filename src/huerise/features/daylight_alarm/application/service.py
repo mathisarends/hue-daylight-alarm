@@ -81,8 +81,21 @@ class DaylightAlarm:
                     raise HueUnavailableError(
                         "The configured Hue scene has no brightness"
                     )
+                after_alarm_brightness: float | None = None
                 if config.after_alarm is not None:
-                    room_for_scene(rooms, config.after_alarm.scene.id)
+                    after_alarm_room = room_for_scene(
+                        rooms, config.after_alarm.scene.id
+                    )
+                    after_alarm_scene = next(
+                        scene
+                        for scene in after_alarm_room.scenes
+                        if scene.id == config.after_alarm.scene.id
+                    )
+                    if after_alarm_scene.brightness is None:
+                        raise HueUnavailableError(
+                            "The configured after-alarm Hue scene has no brightness"
+                        )
+                    after_alarm_brightness = after_alarm_scene.brightness
                 await client.activate_scene(
                     config.scene.id, brightness=START_BRIGHTNESS
                 )
@@ -97,7 +110,9 @@ class DaylightAlarm:
                 ) from error
 
             task = asyncio.create_task(
-                self._run(client, room.id, scene.brightness, config)
+                self._run(
+                    client, room.id, scene.brightness, after_alarm_brightness, config
+                )
             )
             self._task = task
             task.add_done_callback(self._finished)
@@ -117,6 +132,7 @@ class DaylightAlarm:
         client: HueClient,
         room_id: UUID,
         target_brightness: float,
+        after_alarm_brightness: float | None,
         config: DaylightAlarmConfig,
     ) -> None:
         elapsed = 0.0
@@ -131,10 +147,11 @@ class DaylightAlarm:
                 )
                 await client.set_brightness(room_id, brightness)
             if config.after_alarm is not None:
+                assert after_alarm_brightness is not None
                 await self._sleep(config.after_alarm.delay_seconds)
                 await client.activate_scene(
                     config.after_alarm.scene.id,
-                    brightness=config.after_alarm.brightness,
+                    brightness=after_alarm_brightness,
                 )
         except asyncio.CancelledError:
             raise

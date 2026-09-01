@@ -565,12 +565,6 @@
             "format": "uuid",
             "title": "Scene Id"
           },
-          "brightness": {
-            "type": "integer",
-            "maximum": 100.0,
-            "minimum": 1.0,
-            "title": "Brightness"
-          },
           "delay_seconds": {
             "type": "integer",
             "minimum": 0.0,
@@ -581,7 +575,6 @@
         "required": [
           "room_id",
           "scene_id",
-          "brightness",
           "delay_seconds"
         ],
         "title": "AfterAlarmConfigurationRequest"
@@ -594,10 +587,6 @@
           "scene": {
             "$ref": "#/components/schemas/NamedResourceResponse"
           },
-          "brightness": {
-            "type": "integer",
-            "title": "Brightness"
-          },
           "delay_seconds": {
             "type": "integer",
             "title": "Delay Seconds"
@@ -607,7 +596,6 @@
         "required": [
           "room",
           "scene",
-          "brightness",
           "delay_seconds"
         ],
         "title": "AfterAlarmConfigurationResponse"

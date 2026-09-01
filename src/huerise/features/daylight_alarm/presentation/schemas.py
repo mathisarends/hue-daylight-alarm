@@ -23,7 +23,6 @@ class NamedResourceResponse(BaseModel):
 class AfterAlarmConfigurationResponse(BaseModel):
     room: NamedResourceResponse
     scene: NamedResourceResponse
-    brightness: int
     delay_seconds: int
 
 
@@ -37,7 +36,6 @@ class DaylightAlarmConfigurationResponse(BaseModel):
 class AfterAlarmConfigurationRequest(BaseModel):
     room_id: UUID
     scene_id: UUID
-    brightness: int = Field(ge=1, le=100)
     delay_seconds: int = Field(ge=0)
 
 

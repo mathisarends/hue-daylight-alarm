@@ -40,7 +40,6 @@ class AfterAlarmConfig(BaseModel):
 
     room: NamedResourceConfig
     scene: NamedResourceConfig
-    brightness: StrictInt = Field(ge=1, le=100)
     delay_seconds: StrictInt = Field(ge=0)
 
 

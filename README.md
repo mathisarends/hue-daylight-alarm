@@ -71,7 +71,6 @@ daylight_alarm:
     scene:
       id: "00000000-0000-0000-0000-000000000000"
       name: Evening
-    brightness: 30
     delay_seconds: 600
 ```
 

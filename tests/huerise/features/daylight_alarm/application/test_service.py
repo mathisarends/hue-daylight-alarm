@@ -144,6 +144,43 @@ async def test_start_fails_before_changing_light_when_scene_has_no_brightness() 
     assert client.closed is True
 
 
+async def test_start_fails_when_after_alarm_scene_has_no_brightness() -> None:
+    after_alarm_scene_id = UUID(int=3)
+    client = FakeHueClient(
+        [
+            Room(
+                ROOM_ID,
+                "Bedroom",
+                (Scene(SCENE_ID, "Sunrise", 30), Scene(after_alarm_scene_id, "Dim")),
+            )
+        ]
+    )
+    config = HueriseConfig(
+        daylight_alarm=DaylightAlarmConfig(
+            room=NamedResourceConfig(id=ROOM_ID, name="Bedroom"),
+            scene=NamedResourceConfig(id=SCENE_ID, name="Sunrise"),
+            duration_seconds=2,
+            after_alarm=AfterAlarmConfig(
+                room=NamedResourceConfig(id=ROOM_ID, name="Bedroom"),
+                scene=NamedResourceConfig(id=after_alarm_scene_id, name="Dim"),
+                delay_seconds=60,
+            ),
+        )
+    )
+    alarm = DaylightAlarm(
+        FakeConfiguration(config),
+        FakeHueCredentialsSource(),
+        FakeHueClientFactory(client),
+        sleep=immediate_sleep,
+    )
+
+    with pytest.raises(HueUnavailableError, match="after-alarm Hue scene has no"):
+        await alarm.start()
+
+    assert client.commands == []
+    assert client.closed is True
+
+
 async def test_overrides_only_the_duration_for_one_run() -> None:
     client = FakeHueClient(DEFAULT_ROOMS)
     alarm = make_alarm(client, duration=1800, sleep=immediate_sleep)
@@ -168,7 +205,6 @@ async def test_activates_the_optional_after_alarm_scene() -> None:
             after_alarm=AfterAlarmConfig(
                 room=NamedResourceConfig(id=ROOM_ID, name="Bedroom"),
                 scene=NamedResourceConfig(id=SCENE_ID, name="Sunrise"),
-                brightness=50,
                 delay_seconds=60,
             ),
         )
@@ -184,7 +220,7 @@ async def test_activates_the_optional_after_alarm_scene() -> None:
     assert alarm._task is not None
     await alarm._task
 
-    assert client.commands[-1] == ("activate", SCENE_ID, 50)
+    assert client.commands[-1] == ("activate", SCENE_ID, 30)
 
 
 @pytest.mark.parametrize(

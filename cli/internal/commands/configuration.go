@@ -40,7 +40,6 @@ type configurationSetCommand struct {
 	DurationSeconds int        `name:"duration-seconds" default:"1800"`
 	AfterRoomID     *uuid.UUID `name:"after-room-id"`
 	AfterSceneID    *uuid.UUID `name:"after-scene-id"`
-	AfterBrightness *int       `name:"after-brightness"`
 	AfterDelay      *int       `name:"after-delay-seconds"`
 }
 
@@ -99,15 +98,15 @@ func (command configurationSetCommand) request(runtime *Runtime) (*client.Daylig
 }
 
 func (command configurationSetCommand) addAfterAlarm(request *client.DaylightAlarmConfigurationRequest) error {
-	if command.AfterRoomID == nil && command.AfterSceneID == nil && command.AfterBrightness == nil && command.AfterDelay == nil {
+	if command.AfterRoomID == nil && command.AfterSceneID == nil && command.AfterDelay == nil {
 		return nil
 	}
-	if command.AfterRoomID == nil || command.AfterSceneID == nil || command.AfterBrightness == nil || command.AfterDelay == nil {
+	if command.AfterRoomID == nil || command.AfterSceneID == nil || command.AfterDelay == nil {
 		return &commandError{Code: "usage", Message: "after-alarm options must be supplied together", ExitCode: 2}
 	}
 	request.AfterAlarm = client.NewOptNilAfterAlarmConfigurationRequest(client.AfterAlarmConfigurationRequest{
 		RoomID: *command.AfterRoomID, SceneID: *command.AfterSceneID,
-		Brightness: *command.AfterBrightness, DelaySeconds: *command.AfterDelay,
+		DelaySeconds: *command.AfterDelay,
 	})
 	return nil
 }
@@ -157,9 +156,8 @@ func (command configurationSetCommand) askForSelection(
 	}
 	if afterwards != nil {
 		request.AfterAlarm = client.NewOptNilAfterAlarmConfigurationRequest(*afterwards)
-		summary += fmt.Sprintf(" Then hold %q at %d%%, %s after it ends.",
-			sceneName(scenes, afterwards.SceneID), afterwards.Brightness,
-			formatDuration(afterwards.DelaySeconds))
+		summary += fmt.Sprintf(" Then hold %q, %s after it ends.",
+			sceneName(scenes, afterwards.SceneID), formatDuration(afterwards.DelaySeconds))
 	}
 
 	if err := writeLines(runtime.stdout, summary); err != nil {
@@ -192,17 +190,13 @@ func askAfterAlarm(
 	if err != nil {
 		return nil, err
 	}
-	brightness, err := prompt.askInt("Its brightness, 1-100", 100, 1, 100)
-	if err != nil {
-		return nil, err
-	}
 	delay, err := prompt.askInt("Minutes to wait after the fade", 0, 0, 12*60)
 	if err != nil {
 		return nil, err
 	}
 	return &client.AfterAlarmConfigurationRequest{
 		RoomID: roomID, SceneID: scene.Value.(uuid.UUID),
-		Brightness: brightness, DelaySeconds: delay * 60,
+		DelaySeconds: delay * 60,
 	}, nil
 }
 
@@ -248,7 +242,7 @@ func writeConfiguration(runtime *Runtime, config *client.DaylightAlarmConfigurat
 	if after, ok := config.AfterAlarm.Get(); ok {
 		fields = append(fields, recordField{
 			Name:  "Afterwards",
-			Value: fmt.Sprintf("%s at %d%%, %s later", after.Scene.Name, after.Brightness, formatDuration(after.DelaySeconds)),
+			Value: fmt.Sprintf("%s, %s later", after.Scene.Name, formatDuration(after.DelaySeconds)),
 		})
 	}
 	return writeRecord(runtime.stdout, fields...)

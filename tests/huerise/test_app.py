@@ -192,7 +192,6 @@ def test_saves_configuration_from_the_selected_scene(client: TestClient) -> None
             "after_alarm": {
                 "room_id": str(ROOM_ID),
                 "scene_id": str(SCENE_ID),
-                "brightness": 30,
                 "delay_seconds": 60,
             },
         },
@@ -206,7 +205,6 @@ def test_saves_configuration_from_the_selected_scene(client: TestClient) -> None
         "after_alarm": {
             "room": {"id": str(ROOM_ID), "name": "Bedroom"},
             "scene": {"id": str(SCENE_ID), "name": "Sunrise"},
-            "brightness": 30,
             "delay_seconds": 60,
         },
     }

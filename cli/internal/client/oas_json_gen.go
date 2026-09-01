@@ -30,20 +30,15 @@ func (s *AfterAlarmConfigurationRequest) encodeFields(e *jx.Encoder) {
 		json.EncodeUUID(e, s.SceneID)
 	}
 	{
-		e.FieldStart("brightness")
-		e.Int(s.Brightness)
-	}
-	{
 		e.FieldStart("delay_seconds")
 		e.Int(s.DelaySeconds)
 	}
 }
 
-var jsonFieldsNameOfAfterAlarmConfigurationRequest = [4]string{
+var jsonFieldsNameOfAfterAlarmConfigurationRequest = [3]string{
 	0: "room_id",
 	1: "scene_id",
-	2: "brightness",
-	3: "delay_seconds",
+	2: "delay_seconds",
 }
 
 // Decode decodes AfterAlarmConfigurationRequest from json.
@@ -79,20 +74,8 @@ func (s *AfterAlarmConfigurationRequest) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"scene_id\"")
 			}
-		case "brightness":
-			requiredBitSet[0] |= 1 << 2
-			if err := func() error {
-				v, err := d.Int()
-				s.Brightness = int(v)
-				if err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"brightness\"")
-			}
 		case "delay_seconds":
-			requiredBitSet[0] |= 1 << 3
+			requiredBitSet[0] |= 1 << 2
 			if err := func() error {
 				v, err := d.Int()
 				s.DelaySeconds = int(v)
@@ -113,7 +96,7 @@ func (s *AfterAlarmConfigurationRequest) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00001111,
+		0b00000111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -177,20 +160,15 @@ func (s *AfterAlarmConfigurationResponse) encodeFields(e *jx.Encoder) {
 		s.Scene.Encode(e)
 	}
 	{
-		e.FieldStart("brightness")
-		e.Int(s.Brightness)
-	}
-	{
 		e.FieldStart("delay_seconds")
 		e.Int(s.DelaySeconds)
 	}
 }
 
-var jsonFieldsNameOfAfterAlarmConfigurationResponse = [4]string{
+var jsonFieldsNameOfAfterAlarmConfigurationResponse = [3]string{
 	0: "room",
 	1: "scene",
-	2: "brightness",
-	3: "delay_seconds",
+	2: "delay_seconds",
 }
 
 // Decode decodes AfterAlarmConfigurationResponse from json.
@@ -222,20 +200,8 @@ func (s *AfterAlarmConfigurationResponse) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"scene\"")
 			}
-		case "brightness":
-			requiredBitSet[0] |= 1 << 2
-			if err := func() error {
-				v, err := d.Int()
-				s.Brightness = int(v)
-				if err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"brightness\"")
-			}
 		case "delay_seconds":
-			requiredBitSet[0] |= 1 << 3
+			requiredBitSet[0] |= 1 << 2
 			if err := func() error {
 				v, err := d.Int()
 				s.DelaySeconds = int(v)
@@ -256,7 +222,7 @@ func (s *AfterAlarmConfigurationResponse) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00001111,
+		0b00000111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
